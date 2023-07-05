@@ -3,6 +3,7 @@ import json
 import requests
 from docx.shared import Mm
 from docxtpl import DocxTemplate, InlineImage
+import jinja2
 
 
 class HTMLWordCreator:
@@ -38,33 +39,57 @@ class HTMLWordCreator:
 
         query_string = '&'.join(['='.join([key, val]) for (key, val) in query_params.items()])
 
-        # response = requests.get(query_url + query_string)
-        #
-        # if response.status_code == 200:
-        #     print(response.json())
+        response = requests.get(query_url + query_string)
 
-        self.generate_word_document()
+        if response.status_code == 200:
+            result = response.json()
 
-    def generate_word_document(self):
-        template_path = 'templates/base.docx'
+            # for key, val in result.items():
+            #     if key == 'f_news':
+            #         print(val)
+
+            self.generate_word_document(result)
+
+    def mark_word(self, value, word_to_mark):
+        marked_value = value.replace(word_to_mark, f'<mark>{word_to_mark}</mark>')
+        return marked_value
+
+
+    def generate_word_document(self, result):
+        template_path = 'templates/template_parts/table.docx'
         output_path = 'output.docx'
-
-        data = {
-            'title': 'Заголовок документа',
-            'content': 'Содержимое документа',
-        }
 
         template = DocxTemplate(template_path)
 
-        myimage = InlineImage(template, image_descriptor='static/girl.jpeg')
-
-        data['my_image'] = myimage
-
-        template.render(data)
+        data = self.generate_table(result)
+        jinja_env = jinja2.Environment()
+        jinja_env.filters['mark_word'] = self.mark_word
+        template.render({'columns': list(data[0].keys()), 'data_length': range(1, len(data) + 1), 'data': data}, jinja_env, autoescape=True)
 
         template.save(output_path)
 
+    def generate_table(self, data: dict):
 
+        translator = {
+            'title': 'Заголовок',
+            'date': 'Дата',
+            'content': 'Краткое содержание',
+            'resource_name': 'Наименование СМИ',
+            'news_link': 'URL',
+            'sentiment': 'Тональность',
+        }
+
+        table_data = []
+
+        f_news = data.get('f_news')
+
+        if f_news:
+
+            for i in range(len(f_news)):
+                result = {translator[k]:v for (k, v) in f_news[i].items() if k in translator}
+                table_data.append(result)
+        table_data.append({'tag': 'Python'})
+        return table_data
 
     @staticmethod
     def parse_string(query_string: str) -> dict:
