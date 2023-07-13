@@ -1,10 +1,11 @@
 import re
 import json
 import requests
-from docx.shared import Mm, RGBColor, Pt
+from docx.shared import Mm, RGBColor, Pt, Cm
 from docxtpl import DocxTemplate, InlineImage
 import jinja2
 from datetime import datetime
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 
 class HTMLWordCreator:
@@ -42,14 +43,6 @@ class HTMLWordCreator:
         output_path = 'output.docx'
 
         template = DocxTemplate(template_path)
-
-        # for i in range(len(self._rest_data)):
-        #     columns = self._rest_data[i].get('columns')
-        #     if columns:
-        #         for column in columns:
-        #             if column['position'] == 0:
-        #                 for value in result.values():
-        #                     print(value, end='\n\n\n\n')
 
         data = TableContentGenerator(result, type='soc')
         data.generate_data()
@@ -134,7 +127,7 @@ class TableContentGenerator:
 
     def __apply_translator(self, translator, news):
         for i in range(len(news)):
-            news[i] = {**{'№': i + 1}, **news[i]}
+            news[i] = {**{'number': i + 1}, **news[i]}
 
             if news[i].get('date'):
                 news[i]['date'] = datetime.fromtimestamp(news[i]['date']).strftime('%d-%m-%Y')
@@ -167,7 +160,7 @@ class TableContentGenerator:
                 data['type'] = 'Telegram'
             case 10:
                 data['type'] = 'TikTok'
-
+WD_PARAGRAPH_ALIGNMENT
 
 class TableStylesGenerator:
     translator_smi = {
@@ -198,17 +191,22 @@ class TableStylesGenerator:
     def apply_table_styles(self):
 
         table = self._template.tables[0]
-        table.style = 'Light Grid'
+        # table.style = 'Light Grid'
         for setting in self._settings:
             for column in setting['columns']:
                 if column.get('id') in self.translator_soc:
                     column_name_en = column.get('id')
                     column_name = self.translator_soc[column_name_en]
                     for idx, cell in enumerate(table.row_cells(0)):
+                        if cell.text == "Пост":
+                            table.columns[idx].width = Cm(15)
+                        if cell.text == '№':
+                            table.columns[idx].width = Cm(1)
                         if cell.text == column_name:
                             for row in table.rows[1:]:
                                 cell = row.cells[idx]
                                 for paragraph in cell.paragraphs:
+                                    paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                                     for run in paragraph.runs:
 
                                         bold = column.get('bold')
