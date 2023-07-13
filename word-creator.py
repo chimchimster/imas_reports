@@ -1,7 +1,7 @@
 import re
 import json
 import requests
-from docx.shared import Mm
+from docx.shared import Mm, RGBColor
 from docxtpl import DocxTemplate, InlineImage
 import jinja2
 
@@ -15,45 +15,23 @@ class HTMLWordCreator:
         self._rest_data = rest_data
 
     def render_report(self):
-        query_params = self.parse_string(self._rest_data)
 
-        def apply_values_in_query_params_for_rest(key: str, value: str) -> None:
-            """ Замыкание необходимо, чтобы проверить ключи и значения
-                для REST. Относится к TODO -> Изменить REST! """
+        response_string = self.generate_string()
 
-            if query_params.get(key):  # REST может обрабатывать только определенные значения ключей
-                query_params[key] = value
-            else:
-                query_params.setdefault(key, value)
+        an_id = self._rest_data[-1].get('an_id')
 
-        # TODO: исправить вынужденные костыли (REST)
-        if not query_params.get('format') or query_params['format'] not in ('pdf', 'wor', 'exc'):
-            return
-
-        apply_values_in_query_params_for_rest('format', 'pdf')
-        apply_values_in_query_params_for_rest('location', '2')
-        apply_values_in_query_params_for_rest('full_text', '1')
-
-        an_id = query_params.get('an_id')
         query_url = self.__define_query_url(an_id)
 
-        query_string = '&'.join(['='.join([key, val]) for (key, val) in query_params.items()])
-
-        response = requests.get(query_url + query_string)
+        response = requests.get(query_url + response_string)
 
         if response.status_code == 200:
             result = response.json()
-
-            # for key, val in result.items():
-            #     if key == 'f_news':
-            #         print(val)
-
             self.generate_word_document(result)
 
     def mark_word(self, value, word_to_mark):
-        marked_value = value.replace(word_to_mark, f'<mark>{word_to_mark}</mark>')
-        return marked_value
 
+        marked_value = value.replace(word_to_mark, f'<span style="background-color: #FFFF00;">{word_to_mark}</span>')
+        return marked_value
 
     def generate_word_document(self, result):
         template_path = 'templates/template_parts/table.docx'
@@ -61,35 +39,26 @@ class HTMLWordCreator:
 
         template = DocxTemplate(template_path)
 
-        data = self.generate_table(result)
-        jinja_env = jinja2.Environment()
-        jinja_env.filters['mark_word'] = self.mark_word
-        template.render({'columns': list(data[0].keys()), 'data_length': range(1, len(data) + 1), 'data': data}, jinja_env, autoescape=True)
+        data = TableContentGenerator(result, type='soc')
+        data.generate_data()
+        data = data.data_collection
+
+        template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
 
         template.save(output_path)
 
-    def generate_table(self, data: dict):
+    def generate_string(self) -> str:
+        """ Формирование строки из словаря пришедшего в POST-запросе. """
 
-        translator = {
-            'title': 'Заголовок',
-            'date': 'Дата',
-            'content': 'Краткое содержание',
-            'resource_name': 'Наименование СМИ',
-            'news_link': 'URL',
-            'sentiment': 'Тональность',
-        }
+        request_string = ''
 
-        table_data = []
+        self._rest_data[-1]['format'] = 'pdf'
+        self._rest_data[-1]['location'] = 2
+        self._rest_data[-1]['full_text'] = 1
 
-        f_news = data.get('f_news')
+        request_string += '&'.join(['='.join([key, str(val)]) for (key, val) in self._rest_data[-1].items()])
 
-        if f_news:
-
-            for i in range(len(f_news)):
-                result = {translator[k]:v for (k, v) in f_news[i].items() if k in translator}
-                table_data.append(result)
-        table_data.append({'tag': 'Python'})
-        return table_data
+        return request_string
 
     @staticmethod
     def parse_string(query_string: str) -> dict:
@@ -106,3 +75,45 @@ class HTMLWordCreator:
             return cls.api_url + cls.relative_api
         except:
             return cls.api_url + cls.relative_api_folders
+
+
+class TableContentGenerator:
+
+    translator_smi = {
+        'title': 'Заголовок',
+        'not_date': 'Дата',
+        'content': 'Краткое содержание',
+        'resource_name': 'Наименование СМИ',
+        'res_link': 'URL',
+        'sentiment': 'Тональность',
+        'name_cat': 'Категория',
+    }
+
+    translator_soc = {
+        'date': 'Дата',
+        'text': 'Пост',
+        'resource_name': 'Наименование СМИ',
+        'res_link': 'URL',
+        'sentiment': 'Тональность',
+        'type': 'Соцсеть',
+    }
+
+    def __init__(self, data, type='smi'):
+        self._data = data
+        self._type = type
+        self.data_collection = []
+
+    def generate_data(self):
+        if self._type == 'smi':
+            f_news = self._data.get('f_news')
+            if f_news:
+                self.__apply_translator(self.translator_smi, f_news)
+        else:
+            f_news2 = self._data.get('f_news2')
+            if f_news2:
+                self.__apply_translator(self.translator_soc, f_news2)
+
+    def __apply_translator(self, translator, news):
+        for i in range(len(news)):
+            result = {translator[k]: v for (k, v) in news[i].items() if k in translator}
+            self.data_collection.append(result)
