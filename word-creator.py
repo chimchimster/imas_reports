@@ -44,7 +44,7 @@ class HTMLWordCreator:
 
         template = DocxTemplate(template_path)
 
-        data = TableContentGenerator(result, type='soc')
+        data = TableContentGenerator(result, self._rest_data, type='soc')
         data.generate_data()
 
         data = data.data_collection
@@ -86,7 +86,6 @@ class HTMLWordCreator:
         return dict(re.findall(r'([^&=]+)=([^&]*)', query_string))
 
 
-
 class TableContentGenerator:
 
     translator_smi = {
@@ -110,9 +109,10 @@ class TableContentGenerator:
         'number': '№',
     }
 
-    def __init__(self, data, type='smi'):
+    def __init__(self, data, rest_data, type='smi'):
         self._data = data
         self._type = type
+        self._rest_data = rest_data
         self.data_collection = []
 
     def generate_data(self):
@@ -126,6 +126,25 @@ class TableContentGenerator:
                 self.__apply_translator(self.translator_soc, f_news2)
 
     def __apply_translator(self, translator, news):
+
+        translator_for_rest = {
+            'content': 'text',
+            'date': 'date',
+            'resource': 'resource_name',
+            'news_link': 'news_link',
+            'sentiment': 'sentiment',
+        }
+
+        to_delete = []
+        for table in self._rest_data:
+            if table.get('id') == 'soc':
+                for tbl in table['columns']:
+                    column_name = tbl.get('id') if tbl.get('position') == 0 else None
+                    if column_name:
+                        to_delete.append(translator_for_rest[column_name])
+
+        news = [{k:v for (k, v) in n.items() if k not in to_delete} for n in news]
+
         for i in range(len(news)):
             news[i] = {**{'number': i + 1}, **news[i]}
 
