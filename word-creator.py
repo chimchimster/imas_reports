@@ -101,7 +101,7 @@ class TableContentGenerator:
     translator_soc = {
         'date': 'Дата',
         'text': 'Пост',
-        'resource_name': 'Наименование СМИ',
+        'resource_name': 'Сообщество',
         'news_link': 'URL',
         'sentiment': 'Тональность',
         'type': 'Соцсеть',
@@ -222,7 +222,7 @@ class TableStylesGenerator:
     translator_soc = {
         'date': 'Дата',
         'content': 'Пост',
-        'resource': 'Наименование СМИ',
+        'resource': 'Сообщество',
         'news_link': 'URL',
         'sentiment': 'Тональность',
         'category': 'Соцсеть',
@@ -260,7 +260,7 @@ class TableStylesGenerator:
                         table_obj.columns[idx].width = Cm(5)
                     case 'URL':
                         table_obj.columns[idx].width = Cm(10)
-                    case 'Наименование СМИ':
+                    case 'Сообщество':
                         table_obj.columns[idx].width = Cm(10)
                     case 'Тональность':
                         table_obj.columns[idx].width = Cm(5)
