@@ -87,7 +87,6 @@ class HTMLWordCreator:
 
 
 class TableContentGenerator:
-
     translator_smi = {
         'title': 'Заголовок',
         'not_date': 'Дата',
@@ -103,13 +102,13 @@ class TableContentGenerator:
         'date': 'Дата',
         'text': 'Пост',
         'resource_name': 'Наименование СМИ',
-        'res_link': 'URL',
+        'news_link': 'URL',
         'sentiment': 'Тональность',
         'type': 'Соцсеть',
         'number': '№',
     }
 
-    def __init__(self, data, rest_data, type='smi'):
+    def __init__(self, data, rest_data, type='soc'):
         self._data = data
         self._type = type
         self._rest_data = rest_data
@@ -127,12 +126,25 @@ class TableContentGenerator:
 
     def __apply_translator(self, translator, news):
 
-        translator_for_rest = {
+        translator_for_rest_soc = {
+            'number': 'number',
             'content': 'text',
             'date': 'date',
             'resource': 'resource_name',
             'news_link': 'news_link',
             'sentiment': 'sentiment',
+            'category': 'type',
+        }
+
+        translator_for_rest_smi = {
+            'number': 'number',
+            'title': 'title',
+            'content': 'content',
+            'date': 'not_date',
+            'resource': 'RESOURCE_NAME',
+            'news_link': 'news_link',
+            'sentiment': 'sentiment',
+            'category': 'name_cat',
         }
 
         to_delete = []
@@ -141,23 +153,37 @@ class TableContentGenerator:
                 for tbl in table['columns']:
                     column_name = tbl.get('id') if tbl.get('position') == 0 else None
                     if column_name:
-                        to_delete.append(translator_for_rest[column_name])
+                        to_delete.append(translator_for_rest_soc[column_name])
+            elif table.get('id') == 'smi':
+                for tbl in table['columns']:
+                    column_name = tbl.get('id') if tbl.get('position') == 0 else None
+                    if column_name:
+                        to_delete.append(translator_for_rest_smi[column_name])
 
-        news = [{k:v for (k, v) in n.items() if k not in to_delete} for n in news]
+        news = [{k: v for (k, v) in n.items() if k not in to_delete} for n in news]
+
+        to_sort = {}
+
+        for table in self._rest_data:
+            if table.get('id') == 'soc':
+                for tbl in table['columns']:
+                    to_sort[tbl.get('id')] = tbl['position']
+
+        to_sort = {translator[translator_for_rest_soc[k]]:v for (k, v) in to_sort.items()}
 
         for i in range(len(news)):
             news[i] = {**{'number': i + 1}, **news[i]}
-
             if news[i].get('date'):
                 news[i]['date'] = datetime.fromtimestamp(news[i]['date']).strftime('%d-%m-%Y')
 
             if news[i].get('type'):
-                self.match_social_medias(news[i])
+                self.__match_social_medias(news[i])
 
             result = {translator[k]: v for (k, v) in news[i].items() if k in translator}
-            self.data_collection.append(result)
+            sorted_result = {k:v for (k,v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
+            self.data_collection.append(sorted_result)
 
-    def match_social_medias(self, data):
+    def __match_social_medias(self, data):
         match data.get('type'):
             case 1:
                 data['type'] = 'Вконтакте'
@@ -179,7 +205,7 @@ class TableContentGenerator:
                 data['type'] = 'Telegram'
             case 10:
                 data['type'] = 'TikTok'
-WD_PARAGRAPH_ALIGNMENT
+
 
 class TableStylesGenerator:
     translator_smi = {
@@ -210,19 +236,44 @@ class TableStylesGenerator:
     def apply_table_styles(self):
 
         table = self._template.tables[0]
-        # table.style = 'Light Grid'
+        table.style = 'Table Grid'
+
+        if not self._settings:
+            return
+
+        if self._settings[0].get('id') == 'soc':
+            self.choose_particular_table_styles(self.translator_soc, table, 'soc')
+        else:
+            self.choose_particular_table_styles(self.translator_smi, table, 'smi')
+
+    def choose_particular_table_styles(self, translator_obj, table_obj, _type):
+        def set_cell_width():
+            if _type == 'soc':
+                match cell.text:
+                    case "Пост":
+                        table_obj.columns[idx].width = Cm(15)
+                    case '№':
+                        table_obj.columns[idx].width = Cm(1)
+                    case 'Дата':
+                        table_obj.columns[idx].width = Cm(5)
+                    case 'Соцсеть':
+                        table_obj.columns[idx].width = Cm(5)
+                    case 'URL':
+                        table_obj.columns[idx].width = Cm(10)
+                    case 'Наименование СМИ':
+                        table_obj.columns[idx].width = Cm(10)
+                    case 'Тональность':
+                        table_obj.columns[idx].width = Cm(5)
+
         for setting in self._settings:
             for column in setting['columns']:
-                if column.get('id') in self.translator_soc:
+                if column.get('id') in translator_obj:
                     column_name_en = column.get('id')
-                    column_name = self.translator_soc[column_name_en]
-                    for idx, cell in enumerate(table.row_cells(0)):
-                        if cell.text == "Пост":
-                            table.columns[idx].width = Cm(15)
-                        if cell.text == '№':
-                            table.columns[idx].width = Cm(1)
+                    column_name = translator_obj[column_name_en]
+                    for idx, cell in enumerate(table_obj.row_cells(0)):
+                        set_cell_width()
                         if cell.text == column_name:
-                            for row in table.rows[1:]:
+                            for row in table_obj.rows[1:]:
                                 cell = row.cells[idx]
                                 for paragraph in cell.paragraphs:
                                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
@@ -247,3 +298,6 @@ class TableStylesGenerator:
                                             green = int(color[3:5], 16)
                                             blue = int(color[5:7], 16)
                                             run.font.color.rgb = RGBColor(red, green, blue)
+
+                                        run.font.name = 'Arial'
+                                        run.font.size = Pt(10)
