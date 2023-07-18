@@ -1,6 +1,11 @@
 import re
 import json
+from copy import deepcopy
+
+import docx
 import requests
+from docx.oxml import parse_xml
+from docx.oxml.ns import nsdecls
 from docx.shared import Mm, RGBColor, Pt, Cm
 from docxtpl import DocxTemplate, InlineImage
 import jinja2
@@ -44,12 +49,13 @@ class HTMLWordCreator:
 
         template = DocxTemplate(template_path)
 
-        data = TableContentGenerator(result, self._rest_data, type='soc')
+        data = TableContentGenerator(result, self._rest_data, type='smi')
         data.generate_data()
 
         data = data.data_collection
+
         template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
-        settings = [_data for _data in self._rest_data if _data.get('id') in ('soc',)]
+        settings = [_data for _data in self._rest_data if _data.get('id') in ('smi','soc')]
 
         styles = TableStylesGenerator(template, settings)
         styles.apply_table_styles()
@@ -91,8 +97,8 @@ class TableContentGenerator:
         'title': 'Заголовок',
         'not_date': 'Дата',
         'content': 'Краткое содержание',
-        'resource_name': 'Наименование СМИ',
-        'res_link': 'URL',
+        'RESOURCE_NAME': 'Наименование СМИ',
+        'news_link': 'URL',
         'sentiment': 'Тональность',
         'name_cat': 'Категория',
         'number': '№',
@@ -101,14 +107,14 @@ class TableContentGenerator:
     translator_soc = {
         'date': 'Дата',
         'text': 'Пост',
-        'resource_name': 'Сообщество',
+        'RESOURCE_NAME': 'Сообщество',
         'news_link': 'URL',
         'sentiment': 'Тональность',
         'type': 'Соцсеть',
         'number': '№',
     }
 
-    def __init__(self, data, rest_data, type='soc'):
+    def __init__(self, data, rest_data, type):
         self._data = data
         self._type = type
         self._rest_data = rest_data
@@ -147,41 +153,52 @@ class TableContentGenerator:
             'category': 'name_cat',
         }
 
+        to_sort = {}
         to_delete = []
+
+        def delete_unused_columns(_table, translator_type):
+            for tbl in _table['columns']:
+                column_name = tbl.get('id') if tbl.get('position') == 0 else None
+                if column_name:
+                    to_delete.append(translator_type[column_name])
+
+        def sort_columns(_table, translator_type):
+            for tbl in _table['columns']:
+                to_sort[tbl.get('id')] = tbl['position']
+
+            return {translator[translator_type[k]]: v for (k, v) in to_sort.items()}
+
+        def update_collection():
+            for i in range(len(news)):
+                news[i] = {**{'number': i + 1}, **news[i]}
+
+                if news[i].get('date'):
+                    news[i]['date'] = datetime.fromtimestamp(news[i]['date']).strftime('%d-%m-%Y')
+
+                if news[i].get('type'):
+                    self.__match_social_medias(news[i])
+
+                result = {translator[k]: v for (k, v) in news[i].items() if k in translator}
+                sorted_result = {k: v for (k, v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
+                self.data_collection.append(sorted_result)
+
+        # Удаление ненужных столбцов
         for table in self._rest_data:
             if table.get('id') == 'soc':
-                for tbl in table['columns']:
-                    column_name = tbl.get('id') if tbl.get('position') == 0 else None
-                    if column_name:
-                        to_delete.append(translator_for_rest_soc[column_name])
+                delete_unused_columns(table, translator_for_rest_soc)
             elif table.get('id') == 'smi':
-                for tbl in table['columns']:
-                    column_name = tbl.get('id') if tbl.get('position') == 0 else None
-                    if column_name:
-                        to_delete.append(translator_for_rest_smi[column_name])
+                delete_unused_columns(table, translator_for_rest_smi)
 
         news = [{k: v for (k, v) in n.items() if k not in to_delete} for n in news]
 
-        to_sort = {}
-
+        # Сортировка столбцов
         for table in self._rest_data:
             if table.get('id') == 'soc':
-                for tbl in table['columns']:
-                    to_sort[tbl.get('id')] = tbl['position']
+                to_sort = sort_columns(table, translator_for_rest_soc)
+            elif table.get('id') == 'smi':
+                to_sort = sort_columns(table, translator_for_rest_smi)
 
-        to_sort = {translator[translator_for_rest_soc[k]]:v for (k, v) in to_sort.items()}
-
-        for i in range(len(news)):
-            news[i] = {**{'number': i + 1}, **news[i]}
-            if news[i].get('date'):
-                news[i]['date'] = datetime.fromtimestamp(news[i]['date']).strftime('%d-%m-%Y')
-
-            if news[i].get('type'):
-                self.__match_social_medias(news[i])
-
-            result = {translator[k]: v for (k, v) in news[i].items() if k in translator}
-            sorted_result = {k:v for (k,v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
-            self.data_collection.append(sorted_result)
+        update_collection()
 
     def __match_social_medias(self, data):
         match data.get('type'):
@@ -210,13 +227,13 @@ class TableContentGenerator:
 class TableStylesGenerator:
     translator_smi = {
         'title': 'Заголовок',
-        'not_date': 'Дата',
+        'date': 'Дата',
         'content': 'Краткое содержание',
-        'resource_name': 'Наименование СМИ',
-        'res_link': 'URL',
+        'resource': 'Наименование СМИ',
+        'news_link': 'URL',
         'sentiment': 'Тональность',
-        'name_cat': 'Категория',
-        '№': '№',
+        'category': 'Категория',
+        'number': '№',
     }
 
     translator_soc = {
@@ -248,36 +265,47 @@ class TableStylesGenerator:
 
     def choose_particular_table_styles(self, translator_obj, table_obj, _type):
         def set_cell_width():
-            if _type == 'soc':
-                match cell.text:
-                    case "Пост":
-                        table_obj.columns[idx].width = Cm(15)
-                    case '№':
-                        table_obj.columns[idx].width = Cm(1)
-                    case 'Дата':
-                        table_obj.columns[idx].width = Cm(5)
-                    case 'Соцсеть':
-                        table_obj.columns[idx].width = Cm(5)
-                    case 'URL':
-                        table_obj.columns[idx].width = Cm(10)
-                    case 'Сообщество':
-                        table_obj.columns[idx].width = Cm(10)
-                    case 'Тональность':
-                        table_obj.columns[idx].width = Cm(5)
+            match cell.text:
+                case '№':
+                    table_obj.columns[idx].width = Cm(1)
+                case 'Заголовок':
+                    table_obj.columns[idx].width = Cm(10)
+                case "Пост" | 'Краткое содержание':
+                    table_obj.columns[idx].width = Cm(15)
+                case 'Дата':
+                    table_obj.columns[idx].width = Cm(5)
+                case 'Соцсеть' | 'Категория':
+                    table_obj.columns[idx].width = Cm(5)
+                case 'URL':
+                    table_obj.columns[idx].width = Cm(5)
+                case 'Сообщество' | 'Наименование СМИ':
+                    table_obj.columns[idx].width = Cm(7)
+                case 'Тональность':
+                    table_obj.columns[idx].width = Cm(6)
 
         for setting in self._settings:
             for column in setting['columns']:
                 if column.get('id') in translator_obj:
                     column_name_en = column.get('id')
                     column_name = translator_obj[column_name_en]
+
                     for idx, cell in enumerate(table_obj.row_cells(0)):
                         set_cell_width()
                         if cell.text == column_name:
                             for row in table_obj.rows[1:]:
                                 cell = row.cells[idx]
+                                self.define_color_of_sentiment_cell(cell)
+
                                 for paragraph in cell.paragraphs:
                                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                                     for run in paragraph.runs:
+
+                                        if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text):
+                                            hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), 'Ссылка', '#0000FF', '#000080')
+
+                                            for old_run in paragraph.runs:
+                                                if old_run != hyperlink:
+                                                    paragraph._p.remove(old_run._r)
 
                                         bold = column.get('bold')
                                         italic = column.get('italic')
@@ -301,3 +329,49 @@ class TableStylesGenerator:
 
                                         run.font.name = 'Arial'
                                         run.font.size = Pt(10)
+
+    @staticmethod
+    def add_hyperlink(paragraph, url, text, color, underline):
+
+        part = paragraph.part
+        r_id = part.relate_to(url, docx.opc.constants.RELATIONSHIP_TYPE.HYPERLINK, is_external=True)
+
+        hyperlink = docx.oxml.shared.OxmlElement('w:hyperlink')
+        hyperlink.set(docx.oxml.shared.qn('r:id'), r_id, )
+
+        new_run = docx.oxml.shared.OxmlElement('w:r')
+
+        rPr = docx.oxml.shared.OxmlElement('w:rPr')
+
+        if not color is None:
+            c = docx.oxml.shared.OxmlElement('w:color')
+            c.set(docx.oxml.shared.qn('w:val'), color)
+            rPr.append(c)
+
+        if not underline:
+            u = docx.oxml.shared.OxmlElement('w:u')
+            u.set(docx.oxml.shared.qn('w:val'), 'none')
+            rPr.append(u)
+
+        new_run.append(rPr)
+        new_run.text = text
+        hyperlink.append(new_run)
+
+        paragraph._p.append(hyperlink)
+
+        return hyperlink
+
+    @staticmethod
+    def define_color_of_sentiment_cell(value):
+        match value.text.strip():
+            case 'Нейтральная':
+                shading_elm = parse_xml(r'<w:shd {} w:fill="#FFFF00"/>'.format(nsdecls('w')))
+                value._tc.get_or_add_tcPr().append(shading_elm)
+            case 'Негативная':
+                shading_elm = parse_xml(r'<w:shd {} w:fill="#FF0000"/>'.format(nsdecls('w')))
+                value._tc.get_or_add_tcPr().append(shading_elm)
+            case 'Позитивная':
+                shading_elm = parse_xml(r'<w:shd {} w:fill="#008000"/>'.format(nsdecls('w')))
+                value._tc.get_or_add_tcPr().append(shading_elm)
+
+
