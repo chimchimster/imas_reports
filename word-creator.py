@@ -10,7 +10,7 @@ from docx.shared import Mm, RGBColor, Pt, Cm
 from docxtpl import DocxTemplate, InlineImage
 import jinja2
 from datetime import datetime
-from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
+from docx.enum.text import WD_PARAGRAPH_ALIGNMENT, WD_COLOR_INDEX
 
 
 class HTMLWordCreator:
@@ -23,8 +23,8 @@ class HTMLWordCreator:
 
     def render_report(self):
 
-        for i in self._rest_data:
-            print(i, end='\n')
+        # for i in self._rest_data:
+        #     print(i, end='\n')
 
         response_string = self.generate_string()
 
@@ -36,12 +36,9 @@ class HTMLWordCreator:
 
         if response.status_code == 200:
             result = response.json()
+
+            print(result.get('query_ar'))
             self.generate_word_document(result)
-
-    def mark_word(self, value, word_to_mark):
-
-        marked_value = value.replace(word_to_mark, f'<span style="background-color: #FFFF00;">{word_to_mark}</span>')
-        return marked_value
 
     def generate_word_document(self, result):
         template_path = 'templates/template_parts/table.docx'
@@ -55,12 +52,16 @@ class HTMLWordCreator:
         data = data.data_collection
 
         template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
-        settings = [_data for _data in self._rest_data if _data.get('id') in ('smi','soc')]
 
-        styles = TableStylesGenerator(template, settings)
+        settings = [_data for _data in self._rest_data if _data.get('id') in ('smi', 'soc')]
+
+        tags = result.get('query_ar')
+
+        styles = TableStylesGenerator(template, tags,  settings)
         styles.apply_table_styles()
 
         template.save(output_path)
+
 
     def generate_string(self) -> str:
         """ Формирование строки из словаря пришедшего в POST-запросе. """
@@ -246,9 +247,11 @@ class TableStylesGenerator:
         'number': '№',
     }
 
-    def __init__(self, template, settings=None):
+    def __init__(self, template, tags, settings=None):
         self._template = template
+        self._tags = tags
         self._settings = settings
+
 
     def apply_table_styles(self):
 
@@ -291,14 +294,34 @@ class TableStylesGenerator:
 
                     for idx, cell in enumerate(table_obj.row_cells(0)):
                         set_cell_width()
+
                         if cell.text == column_name:
                             for row in table_obj.rows[1:]:
                                 cell = row.cells[idx]
+
                                 self.define_color_of_sentiment_cell(cell)
 
                                 for paragraph in cell.paragraphs:
                                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                                     for run in paragraph.runs:
+
+                                        runs_to_remove = []
+                                        for tag in self._tags:
+
+                                            if tag.lower() in run.text.lower() and column_name == 'Краткое содержание':
+                                                split_parts = run.text.split(' ')
+                                                runs_to_remove.append(run)
+                                                for i, part in enumerate(split_parts):
+                                                    new_run = paragraph.add_run(part + ' ')
+
+                                                    if tag.lower() in part.lower():
+                                                        new_run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+
+                                                    new_run.font.size = Pt(10)
+                                                    new_run.font.name = 'Arial'
+
+                                        for old_run in runs_to_remove:
+                                            paragraph._p.remove(old_run._r)
 
                                         if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text):
                                             hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), 'Ссылка', '#0000FF', '#000080')
@@ -374,4 +397,24 @@ class TableStylesGenerator:
                 shading_elm = parse_xml(r'<w:shd {} w:fill="#008000"/>'.format(nsdecls('w')))
                 value._tc.get_or_add_tcPr().append(shading_elm)
 
+    @staticmethod
+    def highlight_tag(run, paragraph, tags, column_name):
+        runs_to_remove = []
+
+        for tag in tags:
+
+            if tag.lower() in run.text.lower() and column_name == 'Краткое содержание':
+                split_parts = run.text.split(' ')
+                runs_to_remove.append(run)
+                for i, part in enumerate(split_parts):
+                    new_run = paragraph.add_run(part + ' ')
+
+                    if tag.lower() in part.lower():
+                        new_run.font.highlight_color = WD_COLOR_INDEX.YELLOW
+
+                    new_run.font.size = Pt(10)
+                    new_run.font.name = 'Arial'
+
+                for old_run in runs_to_remove:
+                    paragraph._p.remove(old_run._r)
 
