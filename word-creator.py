@@ -4,8 +4,9 @@ from copy import deepcopy
 
 import docx
 import requests
-from docx.oxml import parse_xml
-from docx.oxml.ns import nsdecls
+from docx.opc.oxml import nsmap
+from docx.oxml import parse_xml, OxmlElement
+from docx.oxml.ns import nsdecls, qn
 from docx.shared import Mm, RGBColor, Pt, Cm
 from docxtpl import DocxTemplate, InlineImage
 import jinja2
@@ -37,7 +38,6 @@ class HTMLWordCreator:
         if response.status_code == 200:
             result = response.json()
 
-            print(result.get('query_ar'))
             self.generate_word_document(result)
 
     def generate_word_document(self, result):
@@ -56,8 +56,9 @@ class HTMLWordCreator:
         settings = [_data for _data in self._rest_data if _data.get('id') in ('smi', 'soc')]
 
         tags = result.get('query_ar')
+        tags_highlight_settings = self._rest_data[0].get('tag_highlight')
 
-        styles = TableStylesGenerator(template, tags,  settings)
+        styles = TableStylesGenerator(template, tags,  settings, tags_highlight_settings)
         styles.apply_table_styles()
 
         template.save(output_path)
@@ -122,8 +123,53 @@ class TableContentGenerator:
         self.data_collection = []
 
     def generate_data(self):
+
+        def sort_data(table_data):
+            order = self._rest_data[0].get('order')
+
+            if not order:
+                return
+
+            date = order.get('date')
+            # predominantly = order.get('predominantly')
+            sentiments = order.get('sentiments')
+            categories = order.get('categories')
+            print(categories)
+            if date == 1:
+                table_data = sorted(table_data, key=lambda tbl: tbl['nd_date'])
+            elif date == 0:
+                table_data = sorted(table_data, key=lambda tbl: tbl['nd_date'], reverse=True)
+
+            new_table_data = [[], [], []]
+            for i in range(len(sentiments)):
+                if i == 0:
+                    new_table_data[sentiments[i]-1].append([table for table in table_data if table['sentiment'] == 1])
+                elif i == 1:
+                    new_table_data[sentiments[i]-1].append([table for table in table_data if table['sentiment'] == -1])
+                else:
+                    new_table_data[sentiments[i]-1].append([table for table in table_data if table['sentiment'] == 0])
+
+            table_data = []
+
+            for sentiments_table in new_table_data:
+                for inner_list in sentiments_table:
+                    for table in inner_list:
+                        table_data.append(table)
+
+            for i in range(len(sentiments)):
+                if sentiments[i] == 0 and i == 0:
+                    table_data = [table for table in table_data if table['sentiment'] != 1]
+                elif sentiments[i] == 0 and i == 1:
+                    table_data = [table for table in table_data if table['sentiment'] != -1]
+                elif sentiments[i] == 0 and i == 2:
+                    table_data = [table for table in table_data if table['sentiment'] != 0]
+
+            # индексы за сентимент (тип) 0 - положительный, 1 - отрицательный, 2 - нейтральный, числа за порядок сортировки
+            return table_data
+
         if self._type == 'smi':
             f_news = self._data.get('f_news')
+            f_news = sort_data(f_news)
             if f_news:
                 self.__apply_translator(self.translator_smi, f_news)
         else:
@@ -247,11 +293,11 @@ class TableStylesGenerator:
         'number': '№',
     }
 
-    def __init__(self, template, tags, settings=None):
+    def __init__(self, template, tags, settings=None, tags_highlight_settings=None):
         self._template = template
         self._tags = tags
         self._settings = settings
-
+        self._tags_highlight_settings = tags_highlight_settings
 
     def apply_table_styles(self):
 
@@ -272,7 +318,7 @@ class TableStylesGenerator:
                 case '№':
                     table_obj.columns[idx].width = Cm(1)
                 case 'Заголовок':
-                    table_obj.columns[idx].width = Cm(10)
+                    table_obj.columns[idx].width = Cm(8)
                 case "Пост" | 'Краткое содержание':
                     table_obj.columns[idx].width = Cm(15)
                 case 'Дата':
@@ -282,7 +328,7 @@ class TableStylesGenerator:
                 case 'URL':
                     table_obj.columns[idx].width = Cm(5)
                 case 'Сообщество' | 'Наименование СМИ':
-                    table_obj.columns[idx].width = Cm(7)
+                    table_obj.columns[idx].width = Cm(8)
                 case 'Тональность':
                     table_obj.columns[idx].width = Cm(6)
 
@@ -305,23 +351,7 @@ class TableStylesGenerator:
                                     paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                                     for run in paragraph.runs:
 
-                                        runs_to_remove = []
-                                        for tag in self._tags:
-
-                                            if tag.lower() in run.text.lower() and column_name == 'Краткое содержание':
-                                                split_parts = run.text.split(' ')
-                                                runs_to_remove.append(run)
-                                                for i, part in enumerate(split_parts):
-                                                    new_run = paragraph.add_run(part + ' ')
-
-                                                    if tag.lower() in part.lower():
-                                                        new_run.font.highlight_color = WD_COLOR_INDEX.YELLOW
-
-                                                    new_run.font.size = Pt(10)
-                                                    new_run.font.name = 'Arial'
-
-                                        for old_run in runs_to_remove:
-                                            paragraph._p.remove(old_run._r)
+                                        self.highlight_tag(run, paragraph, self._tags, column_name, self._tags_highlight_settings)
 
                                         if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text):
                                             hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), 'Ссылка', '#0000FF', '#000080')
@@ -398,23 +428,55 @@ class TableStylesGenerator:
                 value._tc.get_or_add_tcPr().append(shading_elm)
 
     @staticmethod
-    def highlight_tag(run, paragraph, tags, column_name):
+    def highlight_tag(run, paragraph, tags, column_name, tags_highlight_settings):
+        """ Highlight для тегов. """
+
         runs_to_remove = []
 
-        for tag in tags:
+        if any(element in run.text.lower() for element in tags) and column_name == 'Краткое содержание':
 
-            if tag.lower() in run.text.lower() and column_name == 'Краткое содержание':
-                split_parts = run.text.split(' ')
-                runs_to_remove.append(run)
-                for i, part in enumerate(split_parts):
-                    new_run = paragraph.add_run(part + ' ')
+            pattern = r"\b" + r"\b|\b".join(map(re.escape, tags)) + r"\b"
+            split_parts = re.split(f"({pattern})", run.text.lower())
 
+            bold = tags_highlight_settings.get('bold')
+            italic = tags_highlight_settings.get('italic')
+            underline = tags_highlight_settings.get('underline')
+            font_color = tags_highlight_settings.get('color')
+            back_color = tags_highlight_settings.get('back_color')
+
+            runs_to_remove.append(run)
+            for i, part in enumerate(split_parts):
+                new_run = paragraph.add_run(part + ' ')
+
+                for tag in tags:
                     if tag.lower() in part.lower():
-                        new_run.font.highlight_color = WD_COLOR_INDEX.YELLOW
 
-                    new_run.font.size = Pt(10)
-                    new_run.font.name = 'Arial'
+                        if bold:
+                            new_run.font.bold = bold
 
-                for old_run in runs_to_remove:
-                    paragraph._p.remove(old_run._r)
+                        if italic:
+                            new_run.font.italic = italic
+
+                        if underline:
+                            new_run.font.underline = underline
+
+                        if font_color:
+                            red = int(font_color[1:3], 16)
+                            green = int(font_color[3:5], 16)
+                            blue = int(font_color[5:7], 16)
+                            run.font.color.rgb = RGBColor(red, green, blue)
+
+                        if back_color:
+                            tag = new_run._r
+                            shd = OxmlElement('w:shd')
+                            shd.set(qn('w:val'), 'clear')
+                            shd.set(qn('w:color'), 'auto')
+                            shd.set(qn('w:fill'), back_color)
+                            tag.rPr.append(shd)
+
+                new_run.font.size = Pt(10)
+                new_run.font.name = 'Arial'
+
+        for old_run in runs_to_remove:
+            paragraph._p.remove(old_run._r)
 
