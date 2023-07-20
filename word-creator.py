@@ -1,6 +1,9 @@
 import re
 import json
+from collections import defaultdict
 from copy import deepcopy
+from itertools import groupby
+from operator import itemgetter
 
 import docx
 import requests
@@ -50,7 +53,6 @@ class HTMLWordCreator:
         data.generate_data()
 
         data = data.data_collection
-
         template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
 
         settings = [_data for _data in self._rest_data if _data.get('id') in ('smi', 'soc')]
@@ -131,41 +133,49 @@ class TableContentGenerator:
                 return
 
             date = order.get('date')
-            # predominantly = order.get('predominantly')
+            predominantly = order.get('predominantly')
             sentiments = order.get('sentiments')
-            categories = order.get('categories')
-            print(categories)
-            if date == 1:
-                table_data = sorted(table_data, key=lambda tbl: tbl['nd_date'])
-            elif date == 0:
-                table_data = sorted(table_data, key=lambda tbl: tbl['nd_date'], reverse=True)
+            categories = [category['name_cat'] for category in order.get('categories', []) if isinstance(category, dict)]
 
-            new_table_data = [[], [], []]
-            for i in range(len(sentiments)):
-                if i == 0:
-                    new_table_data[sentiments[i]-1].append([table for table in table_data if table['sentiment'] == 1])
-                elif i == 1:
-                    new_table_data[sentiments[i]-1].append([table for table in table_data if table['sentiment'] == -1])
+            def sort_by_sentiment_category_date(table_data):
+                sentiment_index = {1: 0, 0: 1, -1: 2}
+
+                category_index = {category: i for i, category in enumerate(categories)}
+
+                return sorted(table_data, key=lambda x: (sentiment_index[x['sentiment']], category_index.get(x['name_cat'], len(categories)), x['nd_date']), reverse=date == 0)
+
+            def sort_by_category_sentiment_date(table_data):
+                sentiment_index = {1: 0, 0: 1, -1: 2}
+
+                category_index = {category: i for i, category in enumerate(categories)}
+
+                return sorted(table_data, key=lambda x: (category_index.get(x['name_cat'], len(categories)), sentiment_index[x['sentiment']], x['nd_date']), reverse=date == 0)
+
+            def sort_by_sentiment_date(table_data):
+
+                return sorted(table_data, key=lambda x: (x['sentiment'], x['nd_date']), reverse=date == 0)
+
+            def sort_by_category_date(table_data):
+
+                return sorted(table_data, key=lambda x: (x['name_cat'], x['nd_date']), reverse=date == 0)
+
+            def sort_by_date(table_data):
+
+                return sorted(table_data, key=itemgetter('nd_date'), reverse=date == 0)
+
+            if sentiments and categories:
+                if predominantly == 0:
+                    sorted_table_data = sort_by_sentiment_category_date(table_data)
                 else:
-                    new_table_data[sentiments[i]-1].append([table for table in table_data if table['sentiment'] == 0])
+                    sorted_table_data = sort_by_category_sentiment_date(table_data)
+            elif sentiments:
+                sorted_table_data = sort_by_sentiment_date(table_data)
+            elif categories:
+                sorted_table_data = sort_by_category_date(table_data)
+            else:
+                sorted_table_data = sort_by_date(table_data)
 
-            table_data = []
-
-            for sentiments_table in new_table_data:
-                for inner_list in sentiments_table:
-                    for table in inner_list:
-                        table_data.append(table)
-
-            for i in range(len(sentiments)):
-                if sentiments[i] == 0 and i == 0:
-                    table_data = [table for table in table_data if table['sentiment'] != 1]
-                elif sentiments[i] == 0 and i == 1:
-                    table_data = [table for table in table_data if table['sentiment'] != -1]
-                elif sentiments[i] == 0 and i == 2:
-                    table_data = [table for table in table_data if table['sentiment'] != 0]
-
-            # индексы за сентимент (тип) 0 - положительный, 1 - отрицательный, 2 - нейтральный, числа за порядок сортировки
-            return table_data
+            return sorted_table_data
 
         if self._type == 'smi':
             f_news = self._data.get('f_news')
