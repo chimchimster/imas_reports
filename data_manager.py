@@ -498,7 +498,7 @@ class TableStylesGenerator:
 
         runs_to_remove = []
 
-        if any(element in run.text.lower() for element in tags) and column_name == 'Краткое содержание':
+        if any(element in run.text.lower() for element in tags) and column_name in ('Краткое содержание', 'Пост'):
 
             pattern = r"\b" + r"\b|\b".join(map(re.escape, tags)) + r"\b"
             split_parts = re.split(f"({pattern})", run.text.lower())
