@@ -53,7 +53,11 @@ class HTMLWordCreator:
         data.generate_data()
 
         data = data.data_collection
-        template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
+
+        try:
+            template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
+        except IndexError:
+            raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
         settings = [_data for _data in self._rest_data if _data.get('id') in ('smi', 'soc')]
 
@@ -111,7 +115,7 @@ class TableContentGenerator:
     translator_soc = {
         'date': 'Дата',
         'text': 'Пост',
-        'RESOURCE_NAME': 'Сообщество',
+        'resource_name': 'Сообщество',
         'news_link': 'URL',
         'sentiment': 'Тональность',
         'type': 'Соцсеть',
@@ -126,6 +130,24 @@ class TableContentGenerator:
 
     def generate_data(self):
 
+        soc_types = {
+            1: 'Вконтакте',
+            2: 'Facebook',
+            3: 'Twitter',
+            4: 'Instagram',
+            5: 'LinkedIn',
+            6: 'Youtube',
+            7: 'Одноклассники',
+            8: 'Мой Мир',
+            9: 'Telegram',
+            10: 'TikTok',
+        }
+
+        smi_types = {
+            1: 'Государственные источники',
+
+        }
+
         def sort_data(table_data):
             order = self._rest_data[0].get('order')
 
@@ -135,42 +157,87 @@ class TableContentGenerator:
             date = order.get('date')
             predominantly = order.get('predominantly')
             sentiments = order.get('sentiments')
-            categories = [category['name_cat'] for category in order.get('categories', []) if isinstance(category, dict)]
+            categories = order.get('categories')
 
-            def sort_by_sentiment_category_date(table_data):
+            def delete_unused_sentiments(_table_data):
+                for idx, sentiment in enumerate(sentiments):
+                    if idx == 0 and sentiment == 0:
+                        _table_data = [table for table in _table_data if table['sentiment'] != 1]
+                    elif idx == 1 and sentiment == 0:
+                        _table_data = [table for table in _table_data if table['sentiment'] != -1]
+                    elif idx == 2 and sentiment == 0:
+                        _table_data = [table for table in _table_data if table['sentiment'] != 0]
+
+                return _table_data
+
+            def delete_unused_categories(_table_data):
+
+                try:
+                    return [table for table in _table_data if table['name_cat'] in categories]
+                except:
+                    return [table for table in _table_data if soc_types[table['type']] in categories]
+
+            def sort_by_sentiment_category_date(_table_data):
                 sentiment_index = {1: 0, 0: 1, -1: 2}
 
                 category_index = {category: i for i, category in enumerate(categories)}
 
-                return sorted(table_data, key=lambda x: (sentiment_index[x['sentiment']], category_index.get(x['name_cat'], len(categories)), x['nd_date']), reverse=date == 0)
+                try:
+                    return sorted(_table_data, key=lambda x: (
+                        sentiment_index[x['sentiment']], category_index.get(x['name_cat'], len(categories)), x['nd_date']),
+                                  reverse=date == 0)
+                except:
+                    return sorted(_table_data, key=lambda x: (
+                        sentiment_index[x['sentiment']], category_index.get(x['type'], len(categories)), x['date']),
+                                  reverse=date == 0)
 
-            def sort_by_category_sentiment_date(table_data):
+            def sort_by_category_sentiment_date(_table_data):
                 sentiment_index = {1: 0, 0: 1, -1: 2}
 
                 category_index = {category: i for i, category in enumerate(categories)}
 
-                return sorted(table_data, key=lambda x: (category_index.get(x['name_cat'], len(categories)), sentiment_index[x['sentiment']], x['nd_date']), reverse=date == 0)
+                try:
+                    return sorted(_table_data, key=lambda x: (
+                        category_index.get(x['name_cat'], len(categories)), sentiment_index[x['sentiment']], x['nd_date']),
+                                  reverse=date == 0)
+                except:
+                    return sorted(_table_data, key=lambda x: (
+                        category_index.get(x['type'], len(categories)), sentiment_index[x['sentiment']], x['date']),
+                                  reverse=date == 0)
 
-            def sort_by_sentiment_date(table_data):
+            def sort_by_sentiment_date(_table_data):
 
-                return sorted(table_data, key=lambda x: (x['sentiment'], x['nd_date']), reverse=date == 0)
+                try:
+                    return sorted(_table_data, key=lambda x: (x['sentiment'], x['nd_date']), reverse=date == 0)
+                except:
+                    return sorted(_table_data, key=lambda x: (x['sentiment'], x['date']), reverse=date == 0)
 
-            def sort_by_category_date(table_data):
+            def sort_by_category_date(_table_data):
 
-                return sorted(table_data, key=lambda x: (x['name_cat'], x['nd_date']), reverse=date == 0)
+                try:
+                    return sorted(_table_data, key=lambda x: (x['name_cat'], x['nd_date']), reverse=date == 0)
+                except:
+                    return sorted(_table_data, key=lambda x: (x['type'], x['date']), reverse=date == 0)
 
-            def sort_by_date(table_data):
+            def sort_by_date(_table_data):
 
-                return sorted(table_data, key=itemgetter('nd_date'), reverse=date == 0)
+                try:
+                    return sorted(_table_data, key=itemgetter('nd_date'), reverse=date == 0)
+                except:
+                    return sorted(_table_data, key=itemgetter('date'), reverse=date == 0)
+
+            table_data = delete_unused_sentiments(table_data)
+
+            table_data = delete_unused_categories(table_data)
 
             if sentiments and categories:
                 if predominantly == 0:
                     sorted_table_data = sort_by_sentiment_category_date(table_data)
                 else:
                     sorted_table_data = sort_by_category_sentiment_date(table_data)
-            elif sentiments:
+            elif sentiments != 0:
                 sorted_table_data = sort_by_sentiment_date(table_data)
-            elif categories:
+            elif categories != 0:
                 sorted_table_data = sort_by_category_date(table_data)
             else:
                 sorted_table_data = sort_by_date(table_data)
@@ -184,6 +251,7 @@ class TableContentGenerator:
                 self.__apply_translator(self.translator_smi, f_news)
         else:
             f_news2 = self._data.get('f_news2')
+            f_news2 = sort_data(f_news2)
             if f_news2:
                 self.__apply_translator(self.translator_soc, f_news2)
 
