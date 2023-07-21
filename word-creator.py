@@ -49,7 +49,7 @@ class HTMLWordCreator:
 
         template = DocxTemplate(template_path)
 
-        data = TableContentGenerator(result, self._rest_data, type='smi')
+        data = TableContentGenerator(result, self._rest_data, 'soc')
         data.generate_data()
 
         data = data.data_collection
@@ -68,7 +68,6 @@ class HTMLWordCreator:
         styles.apply_table_styles()
 
         template.save(output_path)
-
 
     def generate_string(self) -> str:
         """ Формирование строки из словаря пришедшего в POST-запросе. """
@@ -104,7 +103,7 @@ class TableContentGenerator:
     translator_smi = {
         'title': 'Заголовок',
         'not_date': 'Дата',
-        'content': 'Краткое содержание',
+        'full_text': 'Краткое содержание',
         'RESOURCE_NAME': 'Наименование СМИ',
         'news_link': 'URL',
         'sentiment': 'Тональность',
@@ -114,7 +113,7 @@ class TableContentGenerator:
 
     translator_soc = {
         'date': 'Дата',
-        'text': 'Пост',
+        'full_text': 'Пост',
         'resource_name': 'Сообщество',
         'news_link': 'URL',
         'sentiment': 'Тональность',
@@ -122,10 +121,10 @@ class TableContentGenerator:
         'number': '№',
     }
 
-    def __init__(self, data, rest_data, type):
+    def __init__(self, data, rest_data, _type):
         self._data = data
-        self._type = type
         self._rest_data = rest_data
+        self._type = _type
         self.data_collection = []
 
     def generate_data(self):
@@ -143,11 +142,6 @@ class TableContentGenerator:
             10: 'TikTok',
         }
 
-        smi_types = {
-            1: 'Государственные источники',
-
-        }
-
         def sort_data(table_data):
             order = self._rest_data[0].get('order')
 
@@ -160,24 +154,30 @@ class TableContentGenerator:
             categories = order.get('categories')
 
             def delete_unused_sentiments(_table_data):
-                for idx, sentiment in enumerate(sentiments):
-                    if idx == 0 and sentiment == 0:
-                        _table_data = [table for table in _table_data if table['sentiment'] != 1]
-                    elif idx == 1 and sentiment == 0:
-                        _table_data = [table for table in _table_data if table['sentiment'] != -1]
-                    elif idx == 2 and sentiment == 0:
-                        _table_data = [table for table in _table_data if table['sentiment'] != 0]
+                if sentiments:
+                    for idx, sentiment in enumerate(sentiments):
+                        if idx == 0 and sentiment == 0:
+                            _table_data = [table for table in _table_data if table['sentiment'] != 1]
+                        elif idx == 1 and sentiment == 0:
+                            _table_data = [table for table in _table_data if table['sentiment'] != -1]
+                        elif idx == 2 and sentiment == 0:
+                            _table_data = [table for table in _table_data if table['sentiment'] != 0]
+
+                    return _table_data
 
                 return _table_data
 
             def delete_unused_categories(_table_data):
+                if categories:
+                    try:
+                        return [table for table in _table_data if table['name_cat'] in categories]
+                    except:
+                        return [table for table in _table_data if soc_types[table['type']] in categories]
 
-                try:
-                    return [table for table in _table_data if table['name_cat'] in categories]
-                except:
-                    return [table for table in _table_data if soc_types[table['type']] in categories]
+                return _table_data
 
             def sort_by_sentiment_category_date(_table_data):
+
                 sentiment_index = {1: 0, 0: 1, -1: 2}
 
                 category_index = {category: i for i, category in enumerate(categories)}
@@ -259,7 +259,7 @@ class TableContentGenerator:
 
         translator_for_rest_soc = {
             'number': 'number',
-            'content': 'text',
+            'content': 'full_text',
             'date': 'date',
             'resource': 'resource_name',
             'news_link': 'news_link',
@@ -270,7 +270,7 @@ class TableContentGenerator:
         translator_for_rest_smi = {
             'number': 'number',
             'title': 'title',
-            'content': 'content',
+            'text': 'full_text',
             'date': 'not_date',
             'resource': 'RESOURCE_NAME',
             'news_link': 'news_link',
@@ -294,6 +294,7 @@ class TableContentGenerator:
             return {translator[translator_type[k]]: v for (k, v) in to_sort.items()}
 
         def update_collection():
+            text_length = self._rest_data[0].get('text_length')
             for i in range(len(news)):
                 news[i] = {**{'number': i + 1}, **news[i]}
 
@@ -303,7 +304,9 @@ class TableContentGenerator:
                 if news[i].get('type'):
                     self.__match_social_medias(news[i])
 
-                result = {translator[k]: v for (k, v) in news[i].items() if k in translator}
+                result = {translator[k]: v[:text_length] + '...' if translator[k] in ('Пост', 'Краткое содержание') else v
+                          for (k, v) in news[i].items() if k in translator}
+                
                 sorted_result = {k: v for (k, v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
                 self.data_collection.append(sorted_result)
 
