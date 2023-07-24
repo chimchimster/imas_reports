@@ -28,27 +28,37 @@ class ThreadDataGenerator(Thread):
 
         output_path = f'output-{self.name}.docx'
 
-        template = DocxTemplate(self.templates['table'])
-
         self.thread_obj.generate_data()
 
         data = self.thread_obj.data_collection
 
-        try:
-            template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
-        except IndexError:
-            raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
+        if self.thread_obj.flag == 'table':
 
-        settings = {k: v for (k, v) in self.thread_obj._rest_data.items()}
+            template = DocxTemplate(self.templates['table'])
 
-        tags = self.thread_obj._data.get('query_ar')
+            try:
+                template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
+            except IndexError:
+                raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
-        tags_highlight_settings = self.thread_obj._rest_data.get('tag_highlight')
+            settings = {k: v for (k, v) in self.thread_obj._rest_data.items()}
 
-        styles = TableStylesGenerator(template, tags,  settings, tags_highlight_settings)
-        styles.apply_table_styles()
+            tags = self.thread_obj._data.get('query_ar')
 
-        template.save(output_path)
+            tags_highlight_settings = self.thread_obj._rest_data.get('tag_highlight')
+
+            styles = TableStylesGenerator(template, tags,  settings, tags_highlight_settings)
+            styles.apply_table_styles()
+
+            template.save(output_path)
+
+        elif self.thread_obj.flag in ('tags', 'content'):
+
+            template = DocxTemplate(self.templates['table_of_contents'])
+
+            template.render({'table_of_contents': data, 'tags': data}, autoescape=True)
+
+            template.save(output_path)
 
 
 class DataManager:
@@ -60,12 +70,12 @@ class DataManager:
     def distribute_content(self):
         for data in self._rest_data:
             match data.get('id'):
-                # case 'tags':
-                #     tags_obj = lambda x: 1
-                #     self.threads_objs.append(tags_obj)
-                # case 'contents':
-                #     contents_obj = lambda x: 1
-                #     self.threads_objs.append(contents_obj)
+                case 'tags':
+                    tags_obj = TagsGenerator(self._result_data, data)
+                    self.threads_objs.append(tags_obj)
+                case 'contents':
+                    contents_obj = ContentGenerator(self._result_data, data)
+                    self.threads_objs.append(contents_obj)
                 case 'smi':
                     smi_table_obj = TableContentGenerator(self._result_data, data, 'smi')
                     self.threads_objs.append(smi_table_obj)
@@ -86,7 +96,41 @@ class DataManager:
             thr.join()
 
 
+class ContentGenerator:
+
+    flag = 'content'
+
+    def __init__(self, data, rest_data):
+        self._data = data
+        self._rest_data = rest_data
+        self.data_collection = []
+
+    def generate_data(self):
+        counter = 0
+        for k, v in self._data.items():
+            if counter > 50:
+                break
+            print(k, ': ', v, end='\n')
+            counter += 1
+
+
+class TagsGenerator:
+
+    flag = 'tags'
+
+    def __init__(self, data, rest_data):
+        self._data = data
+        self._rest_data = rest_data
+        self.data_collection = []
+
+    def generate_data(self):
+
+        self.data_collection.append(self._data.get('analyzer_tags_changed'))
+
+
 class TableContentGenerator:
+
+    flag = 'table'
 
     translator_smi = {
         'title': 'Заголовок',
