@@ -17,7 +17,8 @@ class ThreadDataGenerator(Thread):
 
     templates = {
         'table': 'templates/template_parts/table.docx',
-        'table_of_contents': 'templates/template_parts/table_of_contents.docx'
+        'table_of_contents': 'templates/template_parts/table_of_contents.docx',
+        'tags': 'templates/template_parts/tags.docx',
     }
 
     def __init__(self, thread_obj):
@@ -52,12 +53,27 @@ class ThreadDataGenerator(Thread):
 
             template.save(output_path)
 
-        elif self.thread_obj.flag in ('tags', 'content'):
+        elif self.thread_obj.flag == 'content':
 
             template = DocxTemplate(self.templates['table_of_contents'])
 
-            template.render({'table_of_contents': data, 'tags': data}, autoescape=True)
+            table = self.thread_obj._rest_data.get('table')
 
+            try:
+                template.render({'table_of_contents': data, 'table': table}, autoescape=True)
+            except IndexError:
+                raise IndexError('Невозможно сформировать оглавление по причине нехватки данных!')
+
+            template.save(output_path)
+
+        elif self.thread_obj.flag == 'tags':
+
+            template = DocxTemplate(self.templates['tags'])
+
+            try:
+                template.render({'tags': data}, autoescape=True)
+            except IndexError:
+                raise IndexError('Невозможно сформировать теги по причине нехватки данных!')
             template.save(output_path)
 
 
@@ -106,12 +122,53 @@ class ContentGenerator:
         self.data_collection = []
 
     def generate_data(self):
-        counter = 0
-        for k, v in self._data.items():
+
+        cut = 150
+
+        def collect_titles_or_texts(news, counter, key):
+
             if counter > 50:
-                break
-            print(k, ': ', v, end='\n')
-            counter += 1
+                counter = 50
+
+            for idx in range(counter):
+                try:
+                    text_obj = news[idx][key][:cut].strip()
+
+                    self.data_collection.append(text_obj + ' ...' if len(text_obj) == cut else text_obj)
+                except IndexError:
+                    pass
+
+        def check_length_of_title_or_text(post):
+
+            post = post.strip()
+
+            if len(post) > 150:
+                return post[:cut] + ' ...'
+
+            return post
+
+        if self._rest_data.get('id') == 'contents':
+            count_soc = self._rest_data.get('soc')
+            count_smi = self._rest_data.get('smi')
+
+            soc_posts = self._data.get('f_news2')
+            smi_posts = self._data.get('f_news')
+
+            if count_smi > 0:
+                collect_titles_or_texts(smi_posts, count_smi, 'title')
+            else:
+
+                for post in smi_posts:
+                    self.data_collection.append(check_length_of_title_or_text(post.get('title')))
+
+            if count_soc > 0:
+                collect_titles_or_texts(soc_posts, count_soc, 'full_text')
+            else:
+
+                for post in soc_posts:
+                    self.data_collection.append(check_length_of_title_or_text(post.get('full_text')))
+
+        self.data_collection = {k: v for (k, v) in enumerate(self.data_collection, start=1)}
 
 
 class TagsGenerator:
