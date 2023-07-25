@@ -1,3 +1,4 @@
+import os
 import re
 
 from docx.opc.oxml import nsmap
@@ -9,9 +10,28 @@ from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 from operator import itemgetter
 import docx
 from threading import Thread
-
+from docxcompose.composer import Composer
 from docxtpl import DocxTemplate
 
+
+class MergeReport:
+    path_to_folder = '../temp/'
+
+    def merge(self):
+        master = docx.Document(self.path_to_folder + 'out.docx')
+        composer = Composer(master)
+
+        for file in os.listdir(self.path_to_folder):
+            if file.endswith('.docx'):  # Make sure you're only processing .docx files
+                doc = docx.Document(os.path.join(self.path_to_folder, file))
+                composer.append(doc)
+
+        output_file = os.path.join(self.path_to_folder, 'merged_output.docx')
+        composer.save(output_file)
+
+
+m = MergeReport()
+m.merge()
 
 class ThreadDataGenerator(Thread):
 
@@ -27,7 +47,7 @@ class ThreadDataGenerator(Thread):
 
     def run(self) -> None:
 
-        output_path = f'output-{self.name}.docx'
+        output_path = f'temp/output-{self.name}.docx'
 
         self.thread_obj.generate_data()
 
