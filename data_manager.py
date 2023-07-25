@@ -12,26 +12,41 @@ import docx
 from threading import Thread
 from docxcompose.composer import Composer
 from docxtpl import DocxTemplate
+from flask import send_from_directory
 
 
 class MergeReport:
-    path_to_folder = '../temp/'
+    path_to_folder = os.getcwd() + '/temp/'
+    path_to_templates = os.getcwd() + '/templates/'
+    path_to_result = os.getcwd() + '/result/'
 
     def merge(self):
-        master = docx.Document(self.path_to_folder + 'out.docx')
+
+        master = docx.Document(self.path_to_templates + 'out.docx')
         composer = Composer(master)
 
-        for file in os.listdir(self.path_to_folder):
-            if file.endswith('.docx'):  # Make sure you're only processing .docx files
-                doc = docx.Document(os.path.join(self.path_to_folder, file))
+        file_order = [file for file in os.listdir(self.path_to_folder)]
+        file_order.sort()
+
+        page_break_added = False
+
+        for idx, file in enumerate(file_order):
+
+            file_path = os.path.join(self.path_to_folder, file)
+
+            if os.path.isfile(file_path) and file.endswith('.docx'):
+                doc = docx.Document(file_path)
+
+                if file_path.endswith('table.docx') and not page_break_added:
+                    run = master.add_paragraph().add_run()
+                    run.add_break(docx.enum.text.WD_BREAK.PAGE)
+                    page_break_added = True
+
                 composer.append(doc)
 
-        output_file = os.path.join(self.path_to_folder, 'merged_output.docx')
+        output_file = os.path.join(self.path_to_result, 'merged_output.docx')
         composer.save(output_file)
 
-
-m = MergeReport()
-m.merge()
 
 class ThreadDataGenerator(Thread):
 
@@ -47,8 +62,6 @@ class ThreadDataGenerator(Thread):
 
     def run(self) -> None:
 
-        output_path = f'temp/output-{self.name}.docx'
-
         self.thread_obj.generate_data()
 
         data = self.thread_obj.data_collection
@@ -56,6 +69,10 @@ class ThreadDataGenerator(Thread):
         if self.thread_obj.flag == 'table':
 
             template = DocxTemplate(self.templates['table'])
+
+            position = self.thread_obj._rest_data.get('position')
+
+            output_path = f'temp/output-{position}-table.docx'
 
             try:
                 template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
@@ -77,10 +94,14 @@ class ThreadDataGenerator(Thread):
 
             template = DocxTemplate(self.templates['table_of_contents'])
 
+            table_name = self.thread_obj._rest_data.get('id')
             table = self.thread_obj._rest_data.get('table')
+            position = self.thread_obj._rest_data.get('position')
+
+            output_path = f'temp/output-{position}-content.docx'
 
             try:
-                template.render({'table_of_contents': data, 'table': table}, autoescape=True)
+                template.render({'table_of_contents': data, 'table': table, 'table_name': table_name}, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировать оглавление по причине нехватки данных!')
 
@@ -89,6 +110,10 @@ class ThreadDataGenerator(Thread):
         elif self.thread_obj.flag == 'tags':
 
             template = DocxTemplate(self.templates['tags'])
+
+            position = self.thread_obj._rest_data.get('position')
+
+            output_path = f'temp/output-{position}-atags.docx'
 
             try:
                 template.render({'tags': data}, autoescape=True)
