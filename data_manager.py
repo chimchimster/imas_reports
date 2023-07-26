@@ -488,6 +488,27 @@ class TableContentGenerator:
 
 
 class SchedulerStylesGenerator:
+    translator_smi = {
+        'title': 'Заголовок',
+        'date': 'Дата',
+        'content': 'Краткое содержание',
+        'resource': 'Наименование СМИ',
+        'news_link': 'URL',
+        'sentiment': 'Тональность',
+        'category': 'Категория',
+        'number': '№',
+    }
+
+    translator_soc = {
+        'date': 'Дата',
+        'content': 'Пост',
+        'resource': 'Сообщество',
+        'news_link': 'URL',
+        'sentiment': 'Тональность',
+        'category': 'Соцсеть',
+        'number': '№',
+    }
+
     def __init__(self, template, tags, settings=None, tags_highlight_settings=None):
         self._template = template
         self._tags = tags
@@ -496,13 +517,48 @@ class SchedulerStylesGenerator:
 
     def apply_scheduler_styles(self):
 
+        def manage_styles(_run, _column):
+
+            runs_to_remove = []
+            _column_name = _column.get('id')
+
+            runs_to_remove.append(_run)
+            if _run.text.startswith(self.translator_smi[_column_name]):
+                bold = _column.get('bold')
+                italic = _column.get('italic')
+                underline = _column.get('underline')
+                font_color = _column.get('color')
+
+                new_runs = _run.text.split(' ')
+                print(new_runs)
+                if bold:
+                    new_runs[-1].font.bold = bold
+                if italic:
+                    new_runs[-1].font.italic = italic
+                if underline:
+                    new_runs[-1].font.underline = underline
+                if font_color:
+                    red = int(font_color[1:3], 16)
+                    green = int(font_color[3:5], 16)
+                    blue = int(font_color[5:7], 16)
+                    new_runs[-1].font.color.rgb = RGBColor(red, green, blue)
+
+                for new_run in new_runs:
+                    paragraph.add_run(new_run + ' ')
+
+            for old_run in runs_to_remove:
+                paragraph._p.remove(old_run._r)
+
+        if not self._settings:
+            return
+
         scheduler = self._template.paragraphs
 
         for column in self._settings['columns']:
+            print(column)
             for paragraph in scheduler:
                 for run in paragraph.runs:
-                    print(run.text)
-
+                    manage_styles(run, column)
 
 class TableStylesGenerator:
     translator_smi = {
