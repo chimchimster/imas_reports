@@ -12,7 +12,6 @@ import docx
 from threading import Thread
 from docxcompose.composer import Composer
 from docxtpl import DocxTemplate
-from flask import send_from_directory
 
 
 class MergeReport:
@@ -74,8 +73,11 @@ class ThreadDataGenerator(Thread):
 
             output_path = f'temp/output-{position}-table.docx'
 
+            table_name = self.thread_obj._rest_data.get('id')
+            table = self.thread_obj._rest_data.get('table')
+
             try:
-                template.render({'columns': data[0].keys(), 'data': data}, autoescape=True)
+                template.render({'columns': data[0].keys(), 'data': data, 'is_table': table, 'table_name': table_name}, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
@@ -85,8 +87,12 @@ class ThreadDataGenerator(Thread):
 
             tags_highlight_settings = self.thread_obj._rest_data.get('tag_highlight')
 
-            styles = TableStylesGenerator(template, tags,  settings, tags_highlight_settings)
-            styles.apply_table_styles()
+            if self.thread_obj._rest_data.get('table'):
+                styles = TableStylesGenerator(template, tags,  settings, tags_highlight_settings)
+                styles.apply_table_styles()
+            else:
+                styles = SchedulerStylesGenerator(template, tags, settings, tags_highlight_settings)
+                styles.apply_scheduler_styles()
 
             template.save(output_path)
 
@@ -94,14 +100,12 @@ class ThreadDataGenerator(Thread):
 
             template = DocxTemplate(self.templates['table_of_contents'])
 
-            table_name = self.thread_obj._rest_data.get('id')
-            table = self.thread_obj._rest_data.get('table')
             position = self.thread_obj._rest_data.get('position')
 
             output_path = f'temp/output-{position}-content.docx'
 
             try:
-                template.render({'table_of_contents': data, 'table': table, 'table_name': table_name}, autoescape=True)
+                template.render({'table_of_contents': data}, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировать оглавление по причине нехватки данных!')
 
@@ -481,6 +485,23 @@ class TableContentGenerator:
                 data['type'] = 'Telegram'
             case 10:
                 data['type'] = 'TikTok'
+
+
+class SchedulerStylesGenerator:
+    def __init__(self, template, tags, settings=None, tags_highlight_settings=None):
+        self._template = template
+        self._tags = tags
+        self._settings = settings
+        self._tags_highlight_settings = tags_highlight_settings
+
+    def apply_scheduler_styles(self):
+
+        scheduler = self._template.paragraphs
+
+        for column in self._settings['columns']:
+            for paragraph in scheduler:
+                for run in paragraph.runs:
+                    print(run.text)
 
 
 class TableStylesGenerator:
