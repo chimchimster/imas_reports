@@ -431,7 +431,18 @@ class TableContentGenerator:
             return {translator[translator_type[k]]: v for (k, v) in to_sort.items()}
 
         def update_collection():
+
+            def choose_tag(tags, value_string):
+
+                for tag in tags:
+                    print(tag)
+                    if tag.lower() in value_string.lower():
+                        return tag.lower()
+                return ''
+
             text_length = self._rest_data.get('text_length')
+            tags = self._data.get('query_ar')
+
             for i in range(len(news)):
                 news[i] = {**{'number': i + 1}, **news[i]}
 
@@ -441,8 +452,47 @@ class TableContentGenerator:
                 if news[i].get('type'):
                     self.__match_social_medias(news[i])
 
-                result = {translator[k]: v[:text_length] + '...' if translator[k] in ('Пост', 'Краткое содержание') else v
-                          for (k, v) in news[i].items() if k in translator}
+                result = {}
+
+                for k, v in news[i].items():
+                    if k in translator:
+                        if translator[k] in ('Пост', 'Краткое содержание'):
+                            tag = choose_tag(tags, v)
+
+                            if tag == '':
+                                result[translator[k]] = v[:text_length] + ' ...'
+                                continue
+
+                            left, right = 0, len(v) - 1
+
+                            tag_idx = v.lower().index(tag)
+
+                            if tag in v.lower()[:text_length]:
+                                result[translator[k]] = v[:text_length] + ' ...'
+                            elif tag in v.lower()[len(v)-text_length:]:
+                                result[translator[k]] = '... ' + v[len(v)-text_length:]
+                            else:
+                                search_value = v.lower()
+                                while True:
+                                    if left < tag_idx:
+                                        left += 1
+                                    if right > tag_idx:
+                                        right -= 1
+                                    search_value = search_value[left:right]
+
+                                    if len(search_value) <= text_length and tag in search_value:
+                                        result[translator[k]] = '... ' + v[left:right] + ' ...'
+                                        break
+                        else:
+                            result[translator[k]] = v
+
+                # result = {translator[k]: v[v.lower().index(tag.lower()) if tag.lower() in v.lower() else 0:] + '...'
+                #           if translator[k] in ('Пост', 'Краткое содержание') else v
+                #           for (k, v) in news[i].items() if k in translator}
+
+                # result = {
+                #     translator[k]: v[:text_length] + '...' if translator[k] in ('Пост', 'Краткое содержание') else v
+                #     for (k, v) in news[i].items() if k in translator}
 
                 sorted_result = {k: v for (k, v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
                 self.data_collection.append(sorted_result)
@@ -485,83 +535,6 @@ class TableContentGenerator:
                 data['type'] = 'Telegram'
             case 10:
                 data['type'] = 'TikTok'
-
-
-class SchedulerStylesGenerator:
-    translator_smi = {
-        'title': 'Заголовок',
-        'date': 'Дата',
-        'content': 'Краткое содержание',
-        'resource': 'Наименование СМИ',
-        'news_link': 'URL',
-        'sentiment': 'Тональность',
-        'category': 'Категория',
-        'number': '№',
-    }
-
-    translator_soc = {
-        'date': 'Дата',
-        'content': 'Пост',
-        'resource': 'Сообщество',
-        'news_link': 'URL',
-        'sentiment': 'Тональность',
-        'category': 'Соцсеть',
-        'number': '№',
-    }
-
-    def __init__(self, template, tags, settings=None, tags_highlight_settings=None):
-        self._template = template
-        self._tags = tags
-        self._settings = settings
-        self._tags_highlight_settings = tags_highlight_settings
-
-    def apply_scheduler_styles(self):
-
-        def manage_styles(curr_run, prev_run, rows):
-
-            prev_run_text = prev_run.text.rstrip(':')
-
-            def get_setting():
-                for row in rows:
-                    id = row.get('id')
-                    if self.translator_smi.get(id) == prev_run_text:
-                        return row
-                return None
-
-            setting = get_setting()
-
-            if setting:
-                bold = setting.get('bold')
-                italic = setting.get('italic')
-                underline = setting.get('underline')
-                font_color = setting.get('color')
-
-                if bold:
-                    curr_run.font.bold = bold
-                if italic:
-                    curr_run.font.italic = italic
-                if underline:
-                    curr_run.font.underline = underline
-                if font_color:
-                    red = int(font_color[1:3], 16)
-                    green = int(font_color[3:5], 16)
-                    blue = int(font_color[5:7], 16)
-                    curr_run.font.color.rgb = RGBColor(red, green, blue)
-
-        if not self._settings:
-            return
-
-        scheduler = self._template.paragraphs
-
-        prev_run = None
-        rows = self._settings['list_rows']
-        for paragraph in scheduler:
-            for idx, run in enumerate(paragraph.runs, start=1):
-                curr_run = run
-                if idx % 2 == 0:
-                    manage_styles(curr_run, prev_run, rows)
-                else:
-                    prev_run = run
 
 
 class TableStylesGenerator:
@@ -702,6 +675,7 @@ class TableStylesGenerator:
         new_run.text = text
         hyperlink.append(new_run)
 
+        paragraph.add_run(' ')
         paragraph._p.append(hyperlink)
 
         return hyperlink
@@ -724,6 +698,8 @@ class TableStylesGenerator:
         """ Highlight для тегов. """
 
         runs_to_remove = []
+
+        column_name = column_name.strip(':')
 
         if any(element in run.text.lower() for element in tags) and column_name in ('Краткое содержание', 'Пост'):
 
@@ -771,3 +747,77 @@ class TableStylesGenerator:
 
         for old_run in runs_to_remove:
             paragraph._p.remove(old_run._r)
+
+
+class SchedulerStylesGenerator(TableStylesGenerator):
+
+    def __init__(self, template, tags, settings=None, tags_highlight_settings=None):
+        super().__init__(template, tags, settings, tags_highlight_settings)
+
+    def apply_scheduler_styles(self):
+
+        def manage_styles(paragraph, curr_run, prev_run, rows):
+
+            prev_run_text = prev_run.text.rstrip(':')
+
+            def get_setting():
+                for row in rows:
+                    id = row.get('id')
+                    if self.translator_smi.get(id) == prev_run_text:
+                        return row
+                return None
+
+            setting = get_setting()
+
+            if setting:
+                bold = setting.get('bold')
+                italic = setting.get('italic')
+                underline = setting.get('underline')
+                font_color = setting.get('color')
+
+                if bold:
+                    curr_run.font.bold = bold
+                if italic:
+                    curr_run.font.italic = italic
+                if underline:
+                    curr_run.font.underline = underline
+                if font_color:
+                    red = int(font_color[1:3], 16)
+                    green = int(font_color[3:5], 16)
+                    blue = int(font_color[5:7], 16)
+                    curr_run.font.color.rgb = RGBColor(red, green, blue)
+
+                curr_run.font.size = Pt(10)
+                curr_run.font.name = 'Arial'
+
+            if prev_run_text in ('Заголовок', 'Краткое содержание'):
+                paragraph._p.remove(prev_run._r)
+
+            if prev_run_text == '№':
+                paragraph._p.remove(curr_run._r)
+                paragraph._p.remove(prev_run._r)
+
+        if not self._settings:
+            return
+
+        scheduler = self._template.paragraphs
+
+        prev_run = None
+        rows = self._settings['list_rows']
+        for paragraph in scheduler:
+            for idx, run in enumerate(paragraph.runs, start=1):
+                curr_run = run
+
+                if prev_run:
+                    self.highlight_tag(curr_run, paragraph, self._tags, prev_run.text, self._tags_highlight_settings)
+
+                if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', curr_run.text.strip()):
+                    if prev_run.text.strip(':') == 'URL':
+                        self.add_hyperlink(paragraph, curr_run.text.strip(), 'Ссылка', '#0000FF', '#000080')
+
+                        paragraph._p.remove(curr_run._r)
+
+                if idx % 2 == 0:
+                    manage_styles(paragraph, curr_run, prev_run, rows)
+                else:
+                    prev_run = run
