@@ -517,48 +517,52 @@ class SchedulerStylesGenerator:
 
     def apply_scheduler_styles(self):
 
-        def manage_styles(_run, _column):
+        def manage_styles(curr_run, prev_run, rows):
 
-            runs_to_remove = []
-            _column_name = _column.get('id')
+            prev_run_text = prev_run.text.rstrip(':')
 
-            runs_to_remove.append(_run)
-            if _run.text.startswith(self.translator_smi[_column_name]):
-                bold = _column.get('bold')
-                italic = _column.get('italic')
-                underline = _column.get('underline')
-                font_color = _column.get('color')
+            def get_setting():
+                for row in rows:
+                    id = row.get('id')
+                    if self.translator_smi.get(id) == prev_run_text:
+                        return row
+                return None
 
-                new_runs = _run.text.split(' ')
-                print(new_runs)
+            setting = get_setting()
+
+            if setting:
+                bold = setting.get('bold')
+                italic = setting.get('italic')
+                underline = setting.get('underline')
+                font_color = setting.get('color')
+
                 if bold:
-                    new_runs[-1].font.bold = bold
+                    curr_run.font.bold = bold
                 if italic:
-                    new_runs[-1].font.italic = italic
+                    curr_run.font.italic = italic
                 if underline:
-                    new_runs[-1].font.underline = underline
+                    curr_run.font.underline = underline
                 if font_color:
                     red = int(font_color[1:3], 16)
                     green = int(font_color[3:5], 16)
                     blue = int(font_color[5:7], 16)
-                    new_runs[-1].font.color.rgb = RGBColor(red, green, blue)
-
-                for new_run in new_runs:
-                    paragraph.add_run(new_run + ' ')
-
-            for old_run in runs_to_remove:
-                paragraph._p.remove(old_run._r)
+                    curr_run.font.color.rgb = RGBColor(red, green, blue)
 
         if not self._settings:
             return
 
         scheduler = self._template.paragraphs
 
-        for column in self._settings['columns']:
-            print(column)
-            for paragraph in scheduler:
-                for run in paragraph.runs:
-                    manage_styles(run, column)
+        prev_run = None
+        rows = self._settings['list_rows']
+        for paragraph in scheduler:
+            for idx, run in enumerate(paragraph.runs, start=1):
+                curr_run = run
+                if idx % 2 == 0:
+                    manage_styles(curr_run, prev_run, rows)
+                else:
+                    prev_run = run
+
 
 class TableStylesGenerator:
     translator_smi = {
