@@ -463,8 +463,6 @@ class TableContentGenerator:
                                 result[translator[k]] = v[:text_length] + ' ...'
                                 continue
 
-                            left, right = 0, len(v) - 1
-
                             tag_idx = v.lower().index(tag)
 
                             if tag in v.lower()[:text_length]:
@@ -472,17 +470,7 @@ class TableContentGenerator:
                             elif tag in v.lower()[len(v)-text_length:]:
                                 result[translator[k]] = '... ' + v[len(v)-text_length:]
                             else:
-                                search_value = v.lower()
-                                while True:
-                                    if left < tag_idx:
-                                        left += 1
-                                    if right > tag_idx:
-                                        right -= 1
-                                    search_value = search_value[left:right]
-
-                                    if len(search_value) <= text_length and tag in search_value:
-                                        result[translator[k]] = '... ' + v[left:right] + ' ...'
-                                        break
+                                result[translator[k]] = '... ' + v[tag_idx - text_length // 2:tag_idx + len(tag)] + v[tag_idx + len(tag) + 1:tag_idx + len(tag) + 1 + text_length // 2] + ' ...'
                         else:
                             result[translator[k]] = v
 
