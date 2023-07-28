@@ -454,29 +454,31 @@ class TableContentGenerator:
 
                 result = {}
 
-                for k, v in news[i].items():
+                for key, value in news[i].items():
 
-                    if k in translator:
-                        if translator[k] in ('Пост', 'Краткое содержание'):
-                            tag = choose_tag(tags, v)
-                            temp_val = v.lower()
+                    value = value.strip() if isinstance(value, str) else value
 
-                            if len(v) <= text_length:
-                                result[translator[k]] = v
+                    if key in translator:
+                        if translator[key] in ('Пост', 'Краткое содержание'):
+                            tag = choose_tag(tags, value)
+                            temp_val = value.lower()
+
+                            if len(value) <= text_length:
+                                result[translator[key]] = value
                                 continue
 
                             if tag == '':
-                                result[translator[k]] = v[:text_length] + ' ...' if text_length < len(v) else v[:text_length]
+                                result[translator[key]] = value[:text_length] + ' ...' if text_length < len(value) else value[:text_length]
                                 continue
 
                             tag_start = temp_val.find(tag)
                             if tag_start != -1:
                                 tag_end = tag_start + len(tag)
                                 left = max(0, tag_start - (text_length - len(tag)) // 2)
-                                right = min(len(v), tag_end + (text_length - len(tag)) // 2)
-                                result[translator[k]] = '...' + v[left:right] + '...'
+                                right = min(len(value), tag_end + (text_length - len(tag)) // 2)
+                                result[translator[key]] = '...' + value[left:right] + '...'
                         else:
-                            result[translator[k]] = v
+                            result[translator[key]] = value
 
                 sorted_result = {k: v for (k, v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
                 self.data_collection.append(sorted_result)
@@ -609,28 +611,7 @@ class TableStylesGenerator:
                                             if old_run != hyperlink:
                                                 paragraph._p.remove(old_run._r)
 
-                                    bold = column.get('bold')
-                                    italic = column.get('italic')
-                                    underline = column.get('underline')
-                                    color = column.get('color')
-
-                                    if bold:
-                                        run.font.bold = bold
-
-                                    if italic:
-                                        run.font.italic = italic
-
-                                    if underline:
-                                        run.font.underline = underline
-
-                                    if color:
-                                        red = int(color[1:3], 16)
-                                        green = int(color[3:5], 16)
-                                        blue = int(color[5:7], 16)
-                                        run.font.color.rgb = RGBColor(red, green, blue)
-
-                                    run.font.name = 'Arial'
-                                    run.font.size = Pt(10)
+                                    self.apply_run_styles(run, column)
 
     @staticmethod
     def add_hyperlink(paragraph, url, text, color, underline):
@@ -690,10 +671,6 @@ class TableStylesGenerator:
             pattern = r"\b" + r"\b|\b".join(map(re.escape, tags)) + r"\b"
             split_parts = re.split(f"({pattern})", run.text.lower())
 
-            bold = tags_highlight_settings.get('bold')
-            italic = tags_highlight_settings.get('italic')
-            underline = tags_highlight_settings.get('underline')
-            font_color = tags_highlight_settings.get('color')
             back_color = tags_highlight_settings.get('back_color')
 
             runs_to_remove.append(run)
@@ -703,20 +680,7 @@ class TableStylesGenerator:
                 for tag in tags:
                     if tag.lower() in part.lower():
 
-                        if bold:
-                            new_run.font.bold = bold
-
-                        if italic:
-                            new_run.font.italic = italic
-
-                        if underline:
-                            new_run.font.underline = underline
-
-                        if font_color:
-                            red = int(font_color[1:3], 16)
-                            green = int(font_color[3:5], 16)
-                            blue = int(font_color[5:7], 16)
-                            run.font.color.rgb = RGBColor(red, green, blue)
+                        TableStylesGenerator.apply_run_styles(new_run, tags_highlight_settings)
 
                         if back_color:
                             tag = new_run._r
@@ -731,6 +695,28 @@ class TableStylesGenerator:
 
         for old_run in runs_to_remove:
             paragraph._p.remove(old_run._r)
+
+    @staticmethod
+    def apply_run_styles(run, setting):
+        bold = setting.get('bold')
+        italic = setting.get('italic')
+        underline = setting.get('underline')
+        font_color = setting.get('color')
+
+        if bold:
+            run.font.bold = bold
+        if italic:
+            run.font.italic = italic
+        if underline:
+            run.font.underline = underline
+        if font_color:
+            red = int(font_color[1:3], 16)
+            green = int(font_color[3:5], 16)
+            blue = int(font_color[5:7], 16)
+            run.font.color.rgb = RGBColor(red, green, blue)
+
+        run.font.size = Pt(10)
+        run.font.name = 'Arial'
 
 
 class SchedulerStylesGenerator(TableStylesGenerator):
@@ -747,34 +733,16 @@ class SchedulerStylesGenerator(TableStylesGenerator):
             def get_setting():
                 for row in rows:
                     id = row.get('id')
-                    if self.translator_smi.get(id) == prev_run_text:
+                    if self.translator_smi.get(id) == prev_run_text or self.translator_soc.get(id) == prev_run_text:
                         return row
                 return None
 
             setting = get_setting()
 
             if setting:
-                bold = setting.get('bold')
-                italic = setting.get('italic')
-                underline = setting.get('underline')
-                font_color = setting.get('color')
+                self.apply_run_styles(curr_run, setting)
 
-                if bold:
-                    curr_run.font.bold = bold
-                if italic:
-                    curr_run.font.italic = italic
-                if underline:
-                    curr_run.font.underline = underline
-                if font_color:
-                    red = int(font_color[1:3], 16)
-                    green = int(font_color[3:5], 16)
-                    blue = int(font_color[5:7], 16)
-                    curr_run.font.color.rgb = RGBColor(red, green, blue)
-
-                curr_run.font.size = Pt(10)
-                curr_run.font.name = 'Arial'
-
-            if prev_run_text in ('Заголовок', 'Краткое содержание'):
+            if prev_run_text in ('Заголовок', 'Краткое содержание', 'Пост'):
                 paragraph._p.remove(prev_run._r)
 
             if prev_run_text == '№':
