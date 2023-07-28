@@ -455,32 +455,28 @@ class TableContentGenerator:
                 result = {}
 
                 for k, v in news[i].items():
+
                     if k in translator:
                         if translator[k] in ('Пост', 'Краткое содержание'):
                             tag = choose_tag(tags, v)
+                            temp_val = v.lower()
 
-                            if tag == '':
-                                result[translator[k]] = v[:text_length] + ' ...'
+                            if len(v) <= text_length:
+                                result[translator[k]] = v
                                 continue
 
-                            tag_idx = v.lower().index(tag)
+                            if tag == '':
+                                result[translator[k]] = v[:text_length] + ' ...' if text_length < len(v) else v[:text_length]
+                                continue
 
-                            if tag in v.lower()[:text_length]:
-                                result[translator[k]] = v[:text_length] + ' ...'
-                            elif tag in v.lower()[len(v)-text_length:]:
-                                result[translator[k]] = '... ' + v[len(v)-text_length:]
-                            else:
-                                result[translator[k]] = '... ' + v[tag_idx - text_length // 2:tag_idx + len(tag)] + v[tag_idx + len(tag) + 1:tag_idx + len(tag) + 1 + text_length // 2] + ' ...'
+                            tag_start = temp_val.find(tag)
+                            if tag_start != -1:
+                                tag_end = tag_start + len(tag)
+                                left = max(0, tag_start - (text_length - len(tag)) // 2)
+                                right = min(len(v), tag_end + (text_length - len(tag)) // 2)
+                                result[translator[k]] = '...' + v[left:right] + '...'
                         else:
                             result[translator[k]] = v
-
-                # result = {translator[k]: v[v.lower().index(tag.lower()) if tag.lower() in v.lower() else 0:] + '...'
-                #           if translator[k] in ('Пост', 'Краткое содержание') else v
-                #           for (k, v) in news[i].items() if k in translator}
-
-                # result = {
-                #     translator[k]: v[:text_length] + '...' if translator[k] in ('Пост', 'Краткое содержание') else v
-                #     for (k, v) in news[i].items() if k in translator}
 
                 sorted_result = {k: v for (k, v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
                 self.data_collection.append(sorted_result)
