@@ -1,5 +1,6 @@
 import os
 import re
+import threading
 
 from docx.opc.oxml import nsmap
 from docx.oxml import parse_xml, OxmlElement
@@ -104,8 +105,11 @@ class ThreadDataGenerator(Thread):
 
             output_path = f'temp/output-{position}-content.docx'
 
+            has_soc = data.get('soc', {})
+            has_smi = data.get('smi', {})
+
             try:
-                template.render({'table_of_contents': data}, autoescape=True)
+                template.render({'table_of_contents_soc': has_soc, 'table_of_contents_smi': has_smi}, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировать оглавление по причине нехватки данных!')
 
@@ -168,7 +172,7 @@ class ContentGenerator:
     def __init__(self, data, rest_data):
         self._data = data
         self._rest_data = rest_data
-        self.data_collection = []
+        self.data_collection = {'soc': [], 'smi': []}
 
     def generate_data(self):
 
@@ -208,16 +212,38 @@ class ContentGenerator:
             else:
 
                 for post in smi_posts:
-                    self.data_collection.append(check_length_of_title_or_text(post.get('title')))
+                    self.data_collection['smi'].append(check_length_of_title_or_text(post.get('title')))
 
             if count_soc > 0:
                 collect_titles_or_texts(soc_posts, count_soc, 'full_text')
             else:
 
                 for post in soc_posts:
-                    self.data_collection.append(check_length_of_title_or_text(post.get('full_text')))
+                    self.data_collection['soc'].append(check_length_of_title_or_text(post.get('full_text')))
 
-        self.data_collection = {k: v for (k, v) in enumerate(self.data_collection, start=1)}
+        for key, value in self.data_collection.items():
+            self.data_collection[key] = {k: v for (k, v) in enumerate(value, start=1)}
+
+
+class ContentAnchors:
+    def __init__(self, document):
+        self.document = document
+
+    def apply_anchors(self):
+        for paragraph in self.document.paragraphs:
+            for run in paragraph.runs:
+                print(run.text)
+
+        for table in self.document.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    print(cell.text)
+
+doc_path = '../result/merged_output.docx'
+doc = docx.Document(doc_path)
+
+c = ContentAnchors(doc)
+c.apply_anchors()
 
 
 class TagsGenerator:
@@ -636,7 +662,7 @@ class TableStylesGenerator:
 
                                     self.highlight_tag(run, paragraph, self._tags, column_name, self._tags_highlight_settings)
 
-                                    if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text):
+                                    if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text) and column_name == 'URL':
                                         hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), 'Ссылка', '#0000FF', '#000080')
 
                                         for old_run in paragraph.runs:
