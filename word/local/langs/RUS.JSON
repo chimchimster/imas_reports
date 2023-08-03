@@ -1,0 +1,21 @@
+{
+  "translator_smi": {
+    "number": "№",
+    "title": "Заголовок",
+    "full_text": "Краткое содержание",
+    "not_date": "Дата",
+    "RESOURCE_NAME": "Наименование СМИ",
+    "news_link": "URL",
+    "name_cat": "Категория",
+    "sentiment": "Тональность"
+  },
+  "translator_soc": {
+    "number": "№",
+    "full_text": "Пост",
+    "resource_name": "Сообщество",
+    "date": "Дата",
+    "type": "Соцсеть",
+    "news_link": "URL",
+    "sentiment": "Тональность"
+  }
+}

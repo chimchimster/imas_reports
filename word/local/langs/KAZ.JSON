@@ -1,0 +1,21 @@
+{
+  "translator_smi": {
+    "number": "№",
+    "title": "Хабарлама\\nтақырыбы",
+    "full_text": "Қысқаша мазмұны",
+    "not_date": "Күні",
+    "RESOURCE_NAME": "БАҚ атауы",
+    "news_link": "URL",
+    "name_cat": "Категориясы",
+    "sentiment": "Реңкілік"
+  },
+  "translator_soc": {
+    "number": "№",
+    "full_text": "Қысқаша мазмұны",
+    "resource_name": "Қауымдастық",
+    "date": "Күні",
+    "type": "Әлеуметтік желілер атауы",
+    "news_link": "URL",
+    "sentiment": "Реңкілік"
+  }
+}
