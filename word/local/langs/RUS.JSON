@@ -1,21 +1,45 @@
 {
-  "translator_smi": {
-    "number": "№",
-    "title": "Заголовок",
-    "full_text": "Краткое содержание",
-    "not_date": "Дата",
-    "RESOURCE_NAME": "Наименование СМИ",
-    "news_link": "URL",
-    "name_cat": "Категория",
-    "sentiment": "Тональность"
-  },
-  "translator_soc": {
-    "number": "№",
-    "full_text": "Пост",
-    "resource_name": "Сообщество",
-    "date": "Дата",
-    "type": "Соцсеть",
-    "news_link": "URL",
-    "sentiment": "Тональность"
+  "content":
+    {
+      "translator_smi": {
+        "number": "№",
+        "title": "Заголовок",
+        "full_text": "Краткое содержание",
+        "not_date": "Дата",
+        "RESOURCE_NAME": "Наименование СМИ",
+        "news_link": "URL",
+        "name_cat": "Категория",
+        "sentiment": "Тональность"
+      },
+      "translator_soc": {
+        "number": "№",
+        "full_text": "Пост",
+        "resource_name": "Сообщество",
+        "date": "Дата",
+        "type": "Соцсеть",
+        "news_link": "URL",
+        "sentiment": "Тональность"
+      }
+    },
+  "styles": {
+    "translator_smi": {
+        "number": "№",
+        "title": "Заголовок",
+        "content": "Краткое содержание",
+        "date": "Дата",
+        "resource": "Наименование СМИ",
+        "news_link": "URL",
+        "sentiment": "Тональность",
+        "category": "Категория"
+    },
+    "translator_soc": {
+        "number": "№",
+        "content": "Пост",
+        "date": "Дата",
+        "resource": "Сообщество",
+        "news_link": "URL",
+        "sentiment": "Тональность",
+        "category": "Соцсеть"
+    }
   }
 }

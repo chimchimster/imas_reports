@@ -6,9 +6,9 @@ from ..tools import TableStylesGenerator, SchedulerStylesGenerator
 class ThreadDataGenerator(Thread):
 
     templates = {
-        'table': 'templates/template_parts/table.docx',
-        'table_of_contents': 'templates/template_parts/table_of_contents.docx',
-        'tags': 'templates/template_parts/tags.docx',
+        'table': 'word/templates/template_parts/table.docx',
+        'table_of_contents': 'word/templates/template_parts/table_of_contents.docx',
+        'tags': 'word/templates/template_parts/tags.docx',
     }
 
     def __init__(self, thread_obj):
@@ -23,17 +23,27 @@ class ThreadDataGenerator(Thread):
 
         if self.thread_obj.flag == 'table':
 
+            report_format = self.thread_obj._static_rest_data.get('format', 'word_rus')
+            report_lang = report_format.split('_')[1]
+
             template = DocxTemplate(self.templates['table'])
 
             position = self.thread_obj._rest_data.get('position')
 
-            output_path = f'temp/output-{position}-table.docx'
+            output_path = f'word/temp/output-{position}-table.docx'
 
             table_name = self.thread_obj._rest_data.get('id')
             table = self.thread_obj._rest_data.get('table')
 
             try:
-                template.render({'columns': data[0].keys(), 'data': data, 'is_table': table, 'table_name': table_name}, autoescape=True)
+                template.render(
+                    {
+                        'columns': data[0].keys(),
+                        'data': data,
+                        'is_table': table,
+                        'table_name': table_name,
+                        'lang': report_lang,
+                    }, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
@@ -60,13 +70,17 @@ class ThreadDataGenerator(Thread):
 
             position = self.thread_obj._rest_data.get('position')
 
-            output_path = f'temp/output-{position}-content.docx'
+            output_path = f'word/temp/output-{position}-content.docx'
 
             has_soc = data.get('soc', {})
             has_smi = data.get('smi', {})
 
             try:
-                template.render({'table_of_contents_soc': has_soc, 'table_of_contents_smi': has_smi}, autoescape=True)
+                template.render(
+                    {
+                        'table_of_contents_soc': has_soc,
+                        'table_of_contents_smi': has_smi,
+                    }, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировать оглавление по причине нехватки данных!')
 
@@ -78,7 +92,7 @@ class ThreadDataGenerator(Thread):
 
             position = self.thread_obj._rest_data.get('position')
 
-            output_path = f'temp/output-{position}-atags.docx'
+            output_path = f'word/temp/output-{position}-atags.docx'
 
             try:
                 template.render({'tags': data}, autoescape=True)

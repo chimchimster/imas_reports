@@ -1,21 +1,43 @@
 {
-  "translator_smi": {
-    "number": "№",
-    "title": "Title",
-    "full_text": "Summary",
-    "not_date": "Date",
-    "RESOURCE_NAME": "Media name",
-    "news_link": "URL",
-    "name_cat": "Category",
-    "sentiment": "Sentiment"
-  },
-  "translator_soc": {
-    "number": "№",
-    "full_text": "Post",
-    "resource_name": "Community",
-    "date": "Date",
-    "type": "Social media",
-    "news_link": "URL",
-    "sentiment": "Sentiment"
+  "content":{
+    "translator_smi": {
+      "number": "№",
+      "title": "Title",
+      "full_text": "Summary",
+      "not_date": "Date",
+      "RESOURCE_NAME": "Media name",
+      "news_link": "URL",
+      "name_cat": "Category",
+      "sentiment": "Sentiment"
+    },
+    "translator_soc": {
+      "number": "№",
+      "full_text": "Post",
+      "resource_name": "Community",
+      "date": "Date",
+      "type": "Social media",
+      "news_link": "URL",
+      "sentiment": "Sentiment"
+    }},
+  "styles": {
+    "translator_smi": {
+        "number": "№",
+        "title": "Title",
+        "content": "Summary",
+        "date": "Date",
+        "resource": "Media name",
+        "news_link": "URL",
+        "sentiment": "Sentiment",
+        "category": "Category"
+    },
+    "translator_soc": {
+        "number": "№",
+        "content": "Post",
+        "date": "Date",
+        "resource": "Community",
+        "news_link": "URL",
+        "sentiment": "Sentiment",
+        "category": "Social media"
+    }
   }
 }

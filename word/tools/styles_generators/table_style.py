@@ -1,12 +1,10 @@
 import re
 import docx
 
-from docx.opc.oxml import qn
-from docx.oxml.ns import nsdecls
-from docx.shared import Cm, Pt, RGBColor
+from docx.oxml.ns import nsdecls, qn
+from docx.shared import RGBColor, Pt, Cm
 from docx.oxml import parse_xml, OxmlElement
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
-
 
 from ..data_generators.table_data import TableContentGenerator
 
@@ -22,7 +20,7 @@ class TableStylesGenerator(TableContentGenerator):
         self._settings = settings
         self._tags_highlight_settings = tags_highlight_settings
         self._static_rest_data = static_rest_data
-        self.pick_language()
+        self.pick_language('styles')
 
     def apply_table_styles(self):
 
@@ -42,20 +40,31 @@ class TableStylesGenerator(TableContentGenerator):
             match cell.text:
                 case '№':
                     table_obj.columns[idx].width = Cm(1)
-                case 'Заголовок':
+                case 'Заголовок' | 'Хабарлама тақырыбы' | 'Title':
                     table_obj.columns[idx].width = Cm(8)
-                case "Пост" | 'Краткое содержание':
+                case "Пост" | 'Краткое содержание' | 'Қысқаша мазмұны' | 'Summary' | 'Post':
                     table_obj.columns[idx].width = Cm(15)
-                case 'Дата':
+                case 'Дата' | 'Күні' | 'Date':
                     table_obj.columns[idx].width = Cm(5)
-                case 'Соцсеть' | 'Категория':
+                case 'Соцсеть' | 'Категория' | 'Категориясы' | 'Әлеуметтік желілер атауы' | 'Category' | 'Social media':
                     table_obj.columns[idx].width = Cm(5)
                 case 'URL':
                     table_obj.columns[idx].width = Cm(5)
-                case 'Сообщество' | 'Наименование СМИ':
+                case 'Сообщество' | 'Наименование СМИ' | 'БАҚ атауы' | 'Қауымдастық' | 'Media name' | 'Community':
                     table_obj.columns[idx].width = Cm(8)
-                case 'Тональность':
+                case 'Тональность' | 'Реңкілік' | 'Sentiment':
                     table_obj.columns[idx].width = Cm(6)
+
+        format = self._static_rest_data.get('format', 'word_rus')
+
+        lang = format.split('_')[1]
+
+        link_name = 'Ссылка'
+
+        if lang == 'kaz':
+            link_name = 'Cілтеме'
+        elif lang == 'eng':
+            link_name = 'Link'
 
         for column in self._settings['columns']:
             if column.get('id') in translator_obj:
@@ -78,7 +87,7 @@ class TableStylesGenerator(TableContentGenerator):
                                     self.highlight_tag(run, paragraph, self._tags, column_name, self._tags_highlight_settings)
 
                                     if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text) and column_name == 'URL':
-                                        hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), 'Ссылка', '#0000FF', '#000080')
+                                        hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), link_name, '#0000FF', '#000080')
 
                                         for old_run in paragraph.runs:
                                             if old_run != hyperlink:
@@ -139,7 +148,9 @@ class TableStylesGenerator(TableContentGenerator):
 
         column_name = column_name.strip(':')
 
-        if any(element in run.text.lower() for element in tags) and column_name in ('Краткое содержание', 'Пост'):
+        if any(element in run.text.lower() for element in tags) and column_name in (
+                'Краткое содержание', 'Пост', 'Қысқаша мазмұны', 'Summary', 'Post'
+        ):
 
             pattern = r"\b" + r"\b|\b".join(map(re.escape, tags)) + r"\b"
             split_parts = re.split(f"({pattern})", run.text.lower())

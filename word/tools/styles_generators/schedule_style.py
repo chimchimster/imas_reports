@@ -26,7 +26,16 @@ class SchedulerStylesGenerator(TableStylesGenerator):
             if setting:
                 self.apply_run_styles(curr_run, setting)
 
-            if prev_run_text in ('Заголовок', 'Краткое содержание', 'Пост'):
+            if prev_run_text in (
+                    'Заголовок',
+                    'Краткое содержание',
+                    'Пост',
+                    'Хабарлама тақырыбы',
+                    'Қысқаша мазмұны',
+                    'Title',
+                    'Summary',
+                    'Post',
+            ):
                 paragraph._p.remove(prev_run._r)
 
             if prev_run_text == '№':

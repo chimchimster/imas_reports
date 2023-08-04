@@ -5,9 +5,9 @@ from docxcompose.composer import Composer
 
 
 class MergeReport:
-    path_to_folder = os.getcwd() + '/temp/'
-    path_to_templates = os.getcwd() + '/templates/'
-    path_to_result = os.getcwd() + '/result/'
+    path_to_folder = os.getcwd() + '/word/temp/'
+    path_to_templates = os.getcwd() + '/word/templates/'
+    path_to_result = os.getcwd() + '/word/merged/'
 
     def merge(self):
 

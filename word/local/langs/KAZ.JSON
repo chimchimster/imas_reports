@@ -1,21 +1,43 @@
 {
-  "translator_smi": {
-    "number": "№",
-    "title": "Хабарлама\\nтақырыбы",
-    "full_text": "Қысқаша мазмұны",
-    "not_date": "Күні",
-    "RESOURCE_NAME": "БАҚ атауы",
-    "news_link": "URL",
-    "name_cat": "Категориясы",
-    "sentiment": "Реңкілік"
-  },
-  "translator_soc": {
-    "number": "№",
-    "full_text": "Қысқаша мазмұны",
-    "resource_name": "Қауымдастық",
-    "date": "Күні",
-    "type": "Әлеуметтік желілер атауы",
-    "news_link": "URL",
-    "sentiment": "Реңкілік"
+  "content": {
+    "translator_smi": {
+      "number": "№",
+      "title": "Хабарлама тақырыбы",
+      "full_text": "Қысқаша мазмұны",
+      "not_date": "Күні",
+      "RESOURCE_NAME": "БАҚ атауы",
+      "news_link": "URL",
+      "name_cat": "Категориясы",
+      "sentiment": "Реңкілік"
+    },
+    "translator_soc": {
+      "number": "№",
+      "full_text": "Қысқаша мазмұны",
+      "resource_name": "Қауымдастық",
+      "date": "Күні",
+      "type": "Әлеуметтік желілер атауы",
+      "news_link": "URL",
+      "sentiment": "Реңкілік"
+    }},
+  "styles": {
+    "translator_smi": {
+        "number": "№",
+        "title": "Хабарлама тақырыбы",
+        "content": "Қысқаша мазмұны",
+        "date": "Күні",
+        "resource": "БАҚ атауы",
+        "news_link": "URL",
+        "sentiment": "Реңкілік",
+        "category": "Категориясы"
+    },
+    "translator_soc": {
+        "number": "№",
+        "content": "Қысқаша мазмұны",
+        "date": "Күні",
+        "resource": "Қауымдастық",
+        "news_link": "URL",
+        "sentiment": "Реңкілік",
+        "category": "Әлеуметтік желілер атауы"
+    }
   }
 }

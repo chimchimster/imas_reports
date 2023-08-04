@@ -1,7 +1,7 @@
 from datetime import datetime
 from operator import itemgetter
 
-from local import ReportLanguagePicker
+from word.local import ReportLanguagePicker
 
 
 class TableContentGenerator:
@@ -16,10 +16,10 @@ class TableContentGenerator:
         self._rest_data = rest_data
         self._static_rest_data = static_rest_data
         self._type = _type
-        self.pick_language()
+        self.pick_language('content')
         self.data_collection = []
 
-    def pick_language(self):
+    def pick_language(self, _type):
 
         obj_format = self._static_rest_data.get('format')
         if not obj_format:
@@ -27,8 +27,8 @@ class TableContentGenerator:
 
         language_dicts = ReportLanguagePicker(obj_format)()
 
-        smi = language_dicts.get('translator_smi', {})
-        soc = language_dicts.get('translator_soc', {})
+        smi = language_dicts.get(_type, {}).get('translator_smi', {})
+        soc = language_dicts.get(_type, {}).get('translator_soc', {})
 
         self.translator_smi.update(smi)
         self.translator_soc.update(soc)
@@ -260,7 +260,7 @@ class TableContentGenerator:
                     value = value.strip() if isinstance(value, str) else value
 
                     if key in translator:
-                        if translator[key] in ('Пост', 'Краткое содержание'):
+                        if translator[key] in ('Пост', 'Краткое содержание', 'Қысқаша мазмұны', 'Post', 'Title'):
                             tag = choose_tag(tags, value)
                             temp_val = value.lower()
 

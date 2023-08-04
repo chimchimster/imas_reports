@@ -4,7 +4,7 @@ import json
 
 class ReportLanguagePicker:
 
-    langs_dir = os.getcwd() + '/local/langs'
+    langs_dir = os.getcwd() + '/word/local/langs'
 
     def __init__(self, document_format):
         try:
@@ -19,6 +19,7 @@ class ReportLanguagePicker:
 
         for file_name in os.listdir(self.langs_dir):
             if file_name.lower().startswith(self._language):
+                print(file_name)
                 with open(self.langs_dir + '/' + file_name) as file:
                     return json.load(file)
 
