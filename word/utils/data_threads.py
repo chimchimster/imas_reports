@@ -1,5 +1,7 @@
+import time
+from datetime import datetime
 from threading import Thread
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, InlineImage
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
 
 
@@ -9,6 +11,7 @@ class ThreadDataGenerator(Thread):
         'table': 'word/templates/template_parts/table.docx',
         'table_of_contents': 'word/templates/template_parts/table_of_contents.docx',
         'tags': 'word/templates/template_parts/tags.docx',
+        'base': 'word/templates/template_parts/base.docx',
     }
 
     def __init__(self, thread_obj):
@@ -21,12 +24,12 @@ class ThreadDataGenerator(Thread):
 
         data = self.thread_obj.data_collection
 
+        report_format = self.thread_obj._static_rest_data.get('format', 'word_rus')
+        report_lang = report_format.split('_')[1]
+
         if self.thread_obj.flag == 'table':
 
-            report_format = self.thread_obj._static_rest_data.get('format', 'word_rus')
-            report_lang = report_format.split('_')[1]
-
-            template = DocxTemplate(self.templates['table'])
+            template = DocxTemplate(self.templates.get('table'))
 
             position = self.thread_obj._rest_data.get('position')
 
@@ -66,7 +69,7 @@ class ThreadDataGenerator(Thread):
 
         elif self.thread_obj.flag == 'content':
 
-            template = DocxTemplate(self.templates['table_of_contents'])
+            template = DocxTemplate(self.templates.get('table_of_contents'))
 
             position = self.thread_obj._rest_data.get('position')
 
@@ -80,6 +83,7 @@ class ThreadDataGenerator(Thread):
                     {
                         'table_of_contents_soc': has_soc,
                         'table_of_contents_smi': has_smi,
+                        'lang': report_lang,
                     }, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировать оглавление по причине нехватки данных!')
@@ -88,14 +92,42 @@ class ThreadDataGenerator(Thread):
 
         elif self.thread_obj.flag == 'tags':
 
-            template = DocxTemplate(self.templates['tags'])
+            template = DocxTemplate(self.templates.get('tags'))
 
             position = self.thread_obj._rest_data.get('position')
 
             output_path = f'word/temp/output-{position}-atags.docx'
 
             try:
-                template.render({'tags': data}, autoescape=True)
+                template.render({
+                    'tags': data,
+                    'lang': report_lang,
+                }, autoescape=True)
             except IndexError:
                 raise IndexError('Невозможно сформировать теги по причине нехватки данных!')
+            template.save(output_path)
+
+        elif self.thread_obj.flag == 'base':
+
+            position = 0
+
+            template = DocxTemplate(self.templates.get('base'))
+            output_path = f'word/temp/output-{position}-base.docx'
+
+            base_image = InlineImage(template, image_descriptor='word/static/images/base/base_title.png')
+
+            project_name = data.get('project_name')
+            start_time = data.get('start_time')
+            end_time = data.get('end_time')
+            date_of_export = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+
+            template.render({
+                'project_name': project_name,
+                'date_start': start_time,
+                'date_end': end_time,
+                'date_of_export': date_of_export,
+                'base_image': base_image,
+                'lang': report_lang,
+            }, autoescape=True)
+
             template.save(output_path)

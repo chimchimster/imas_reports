@@ -1,4 +1,4 @@
-from ..tools import TagsGenerator, ContentGenerator, TableContentGenerator
+from ..tools import BasePageDataGenerator, TagsGenerator, ContentGenerator, TableContentGenerator
 from .data_threads import ThreadDataGenerator
 
 
@@ -15,10 +15,10 @@ class DataManager:
         for data in self._rest_data:
             match data.get('id'):
                 case 'tags':
-                    tags_obj = TagsGenerator(self._result_data, data)
+                    tags_obj = TagsGenerator(self._result_data, static_rest_data, data)
                     self.threads_objs.append(tags_obj)
                 case 'contents':
-                    contents_obj = ContentGenerator(self._result_data, data)
+                    contents_obj = ContentGenerator(self._result_data, static_rest_data, data)
                     self.threads_objs.append(contents_obj)
                 case 'smi':
                     smi_table_obj = TableContentGenerator(self._result_data, data, static_rest_data, 'smi')
@@ -26,6 +26,9 @@ class DataManager:
                 case 'soc':
                     soc_table_obj = TableContentGenerator(self._result_data, data, static_rest_data, 'soc')
                     self.threads_objs.append(soc_table_obj)
+                case _:
+                    base_page_obj = BasePageDataGenerator(self._result_data, static_rest_data)
+                    self.threads_objs.append(base_page_obj)
 
     def apply_threads(self):
 
