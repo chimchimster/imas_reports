@@ -114,19 +114,16 @@ class ThreadDataGenerator(Thread):
             template = DocxTemplate(self.templates.get('base'))
             output_path = f'word/temp/output-{position}-base.docx'
 
-            base_image = InlineImage(template, image_descriptor='word/static/images/base/base_title.png')
-
             project_name = data.get('project_name')
             start_time = data.get('start_time')
             end_time = data.get('end_time')
-            date_of_export = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
+            date_of_export = data.get('date_of_export')
 
             template.render({
                 'project_name': project_name,
                 'date_start': start_time,
                 'date_end': end_time,
                 'date_of_export': date_of_export,
-                'base_image': base_image,
                 'lang': report_lang,
             }, autoescape=True)
 
