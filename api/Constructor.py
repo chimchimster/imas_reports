@@ -4,10 +4,11 @@ from flask_restful import Resource
 from flask import request, send_from_directory
 
 from tools import WordCreator, PDFCreator
+from utils import clear_dir
 
 
 class ReportDocx(Resource):
-
+    @clear_dir
     def post(self):
 
         query = request.get_json()
@@ -23,7 +24,7 @@ class ReportPDF(Resource):
     def post(self):
 
         query = request.get_data()
-        print(query)
+        print(query, flush=True)
 
 
 

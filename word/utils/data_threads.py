@@ -1,5 +1,3 @@
-import time
-from datetime import datetime
 from threading import Thread
 from docxtpl import DocxTemplate, InlineImage
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
