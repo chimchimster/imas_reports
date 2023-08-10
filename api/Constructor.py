@@ -8,6 +8,7 @@ from utils import RemoveDirsMixin
 
 
 class ReportDocx(Resource, RemoveDirsMixin):
+    """ В ответ на POST запрос формирует отчет в формате docx. """
 
     def post(self):
 

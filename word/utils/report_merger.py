@@ -5,10 +5,26 @@ from docxcompose.composer import Composer
 
 
 class MergeReport:
+    """ Класс обращается к заданным директориям
+        основываясь на уникальных идекнтификаторах клиента uuid
+        и собирает воедино сгенерированные части шаблонов. """
+
     def __init__(self):
-        self.path_to_folder: str = os.path.join(os.getcwd(), 'word', 'temp')
-        self.path_to_templates: str = os.path.join(os.getcwd(), 'word', 'temp_templates')
-        self.path_to_result: str = os.path.join(os.getcwd(), 'word', 'merged')
+        self.path_to_folder: str = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp',
+        )
+        self.path_to_templates: str = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+        )
+        self.path_to_result: str = os.path.join(
+            os.getcwd(),
+            'word',
+            'merged',
+        )
         self.folder: FolderUUID = None
 
     def set_path_to_folder(self, folder: FolderUUID):
@@ -21,7 +37,13 @@ class MergeReport:
         self.path_to_templates += f'/{folder.unique_identifier}'
 
     def create_result_folder(self):
-        os.chdir('./word/merged')
+        os.chdir(
+            os.path.join(
+                os.getcwd(),
+                'word',
+                'merged',
+            ),
+        )
         os.mkdir(f'{self.folder.unique_identifier}')
         os.chdir('../..')
 

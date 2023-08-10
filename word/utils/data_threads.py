@@ -1,22 +1,22 @@
 import os.path
-from threading import Thread
+from multiprocessing import Process
 from typing import Any
 from docxtpl import DocxTemplate, InlineImage
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
 
 
-class ThreadDataGenerator(Thread):
+class ProcessDataGenerator(Process):
 
-    def __init__(self, thread_obj: Any):
+    def __init__(self, proc_obj: Any):
         super().__init__()
-        self.thread_obj = thread_obj
+        self.proc_obj = proc_obj
         self.templates: dict = {
             'table':
                 os.path.join(
                     os.getcwd(),
                     'word',
                     'temp_templates',
-                    f'{self.thread_obj.folder.unique_identifier}',
+                    f'{self.proc_obj.folder.unique_identifier}',
                     'template_parts',
                     'table.docx'
                 ),
@@ -25,7 +25,7 @@ class ThreadDataGenerator(Thread):
                     os.getcwd(),
                     'word',
                     'temp_templates',
-                    f'{self.thread_obj.folder.unique_identifier}',
+                    f'{self.proc_obj.folder.unique_identifier}',
                     'template_parts',
                     'table_of_contents.docx'
                 ),
@@ -34,7 +34,7 @@ class ThreadDataGenerator(Thread):
                     os.getcwd(),
                     'word',
                     'temp_templates',
-                    f'{self.thread_obj.folder.unique_identifier}',
+                    f'{self.proc_obj.folder.unique_identifier}',
                     'template_parts',
                     'tags.docx'
                 ),
@@ -42,7 +42,7 @@ class ThreadDataGenerator(Thread):
                 os.getcwd(),
                 'word',
                 'temp_templates',
-                f'{self.thread_obj.folder.unique_identifier}',
+                f'{self.proc_obj.folder.unique_identifier}',
                 'template_parts',
                 'base.docx'
             ),
@@ -50,29 +50,29 @@ class ThreadDataGenerator(Thread):
 
     def run(self) -> None:
 
-        self.thread_obj.generate_data()
+        self.proc_obj.generate_data()
 
-        data = self.thread_obj.data_collection
+        data = self.proc_obj.data_collection
 
-        report_format = self.thread_obj._static_rest_data.get('format', 'word_rus')
+        report_format = self.proc_obj._static_rest_data.get('format', 'word_rus')
         report_lang = report_format.split('_')[1]
 
-        if self.thread_obj.flag == 'table':
+        if self.proc_obj.flag == 'table':
 
             template = DocxTemplate(self.templates.get('table'))
 
-            position = self.thread_obj._rest_data.get('position')
+            position = self.proc_obj._rest_data.get('position')
 
             output_path = os.path.join(
                 os.getcwd(),
                 'word',
                 'temp',
-                f'{self.thread_obj.folder.unique_identifier}',
+                f'{self.proc_obj.folder.unique_identifier}',
                 f'output-{position}-table.docx',
             )
 
-            table_name = self.thread_obj._rest_data.get('id')
-            table = self.thread_obj._rest_data.get('table')
+            table_name = self.proc_obj._rest_data.get('id')
+            table = self.proc_obj._rest_data.get('table')
 
             try:
                 template.render(
@@ -86,15 +86,15 @@ class ThreadDataGenerator(Thread):
             except IndexError:
                 raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
-            settings = {k: v for (k, v) in self.thread_obj._rest_data.items()}
+            settings = {k: v for (k, v) in self.proc_obj._rest_data.items()}
 
-            tags = self.thread_obj._data.get('query_ar')
+            tags = self.proc_obj._data.get('query_ar')
 
-            tags_highlight_settings = self.thread_obj._rest_data.get('tag_highlight')
+            tags_highlight_settings = self.proc_obj._rest_data.get('tag_highlight')
 
-            static_rest_data = self.thread_obj._static_rest_data
+            static_rest_data = self.proc_obj._static_rest_data
 
-            if self.thread_obj._rest_data.get('table'):
+            if self.proc_obj._rest_data.get('table'):
                 styles = TableStylesGenerator(template, tags,  settings, tags_highlight_settings, static_rest_data)
                 styles.apply_table_styles()
             else:
@@ -103,17 +103,17 @@ class ThreadDataGenerator(Thread):
 
             template.save(output_path)
 
-        elif self.thread_obj.flag == 'content':
+        elif self.proc_obj.flag == 'content':
 
             template = DocxTemplate(self.templates.get('table_of_contents'))
 
-            position = self.thread_obj._rest_data.get('position')
+            position = self.proc_obj._rest_data.get('position')
 
             output_path = os.path.join(
                 os.getcwd(),
                 'word',
                 'temp',
-                f'{self.thread_obj.folder.unique_identifier}',
+                f'{self.proc_obj.folder.unique_identifier}',
                 f'output-{position}-content.docx',
             )
 
@@ -132,17 +132,17 @@ class ThreadDataGenerator(Thread):
 
             template.save(output_path)
 
-        elif self.thread_obj.flag == 'tags':
+        elif self.proc_obj.flag == 'tags':
 
             template = DocxTemplate(self.templates.get('tags'))
 
-            position = self.thread_obj._rest_data.get('position')
+            position = self.proc_obj._rest_data.get('position')
 
             output_path = os.path.join(
                 os.getcwd(),
                 'word',
                 'temp',
-                f'{self.thread_obj.folder.unique_identifier}',
+                f'{self.proc_obj.folder.unique_identifier}',
                 f'output-{position}-atags.docx',
             )
 
@@ -155,7 +155,7 @@ class ThreadDataGenerator(Thread):
                 raise IndexError('Невозможно сформировать теги по причине нехватки данных!')
             template.save(output_path)
 
-        elif self.thread_obj.flag == 'base':
+        elif self.proc_obj.flag == 'base':
 
             position = 0
 
@@ -165,7 +165,7 @@ class ThreadDataGenerator(Thread):
                 os.getcwd(),
                 'word',
                 'temp',
-                f'{self.thread_obj.folder.unique_identifier}',
+                f'{self.proc_obj.folder.unique_identifier}',
                 f'output-{position}-base.docx',
             )
 

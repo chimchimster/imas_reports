@@ -1,9 +1,8 @@
 import os
 import shutil
-import time
 
 from utils import FolderUUID
-from .data_threads import ThreadDataGenerator
+from .data_threads import ProcessDataGenerator
 from ..tools import BasePageDataGenerator, TagsGenerator, ContentGenerator, TableContentGenerator
 
 
@@ -11,7 +10,7 @@ class DataManager:
     def __init__(self, rest_data, result_data):
         self._rest_data = rest_data
         self._result_data = result_data
-        self.threads_objs = []
+        self.procs_objs = []
         self.folder = FolderUUID()
 
     def distribute_content(self):
@@ -26,42 +25,68 @@ class DataManager:
                 case 'tags':
                     tags_obj = TagsGenerator(self._result_data, static_rest_data, data)
                     setattr(tags_obj, 'folder', self.folder)
-                    self.threads_objs.append(tags_obj)
+                    self.procs_objs.append(tags_obj)
                 case 'contents':
                     contents_obj = ContentGenerator(self._result_data, static_rest_data, data)
                     setattr(contents_obj, 'folder', self.folder)
-                    self.threads_objs.append(contents_obj)
+                    self.procs_objs.append(contents_obj)
                 case 'smi':
                     smi_table_obj = TableContentGenerator(self._result_data, data, static_rest_data, 'smi')
                     setattr(smi_table_obj, 'folder', self.folder)
-                    self.threads_objs.append(smi_table_obj)
+                    self.procs_objs.append(smi_table_obj)
                 case 'soc':
                     soc_table_obj = TableContentGenerator(self._result_data, data, static_rest_data, 'soc')
                     setattr(soc_table_obj, 'folder', self.folder)
-                    self.threads_objs.append(soc_table_obj)
+                    self.procs_objs.append(soc_table_obj)
                 case _:
                     base_page_obj = BasePageDataGenerator(self._result_data, static_rest_data)
                     setattr(base_page_obj, 'folder', self.folder)
-                    self.threads_objs.append(base_page_obj)
+                    self.procs_objs.append(base_page_obj)
 
     def apply_threads(self):
 
-        threads = []
+        procs = []
 
-        for thread_obj in self.threads_objs:
-            thread = ThreadDataGenerator(thread_obj)
-            threads.append(thread)
-            thread.start()
+        for proc_obj in self.procs_objs:
+            proc = ProcessDataGenerator(proc_obj)
+            procs.append(proc)
+            proc.start()
 
-        for thr in threads:
-            thr.join()
+        for prc in procs:
+            prc.join()
 
     def create_temp_folder(self):
-        os.chdir('./word/temp')
-        os.mkdir(f'{self.folder.unique_identifier}')
+        os.chdir(
+            os.path.join(
+                os.getcwd(),
+                'word',
+                'temp',
+            )
+        )
+        os.mkdir(
+            os.path.join(
+                os.getcwd(),
+                f'{self.folder.unique_identifier}',
+            )
+        )
         os.chdir('../..')
 
     def create_temp_templates(self):
-        os.chdir('./word')
-        shutil.copytree('./templates', f'./temp_templates/{self.folder.unique_identifier}')
+        os.chdir(
+            os.path.join(
+                os.getcwd(),
+                'word',
+            )
+        )
+        shutil.copytree(
+            os.path.join(
+                os.getcwd(),
+                'templates',
+            ),
+            os.path.join(
+                os.getcwd(),
+                'temp_templates',
+                f'{self.folder.unique_identifier}',
+            ),
+        )
         os.chdir('..')
