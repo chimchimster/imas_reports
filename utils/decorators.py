@@ -1,6 +1,5 @@
 from typing import Callable
 from functools import wraps
-from .garbage_collector import clear
 
 
 def clear_dir(func: Callable) -> Callable:
@@ -8,8 +7,6 @@ def clear_dir(func: Callable) -> Callable:
     def wrapper(*args, **kwargs):
 
         result = func(*args, **kwargs)
-
-        clear()
 
         return result
 

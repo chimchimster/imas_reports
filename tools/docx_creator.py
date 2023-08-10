@@ -33,7 +33,10 @@ class WordCreator:
         manager.distribute_content()
         manager.apply_threads()
 
+        folder = manager.folder
+
         merger = MergeReport()
+        setattr(merger, 'folder', folder)
         merger.merge()
 
     def generate_string(self) -> str:
