@@ -2,7 +2,7 @@ import os
 import shutil
 import time
 
-from utils import FolderManager
+from utils import FolderUUID
 from .data_threads import ThreadDataGenerator
 from ..tools import BasePageDataGenerator, TagsGenerator, ContentGenerator, TableContentGenerator
 
@@ -12,7 +12,7 @@ class DataManager:
         self._rest_data = rest_data
         self._result_data = result_data
         self.threads_objs = []
-        self.folder = FolderManager(flag='temp')
+        self.folder = FolderUUID()
 
     def distribute_content(self):
 
@@ -58,10 +58,10 @@ class DataManager:
 
     def create_temp_folder(self):
         os.chdir('./word/temp')
-        os.mkdir(f'temp_{self.folder.unique_identifier}')
+        os.mkdir(f'{self.folder.unique_identifier}')
         os.chdir('../..')
 
     def create_temp_templates(self):
         os.chdir('./word')
-        shutil.copytree('./templates', f'./temp_templates/templates_{self.folder}')
+        shutil.copytree('./templates', f'./temp_templates/{self.folder.unique_identifier}')
         os.chdir('..')

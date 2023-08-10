@@ -34,6 +34,7 @@ class WordCreator:
         manager.apply_threads()
 
         folder = manager.folder
+        setattr(self, 'folder', folder)
 
         merger = MergeReport()
         setattr(merger, 'folder', folder)

@@ -1,30 +1,28 @@
 import os
 import docx
-from utils import FolderManager
+from utils import FolderUUID
 from docxcompose.composer import Composer
 
 
 class MergeReport:
     def __init__(self):
-        self.path_to_folder: str = os.getcwd() + '/word/temp/'
-        self.path_to_templates: str = os.getcwd() + '/word/temp_templates/'
-        self.path_to_result: str = os.getcwd() + '/word/merged/'
-        self.folder: FolderManager = None
+        self.path_to_folder: str = os.path.join(os.getcwd(), 'word', 'temp')
+        self.path_to_templates: str = os.path.join(os.getcwd(), 'word', 'temp_templates')
+        self.path_to_result: str = os.path.join(os.getcwd(), 'word', 'merged')
+        self.folder: FolderUUID = None
 
-    def set_path_to_folder(self, folder):
-        self.path_to_folder += str(folder)
+    def set_path_to_folder(self, folder: FolderUUID):
+        self.path_to_folder += f'/{folder.unique_identifier}'
 
-    def set_path_to_result(self, folder):
-        folder.flag = 'result'
-        self.path_to_result += str(folder)
+    def set_path_to_result(self, folder: FolderUUID):
+        self.path_to_result += f'/{folder.unique_identifier}'
 
     def set_path_to_templates(self, folder):
-        folder.flag = 'templates'
-        self.path_to_templates += str(folder)
+        self.path_to_templates += f'/{folder.unique_identifier}'
 
     def create_result_folder(self):
         os.chdir('./word/merged')
-        os.mkdir(f'result_{self.folder.unique_identifier}')
+        os.mkdir(f'{self.folder.unique_identifier}')
         os.chdir('../..')
 
     def merge(self):
@@ -32,7 +30,7 @@ class MergeReport:
         self.set_path_to_folder(self.folder)
         self.set_path_to_templates(self.folder)
 
-        master = docx.Document(self.path_to_templates + '/out.docx')
+        master = docx.Document(os.path.join(self.path_to_templates, 'out.docx'))
         composer = Composer(master)
 
         file_order = [file for file in os.listdir(self.path_to_folder)]
@@ -57,5 +55,6 @@ class MergeReport:
 
         self.create_result_folder()
         self.set_path_to_result(self.folder)
+
         output_file = os.path.join(self.path_to_result, 'merged_output.docx')
         composer.save(output_file)

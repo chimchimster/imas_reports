@@ -1,3 +1,4 @@
+import os.path
 from threading import Thread
 from typing import Any
 from docxtpl import DocxTemplate, InlineImage
@@ -10,10 +11,41 @@ class ThreadDataGenerator(Thread):
         super().__init__()
         self.thread_obj = thread_obj
         self.templates: dict = {
-            'table': f'word/temp_templates/templates_{self.thread_obj.folder}/template_parts/table.docx',
-            'table_of_contents': f'word/temp_templates/templates_{self.thread_obj.folder}/template_parts/table_of_contents.docx',
-            'tags': f'word/temp_templates/templates_{self.thread_obj.folder}/template_parts/tags.docx',
-            'base': f'word/temp_templates/templates_{self.thread_obj.folder}/template_parts/base.docx',
+            'table':
+                os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'temp_templates',
+                    f'{self.thread_obj.folder.unique_identifier}',
+                    'template_parts',
+                    'table.docx'
+                ),
+            'table_of_contents':
+                os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'temp_templates',
+                    f'{self.thread_obj.folder.unique_identifier}',
+                    'template_parts',
+                    'table_of_contents.docx'
+                ),
+            'tags':
+                os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'temp_templates',
+                    f'{self.thread_obj.folder.unique_identifier}',
+                    'template_parts',
+                    'tags.docx'
+                ),
+            'base': os.path.join(
+                os.getcwd(),
+                'word',
+                'temp_templates',
+                f'{self.thread_obj.folder.unique_identifier}',
+                'template_parts',
+                'base.docx'
+            ),
         }
 
     def run(self) -> None:
@@ -31,7 +63,13 @@ class ThreadDataGenerator(Thread):
 
             position = self.thread_obj._rest_data.get('position')
 
-            output_path = f'word/temp/{self.thread_obj.folder}/output-{position}-table.docx'
+            output_path = os.path.join(
+                os.getcwd(),
+                'word',
+                'temp',
+                f'{self.thread_obj.folder.unique_identifier}',
+                f'output-{position}-table.docx',
+            )
 
             table_name = self.thread_obj._rest_data.get('id')
             table = self.thread_obj._rest_data.get('table')
@@ -71,7 +109,13 @@ class ThreadDataGenerator(Thread):
 
             position = self.thread_obj._rest_data.get('position')
 
-            output_path = f'word/temp/{self.thread_obj.folder}/output-{position}-content.docx'
+            output_path = os.path.join(
+                os.getcwd(),
+                'word',
+                'temp',
+                f'{self.thread_obj.folder.unique_identifier}',
+                f'output-{position}-content.docx',
+            )
 
             has_soc = data.get('soc', {})
             has_smi = data.get('smi', {})
@@ -94,7 +138,13 @@ class ThreadDataGenerator(Thread):
 
             position = self.thread_obj._rest_data.get('position')
 
-            output_path = f'word/temp/{self.thread_obj.folder}/output-{position}-atags.docx'
+            output_path = os.path.join(
+                os.getcwd(),
+                'word',
+                'temp',
+                f'{self.thread_obj.folder.unique_identifier}',
+                f'output-{position}-atags.docx',
+            )
 
             try:
                 template.render({
@@ -110,7 +160,14 @@ class ThreadDataGenerator(Thread):
             position = 0
 
             template = DocxTemplate(self.templates.get('base'))
-            output_path = f'word/temp/{self.thread_obj.folder}/output-{position}-base.docx'
+
+            output_path = os.path.join(
+                os.getcwd(),
+                'word',
+                'temp',
+                f'{self.thread_obj.folder.unique_identifier}',
+                f'output-{position}-base.docx',
+            )
 
             project_name = data.get('project_name')
             start_time = data.get('start_time')

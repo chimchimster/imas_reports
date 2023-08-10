@@ -1,2 +1,2 @@
-from .decorators import clear_dir
-from .folder_manager import FolderManager
+from .folder_manager import FolderUUID
+from .mixins import RemoveDirsMixin
