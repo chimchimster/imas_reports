@@ -35,6 +35,8 @@ class TableStylesGenerator(TableContentGenerator):
         else:
             self.choose_particular_table_styles(self.translator_smi, table, 'smi')
 
+        self.delete_first_row(table)
+
     def choose_particular_table_styles(self, translator_obj, table_obj, _type):
         def set_cell_width():
             match cell.text:
@@ -201,3 +203,9 @@ class TableStylesGenerator(TableContentGenerator):
 
         run.font.size = Pt(10)
         run.font.name = 'Arial'
+
+    def delete_first_row(self, table):
+        if self.pointer > 0 and len(table.rows) > 1:
+            tr = table.rows[0]._tr
+            table._tbl.remove(tr)
+

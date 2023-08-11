@@ -24,7 +24,7 @@ class ReportDocx(Resource, RemoveDirsMixin):
 
         dirs_to_delete = [
             os.path.join(os.getcwd(), 'word', 'merged'),
-            os.path.join(os.getcwd(), 'word', 'temp'),
+            # os.path.join(os.getcwd(), 'word', 'temp'),
             os.path.join(os.getcwd(), 'word', 'temp_templates'),
         ]
 

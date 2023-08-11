@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import uuid
 import docx
@@ -64,8 +65,39 @@ class ProcessDataGenerator(Process):
 
         if self.proc_obj.flag == 'table':
 
-            def create_temp_table_folder():
-                pass
+            def create_temp_template_folder() -> None:
+
+                _type_of_table = self.proc_obj._type
+
+                _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+
+                path_to_temp_table_folder = os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'temp_tables',
+                    'templates',
+                    _uuid,
+                )
+
+                if not os.path.exists(path_to_temp_table_folder):
+                    os.mkdir(path_to_temp_table_folder)
+
+            def create_temp_result_folder() -> None:
+
+                _type_of_table = self.proc_obj._type
+
+                _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+
+                path_to_temp_results_folder = os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'temp_tables',
+                    'results',
+                    _uuid,
+                )
+
+                if not os.path.exists(path_to_temp_results_folder):
+                    os.mkdir(path_to_temp_results_folder)
 
             def chunk_data_process(_pointer: int, proc_data: dict, _semaphore: Semaphore):
 
@@ -76,19 +108,26 @@ class ProcessDataGenerator(Process):
 
                 _uuid: uuid = uuid.uuid4()
 
+                _type_of_table: str = self.proc_obj._type
+
+                temp_table_template_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+                temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+
                 path_to_copied_file: str = os.path.join(
                     os.getcwd(),
                     'word',
                     'temp_tables',
                     'templates',
+                    temp_table_template_folder_name,
                     str(pointer) + '_' + str(_uuid) + '.docx',
                 )
 
-                _output_path = os.path.join(
+                _output_path: str = os.path.join(
                     os.getcwd(),
                     'word',
                     'temp_tables',
                     'results',
+                    temp_table_result_folder_name,
                     str(pointer) + '_' + str(_uuid) + '.docx',
                 )
 
@@ -119,33 +158,45 @@ class ProcessDataGenerator(Process):
 
                 if self.proc_obj._rest_data.get('table'):
                     styles = TableStylesGenerator(_template, tags, settings, tags_highlight_settings, static_rest_data)
+                    setattr(styles, 'pointer', pointer)
                     styles.apply_table_styles()
                 else:
                     styles = SchedulerStylesGenerator(_template, tags, settings, tags_highlight_settings)
+                    setattr(styles, 'pointer', pointer)
                     styles.apply_scheduler_styles()
 
                 _template.save(_output_path)
 
             def merge_procs_tables() -> None:
-                path_to_results = os.path.join(
+
+                _uuid: str = str(self.proc_obj.folder.unique_identifier)
+                _type_of_table: str = self.proc_obj._type
+
+                results_folder_name: str = '_'.join((_type_of_table, _uuid))
+
+                path_to_results: str = os.path.join(
                     os.getcwd(),
                     'word',
                     'temp_tables',
                     'results',
+                    results_folder_name,
                 )
 
-                path_to_out_file = os.path.join(
+                path_to_out_file: str = os.path.join(
                     os.getcwd(),
                     'word',
                     'temp_tables',
                     'out.docx',
                 )
 
-                master = docx.Document(path_to_out_file)
-                composer = Composer(master)
+                master: docx.Document = docx.Document(path_to_out_file)
+                composer: Composer = Composer(master)
 
-                for file in os.listdir(path_to_results):
-                    doc = docx.Document(
+                sorted_list_dir: list = sorted(os.listdir(path_to_results), key=lambda x: int(x.split('_')[0]))
+
+                for file in sorted_list_dir:
+
+                    doc: docx.Document = docx.Document(
                         os.path.join(
                             path_to_results,
                             file,
@@ -154,7 +205,83 @@ class ProcessDataGenerator(Process):
 
                     composer.append(doc)
 
-                composer.save('output.docx')
+                composer.save(
+                    os.path.join(
+                        os.getcwd(),
+                        'word',
+                        'temp_tables',
+                        'results',
+                        'pre_prepared_results',
+                        f'{_type_of_table}_{_uuid}.docx',
+                    )
+                )
+
+            def merge_tables_within_document():
+
+                _uuid: str = str(self.proc_obj.folder.unique_identifier)
+
+                def merge_tables(*tables):
+                    if not tables:
+                        return
+
+                    new_table = docx.Document().add_table(rows=1, cols=1)
+
+                    for table in tables:
+                        for tbl in table:
+                            for row in tbl.rows:
+                                new_table._tbl.append(row._tr)
+
+                    return new_table
+
+                path_to_pre_prepared_results = os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'temp_tables',
+                    'results',
+                    'pre_prepared_results'
+                )
+
+                for file in os.listdir(path_to_pre_prepared_results):
+                    if file.endswith(_uuid + '.docx'):
+                        doc = docx.Document(
+                            os.path.join(
+                                path_to_pre_prepared_results,
+                                file,
+                            )
+                        )
+
+                        tables = doc.tables
+
+                        new_table = merge_tables(tables)
+
+                        new_doc: docx.Document = docx.Document(
+                            os.path.join(
+                                os.getcwd(),
+                                'word',
+                                'temp_tables',
+                                'out.docx',
+                            )
+                        )
+
+                        # In monday: Start from here!
+
+                        new_doc.add_table(rows=1, cols=1)
+                        new_doc.tables[0]._tbl = new_table._tbl
+                        print(new_doc)
+                        for table in new_doc.tables:
+                            print(table)
+                        new_doc.save(
+                            os.path.join(
+                                os.getcwd(),
+                                'word',
+                                'temp',
+                                _uuid,
+                                f'{_uuid}.docx'
+                            )
+                        )
+
+            create_temp_template_folder()
+            create_temp_result_folder()
 
             semaphore = Semaphore(0)
             procs = []
@@ -172,50 +299,7 @@ class ProcessDataGenerator(Process):
                 semaphore.acquire()
 
             merge_procs_tables()
-
-            # template = DocxTemplate(self.templates.get('table'))
-            #
-            # position = self.proc_obj._rest_data.get('position')
-            #
-            # output_path = os.path.join(
-            #     os.getcwd(),
-            #     'word',
-            #     'temp',
-            #     f'{self.proc_obj.folder.unique_identifier}',
-            #     f'output-{position}-table.docx',
-            # )
-            #
-            # table_name = self.proc_obj._rest_data.get('id')
-            # table = self.proc_obj._rest_data.get('table')
-            #
-            # try:
-            #     template.render(
-            #         {
-            #             'columns': data[0].keys(),
-            #             'data': data,
-            #             'is_table': table,
-            #             'table_name': table_name,
-            #             'lang': report_lang,
-            #         }, autoescape=True)
-            # except IndexError:
-            #     raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
-            #
-            # settings = {k: v for (k, v) in self.proc_obj._rest_data.items()}
-            #
-            # tags = self.proc_obj._data.get('query_ar')
-            #
-            # tags_highlight_settings = self.proc_obj._rest_data.get('tag_highlight')
-            #
-            # static_rest_data = self.proc_obj._static_rest_data
-            #
-            # if self.proc_obj._rest_data.get('table'):
-            #     styles = TableStylesGenerator(template, tags, settings, tags_highlight_settings, static_rest_data)
-            #     styles.apply_table_styles()
-            # else:
-            #     styles = SchedulerStylesGenerator(template, tags, settings, tags_highlight_settings)
-            #     styles.apply_scheduler_styles()
-            #
-            # template.save(output_path)
+            merge_tables_within_document()
 
         elif self.proc_obj.flag == 'content':
 

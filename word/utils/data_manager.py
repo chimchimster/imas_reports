@@ -63,12 +63,18 @@ class DataManager:
                 'temp',
             )
         )
-        os.mkdir(
-            os.path.join(
+
+        if not os.path.exists(os.path.join(
                 os.getcwd(),
                 f'{self.folder.unique_identifier}',
+            )):
+            os.mkdir(
+                os.path.join(
+                    os.getcwd(),
+                    f'{self.folder.unique_identifier}',
+                )
             )
-        )
+
         os.chdir('../..')
 
     def create_temp_templates(self):
