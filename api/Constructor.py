@@ -20,16 +20,38 @@ class ReportDocx(Resource, RemoveDirsMixin):
 
         _uuid = str(report.folder.unique_identifier)
 
-        response = send_from_directory(os.path.join(os.getcwd(), 'word', 'merged', _uuid), 'merged_output.docx')
+        response = send_from_directory(
+            os.path.join(
+                os.getcwd(),
+                'word',
+                'merged',
+                _uuid,
+            ),
+            'merged_output.docx',
+        )
 
         dirs_to_delete = [
-            os.path.join(os.getcwd(), 'word', 'merged'),
-            # os.path.join(os.getcwd(), 'word', 'temp'),
-            os.path.join(os.getcwd(), 'word', 'temp_templates'),
+            os.path.join(
+                os.getcwd(),
+                'word',
+                'merged',
+            ),
+            os.path.join(
+                os.getcwd(),
+                'word',
+                'temp',
+            ),
+            os.path.join(
+                os.getcwd(),
+                'word',
+                'temp_templates',
+            ),
         ]
 
         for _dir in dirs_to_delete:
             self.remove_dir(_dir, _uuid)
+
+        self.remove_temp_tables_dirs(_uuid)
 
         return response
 

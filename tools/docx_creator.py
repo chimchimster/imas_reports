@@ -31,7 +31,7 @@ class WordCreator:
 
         manager = DataManager(self._rest_data, result)
         manager.distribute_content()
-        manager.apply_threads()
+        manager.apply_processes()
 
         folder = manager.folder
         setattr(self, 'folder', folder)

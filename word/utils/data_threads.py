@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import uuid
 import docx
@@ -5,7 +6,7 @@ import shutil
 
 from typing import Any
 from docxcompose.composer import Composer
-from multiprocessing import Process, Semaphore
+from multiprocessing import Pool, Process, Semaphore
 from docxtpl import DocxTemplate, InlineImage
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
 
@@ -229,10 +230,17 @@ class ProcessDataGenerator(Process):
 
             semaphore = Semaphore(0)
             procs = []
-            step = 50
+            step = 500
 
             for pointer, chunk in enumerate(range(0, len(data), step)):
-                process = Process(target=chunk_data_process, args=(pointer, data[chunk:chunk+step], semaphore,))
+                process = Process(
+                    target=chunk_data_process,
+                    args=(
+                        pointer,
+                        data[chunk:chunk+step],
+                        semaphore,
+                    ),
+                                  )
                 procs.append(process)
                 process.start()
 

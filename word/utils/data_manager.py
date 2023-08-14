@@ -1,5 +1,7 @@
+import multiprocessing
 import os
 import shutil
+import traceback
 
 from utils import FolderUUID
 from .data_threads import ProcessDataGenerator
@@ -43,17 +45,40 @@ class DataManager:
                     setattr(base_page_obj, 'folder', self.folder)
                     self.procs_objs.append(base_page_obj)
 
-    def apply_threads(self):
+    def _execute_process(self, proc_obj):
+        process = ProcessDataGenerator(proc_obj)
+        try:
+            process.run()
+        except Exception as e:
+            print(f'Ошибка в процессе {e}')
+            traceback.print_exc()
 
-        procs = []
+    def apply_processes(self):
+        def init_no_daemon():
+            multiprocessing.current_process().daemon = False
 
-        for proc_obj in self.procs_objs:
-            proc = ProcessDataGenerator(proc_obj)
-            procs.append(proc)
-            proc.start()
+        max_workers = 12
+        processes = []
 
-        for prc in procs:
-            prc.join()
+        with multiprocessing.Pool(processes=max_workers, initializer=init_no_daemon) as process_pool:
+            for proc_obj in self.procs_objs:
+                process = process_pool.apply(self._execute_process, args=(proc_obj,))
+                processes.append(process)
+
+        for process in processes:
+            try:
+                process.get()
+            except Exception as e:
+                print(f'Ошибка в процессе {e}')
+                traceback.print_exc()
+
+        # for proc_obj in self.procs_objs:
+        #     proc = ProcessDataGenerator(proc_obj)
+        #     procs.append(proc)
+        #     proc.start()
+        #
+        # for prc in procs:
+        #     prc.join()
 
     def create_temp_folder(self):
         os.chdir(
