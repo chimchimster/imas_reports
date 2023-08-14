@@ -1,4 +1,3 @@
-import multiprocessing
 import os
 import uuid
 import docx
@@ -194,7 +193,7 @@ class ProcessDataGenerator(Process):
 
                 sorted_list_dir: list = sorted(os.listdir(path_to_results), key=lambda x: int(x.split('_')[0]))
 
-                for file in sorted_list_dir:
+                for idx, file in enumerate(sorted_list_dir):
 
                     doc: docx.Document = docx.Document(
                         os.path.join(
@@ -203,89 +202,34 @@ class ProcessDataGenerator(Process):
                         )
                     )
 
+                    def delete_paragraph(_paragraph):
+                        p = _paragraph._element
+                        p.getparent().remove(p)
+                        p._p = p._element = None
+
+                    for paragraph in doc.paragraphs:
+                        delete_paragraph(paragraph)
+
                     composer.append(doc)
+
+                position = self.proc_obj._rest_data.get('position')
 
                 composer.save(
                     os.path.join(
                         os.getcwd(),
                         'word',
-                        'temp_tables',
-                        'results',
-                        'pre_prepared_results',
-                        f'{_type_of_table}_{_uuid}.docx',
+                        'temp',
+                        str(_uuid),
+                        f'output-{position}-table.docx',
                     )
                 )
-
-            def merge_tables_within_document():
-
-                _uuid: str = str(self.proc_obj.folder.unique_identifier)
-
-                def merge_tables(*tables):
-                    if not tables:
-                        return
-
-                    new_table = docx.Document().add_table(rows=1, cols=1)
-
-                    for table in tables:
-                        for tbl in table:
-                            for row in tbl.rows:
-                                new_table._tbl.append(row._tr)
-
-                    return new_table
-
-                path_to_pre_prepared_results = os.path.join(
-                    os.getcwd(),
-                    'word',
-                    'temp_tables',
-                    'results',
-                    'pre_prepared_results'
-                )
-
-                for file in os.listdir(path_to_pre_prepared_results):
-                    if file.endswith(_uuid + '.docx'):
-                        doc = docx.Document(
-                            os.path.join(
-                                path_to_pre_prepared_results,
-                                file,
-                            )
-                        )
-
-                        tables = doc.tables
-
-                        new_table = merge_tables(tables)
-
-                        new_doc: docx.Document = docx.Document(
-                            os.path.join(
-                                os.getcwd(),
-                                'word',
-                                'temp_tables',
-                                'out.docx',
-                            )
-                        )
-
-                        # In monday: Start from here!
-
-                        new_doc.add_table(rows=1, cols=1)
-                        new_doc.tables[0]._tbl = new_table._tbl
-                        print(new_doc)
-                        for table in new_doc.tables:
-                            print(table)
-                        new_doc.save(
-                            os.path.join(
-                                os.getcwd(),
-                                'word',
-                                'temp',
-                                _uuid,
-                                f'{_uuid}.docx'
-                            )
-                        )
 
             create_temp_template_folder()
             create_temp_result_folder()
 
             semaphore = Semaphore(0)
             procs = []
-            step = 10
+            step = 50
 
             for pointer, chunk in enumerate(range(0, len(data), step)):
                 process = Process(target=chunk_data_process, args=(pointer, data[chunk:chunk+step], semaphore,))
@@ -299,7 +243,6 @@ class ProcessDataGenerator(Process):
                 semaphore.acquire()
 
             merge_procs_tables()
-            merge_tables_within_document()
 
         elif self.proc_obj.flag == 'content':
 
