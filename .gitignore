@@ -1,2 +1,3 @@
 word/tests/.pytest_cache
 env/
+kafka/.env

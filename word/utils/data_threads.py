@@ -235,8 +235,8 @@ class ProcessDataGenerator(Process):
             create_temp_template_folder()
             create_temp_result_folder()
 
-            max_processes = 25
-            step = 50
+            max_processes = 8
+            step = 10
 
             semaphore = multiprocessing.Semaphore(max_processes)
 

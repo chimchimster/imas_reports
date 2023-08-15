@@ -51,22 +51,9 @@ class DataManager:
             process.run()
 
     def apply_processes(self):
-        # def init_no_daemon():
-        #     multiprocessing.current_process().daemon = False
-        #
-        # max_workers = 12
-        # processes = []
-        #
-        # with multiprocessing.Pool(processes=max_workers, initializer=init_no_daemon) as process_pool:
-        #     for proc_obj in self.procs_objs:
-        #         process = process_pool.apply(self._execute_process, args=(proc_obj,))
-        #         processes.append(process)
-        #
-        # for process in processes:
-        #     if process:
-        #         process.get()
 
         procs = []
+
         for proc_obj in self.procs_objs:
             proc = ProcessDataGenerator(proc_obj)
             procs.append(proc)
