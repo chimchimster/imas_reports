@@ -1,12 +1,15 @@
 import multiprocessing
 import os
 import uuid
+from concurrent.futures import ProcessPoolExecutor
+
 import docx
 import shutil
 
+
 from typing import Any
 from docxcompose.composer import Composer
-from multiprocessing import Pool, Process, Semaphore
+from multiprocessing import Pool, Process, Barrier, Lock, Semaphore, Queue
 from docxtpl import DocxTemplate, InlineImage
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
 
@@ -99,73 +102,77 @@ class ProcessDataGenerator(Process):
                 if not os.path.exists(path_to_temp_results_folder):
                     os.mkdir(path_to_temp_results_folder)
 
-            def chunk_data_process(_pointer: int, proc_data: dict, _semaphore: Semaphore):
+            def chunk_data_process(*args):
 
                 def copy_table_template(_uuid: uuid, _path_to_copied_file: str) -> None:
                     table_docx_obj = self.templates.get('table')
 
                     shutil.copy(table_docx_obj, _path_to_copied_file)
 
-                _uuid: uuid = uuid.uuid4()
+                _pointer, proc_data, _semaphore = args
 
-                _type_of_table: str = self.proc_obj._type
+                with _semaphore:
 
-                temp_table_template_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
-                temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+                    _uuid: uuid = uuid.uuid4()
 
-                path_to_copied_file: str = os.path.join(
-                    os.getcwd(),
-                    'word',
-                    'temp_tables',
-                    'templates',
-                    temp_table_template_folder_name,
-                    str(pointer) + '_' + str(_uuid) + '.docx',
-                )
+                    _type_of_table: str = self.proc_obj._type
 
-                _output_path: str = os.path.join(
-                    os.getcwd(),
-                    'word',
-                    'temp_tables',
-                    'results',
-                    temp_table_result_folder_name,
-                    str(pointer) + '_' + str(_uuid) + '.docx',
-                )
+                    temp_table_template_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+                    temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
 
-                copy_table_template(_uuid, path_to_copied_file)
+                    path_to_copied_file: str = os.path.join(
+                        os.getcwd(),
+                        'word',
+                        'temp_tables',
+                        'templates',
+                        temp_table_template_folder_name,
+                        str(pointer) + '_' + str(_uuid) + '.docx',
+                    )
 
-                _template: DocxTemplate = DocxTemplate(path_to_copied_file)
+                    _output_path: str = os.path.join(
+                        os.getcwd(),
+                        'word',
+                        'temp_tables',
+                        'results',
+                        temp_table_result_folder_name,
+                        str(pointer) + '_' + str(_uuid) + '.docx',
+                    )
 
-                try:
-                    _template.render(
-                        {
-                            'columns': proc_data[0].keys(),
-                            'data': proc_data,
-                            'is_table': True,
-                        }, autoescape=True)
+                    copy_table_template(_uuid, path_to_copied_file)
 
-                    _semaphore.release()
+                    _template: DocxTemplate = DocxTemplate(path_to_copied_file)
 
-                except IndexError:
-                    raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
+                    try:
+                        _template.render(
+                            {
+                                'columns': proc_data[0].keys(),
+                                'data': proc_data,
+                                'is_table': True,
+                            }, autoescape=True)
 
-                settings: dict = {k: v for (k, v) in self.proc_obj._rest_data.items()}
+                    except IndexError:
+                        raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
-                tags: str = self.proc_obj._data.get('query_ar')
+                    # _semaphore.release()
 
-                tags_highlight_settings: dict = self.proc_obj._rest_data.get('tag_highlight')
+                    settings: dict = {k: v for (k, v) in self.proc_obj._rest_data.items()}
 
-                static_rest_data: dict = self.proc_obj._static_rest_data
+                    tags: str = self.proc_obj._data.get('query_ar')
 
-                if self.proc_obj._rest_data.get('table'):
-                    styles = TableStylesGenerator(_template, tags, settings, tags_highlight_settings, static_rest_data)
-                    setattr(styles, 'pointer', pointer)
-                    styles.apply_table_styles()
-                else:
-                    styles = SchedulerStylesGenerator(_template, tags, settings, tags_highlight_settings)
-                    setattr(styles, 'pointer', pointer)
-                    styles.apply_scheduler_styles()
+                    tags_highlight_settings: dict = self.proc_obj._rest_data.get('tag_highlight')
 
-                _template.save(_output_path)
+                    static_rest_data: dict = self.proc_obj._static_rest_data
+
+                    if self.proc_obj._rest_data.get('table'):
+                        styles = TableStylesGenerator(_template, tags, settings, tags_highlight_settings, static_rest_data)
+                        setattr(styles, 'pointer', pointer)
+                        styles.apply_table_styles()
+                    else:
+                        styles = SchedulerStylesGenerator(_template, tags, settings, tags_highlight_settings)
+                        setattr(styles, 'pointer', pointer)
+                        styles.apply_scheduler_styles()
+
+                    _template.save(_output_path)
 
             def merge_procs_tables() -> None:
 
@@ -228,27 +235,20 @@ class ProcessDataGenerator(Process):
             create_temp_template_folder()
             create_temp_result_folder()
 
-            semaphore = Semaphore(0)
-            procs = []
-            step = 500
+            max_processes = 25
+            step = 50
 
+            semaphore = multiprocessing.Semaphore(max_processes)
+
+            processes = []
             for pointer, chunk in enumerate(range(0, len(data), step)):
-                process = Process(
-                    target=chunk_data_process,
-                    args=(
-                        pointer,
-                        data[chunk:chunk+step],
-                        semaphore,
-                    ),
-                                  )
-                procs.append(process)
+                process = multiprocessing.Process(target=chunk_data_process,
+                                                  args=(pointer, data[chunk:chunk + step], semaphore))
+                processes.append(process)
                 process.start()
 
-            for prc in procs:
-                prc.join()
-
-            for _ in procs:
-                semaphore.acquire()
+            for process in processes:
+                process.join()
 
             merge_procs_tables()
 

@@ -47,38 +47,33 @@ class DataManager:
 
     def _execute_process(self, proc_obj):
         process = ProcessDataGenerator(proc_obj)
-        try:
+        if process:
             process.run()
-        except Exception as e:
-            print(f'Ошибка в процессе {e}')
-            traceback.print_exc()
 
     def apply_processes(self):
-        def init_no_daemon():
-            multiprocessing.current_process().daemon = False
-
-        max_workers = 12
-        processes = []
-
-        with multiprocessing.Pool(processes=max_workers, initializer=init_no_daemon) as process_pool:
-            for proc_obj in self.procs_objs:
-                process = process_pool.apply(self._execute_process, args=(proc_obj,))
-                processes.append(process)
-
-        for process in processes:
-            try:
-                process.get()
-            except Exception as e:
-                print(f'Ошибка в процессе {e}')
-                traceback.print_exc()
-
-        # for proc_obj in self.procs_objs:
-        #     proc = ProcessDataGenerator(proc_obj)
-        #     procs.append(proc)
-        #     proc.start()
+        # def init_no_daemon():
+        #     multiprocessing.current_process().daemon = False
         #
-        # for prc in procs:
-        #     prc.join()
+        # max_workers = 12
+        # processes = []
+        #
+        # with multiprocessing.Pool(processes=max_workers, initializer=init_no_daemon) as process_pool:
+        #     for proc_obj in self.procs_objs:
+        #         process = process_pool.apply(self._execute_process, args=(proc_obj,))
+        #         processes.append(process)
+        #
+        # for process in processes:
+        #     if process:
+        #         process.get()
+
+        procs = []
+        for proc_obj in self.procs_objs:
+            proc = ProcessDataGenerator(proc_obj)
+            procs.append(proc)
+            proc.start()
+
+        for prc in procs:
+            prc.join()
 
     def create_temp_folder(self):
         os.chdir(
