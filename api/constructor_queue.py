@@ -1,10 +1,10 @@
-import sys
 import time
 import uuid
 import json
 from flask import request
 from flask_restful import Resource
 from confluent_kafka import Producer, Consumer, KafkaError
+from kafka import load_kafka_settings, KafkaProducer, KafkaConsumer
 
 
 class DocxReportQueue(Resource):
@@ -27,41 +27,30 @@ class DocxReportQueue(Resource):
 
         response_json: json = json.dumps(response_data)
 
-        conf = {
-            'bootstrap.servers': 'someserverip',
-        }
+        bs_serv, topic = load_kafka_settings()
 
-        producer: Producer = Producer(conf)
+        producer: KafkaProducer = KafkaProducer(
+            bootstrap_servers=bs_serv,
+            topic=topic,
+            timeout=1000,
+        )
 
-        producer.produce('reports', key=str(task_unique_identifier), value=json_bytes)
-        producer.poll(10000)
-        producer.flush()
+        producer.send_message(
+            key=str(task_unique_identifier),
+            message=json_bytes,
+        )
 
-        conf = {
-            'bootstrap.servers': 'someserverip',
-            'group.id': "foo",
-            'enable.auto.commit': False,
-            'auto.offset.reset': 'earliest',
-        }
+        producer.producer_poll()
+        producer.producer_flush()
 
-        consumer: Consumer = Consumer(conf)
-        consumer.subscribe(['reports'])
-        start = time.time()
-        while True:
-            msg = consumer.poll(1.0)
-            if msg is None:
-                continue
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
-                    continue
-                else:
-                    print(msg.error())
-            else:
-                print('%% %s [%d] at offset %d with key %s:\n' %
-                      (msg.topic(), msg.partition(), msg.offset(),
-                       str(msg.key())))
-                print(msg.value())
-                end = time.time()
-                print(end - start)
+        consumer: KafkaConsumer = KafkaConsumer(
+            bootstrap_servers=bs_serv,
+            topic=topic,
+            timeout=1.0,
+            group_id='my_group',
+
+        )
+
+        consumer.retrieve_message()
 
         return response_json, 200
