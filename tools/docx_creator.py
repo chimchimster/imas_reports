@@ -1,4 +1,6 @@
 import re
+import uuid
+
 import requests
 
 from word.utils import DataManager, MergeReport
@@ -9,8 +11,9 @@ class WordCreator:
     relative_api = 'export-apis?'
     relative_api_folders = 'export-api-folders?'
 
-    def __init__(self, rest_data):
+    def __init__(self, rest_data, task_uuid):
         self._rest_data = rest_data
+        self._task_uuid = task_uuid
 
     def render_report(self):
 
@@ -27,13 +30,14 @@ class WordCreator:
 
             self.generate_word_document(result)
 
-    def generate_word_document(self, result):
+    def generate_word_document(self, result) -> None:
+        folder: uuid = self._task_uuid
 
         manager = DataManager(self._rest_data, result)
+        setattr(manager.folder, 'unique_identifier', folder)
         manager.distribute_content()
         manager.apply_processes()
 
-        folder = manager.folder
         setattr(self, 'folder', folder)
 
         merger = MergeReport()

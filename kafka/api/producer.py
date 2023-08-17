@@ -51,7 +51,7 @@ class KafkaProducer:
             if error is not None:
                 print(f'Отправка сообщения не удалась.\n Ошибка:\n{error}')
             else:
-                print(f'Удачная отправка сообщения в партицию\n {msg.partition()}\nтопика: {msg.topic()}')
+                print(f'Удачная отправка сообщения в партицию {msg.partition()}\nтопика: {msg.topic()}')
 
         try:
             self.producer.produce(

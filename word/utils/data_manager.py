@@ -1,7 +1,5 @@
-import multiprocessing
 import os
 import shutil
-import traceback
 
 from utils import FolderUUID
 from .data_threads import ProcessDataGenerator

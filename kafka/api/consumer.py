@@ -1,7 +1,11 @@
+import sys
+from abc import ABC, abstractmethod
+from typing import Any
+
 from confluent_kafka import Consumer, TopicPartition, KafkaError
 
 
-class KafkaConsumer:
+class KafkaConsumer(ABC):
     def __init__(
             self,
             bootstrap_servers: str,
@@ -9,14 +13,12 @@ class KafkaConsumer:
             timeout: float,
             group_id: str,
             enable_auto_commit: bool = False,
-            auto_offset_reset: str = 'earliest',
     ) -> None:
         self._bootstrap_servers = bootstrap_servers
         self._topic = topic
         self._timeout = timeout
         self._group_id = group_id
         self._enable_auto_commit = enable_auto_commit
-        self._auto_offset_reset = auto_offset_reset
 
         self._consumer: Consumer = self.__configure_consumer()
 
@@ -26,7 +28,6 @@ class KafkaConsumer:
             'bootstrap.servers': self._bootstrap_servers,
             'group.id': self._group_id,
             'enable.auto.commit': self._enable_auto_commit,
-            'auto.offset.reset': self._auto_offset_reset,
         }
 
         cnsmr: Consumer = Consumer(conf)
@@ -45,10 +46,10 @@ class KafkaConsumer:
     def timeout(self) -> float:
         return self._timeout
 
-    def __assign_consumer_to_topic_and_partition(self):
-        self.consumer.assign([TopicPartition(self.topic, 0),])
+    def __assign_consumer_to_topic_and_partition(self) -> None:
+        self.consumer.assign([TopicPartition(self.topic, 0), ])
 
-    def retrieve_message(self):
+    def retrieve_message(self) -> tuple[bytes, str]:
 
         self.__assign_consumer_to_topic_and_partition()
 
@@ -61,6 +62,14 @@ class KafkaConsumer:
                 if msg.error().code() == KafkaError._PARTITION_EOF:
                     continue
                 else:
-                    print(f"Error: {msg.error().str()}")
-                    break
-            print(f"Key: {msg.key()} received message: {msg.value().decode('utf-8')} from partition {msg.partition()}")
+                    sys.stdout.write(f"Error: {msg.error().str()}")
+
+            yield msg.key(), msg.value().decode('utf-8')
+
+    @abstractmethod
+    def consume(self) -> tuple[str]:
+        """ Метод обрабатывающий сообщения в очереди задач. """
+
+    @abstractmethod
+    def process_task(self, key: bytes, value: str) -> Any:
+        """ Метод обрабатывабщий операции полученные из очереди задач. """

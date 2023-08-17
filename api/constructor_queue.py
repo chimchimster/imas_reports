@@ -1,9 +1,8 @@
-import time
 import uuid
 import json
+
 from flask import request
 from flask_restful import Resource
-from confluent_kafka import Producer, Consumer, KafkaError
 from kafka import load_kafka_settings, KafkaProducer, KafkaConsumer
 
 
@@ -42,15 +41,5 @@ class DocxReportQueue(Resource):
 
         producer.producer_poll()
         producer.producer_flush()
-
-        consumer: KafkaConsumer = KafkaConsumer(
-            bootstrap_servers=bs_serv,
-            topic=topic,
-            timeout=1.0,
-            group_id='my_group',
-
-        )
-
-        consumer.retrieve_message()
 
         return response_json, 200
