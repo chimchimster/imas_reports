@@ -1,6 +1,6 @@
 import sys
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Any, Callable
 
 from confluent_kafka import Consumer, TopicPartition, KafkaError
 
@@ -12,7 +12,7 @@ class KafkaConsumer(ABC):
             topic: str,
             timeout: float,
             group_id: str,
-            enable_auto_commit: bool = False,
+            enable_auto_commit: bool = True,
     ) -> None:
         self._bootstrap_servers = bootstrap_servers
         self._topic = topic
@@ -68,8 +68,24 @@ class KafkaConsumer(ABC):
 
     @abstractmethod
     def consume(self) -> tuple[str]:
-        """ Метод обрабатывающий сообщения в очереди задач. """
+        """ Метод обрабатывающий сообщения в очереди задач Кафка. """
 
     @abstractmethod
     def process_task(self, key: bytes, value: str) -> Any:
         """ Метод обрабатывабщий операции полученные из очереди задач. """
+
+    @abstractmethod
+    def queue_worker(self) -> None:
+        """ Метод обрабатывающий операции в очереди. """
+
+    @abstractmethod
+    def partial_task(self, task: Callable, *args) -> Callable:
+        """ Метод позволяющий добавлять задачи в виде функций с аргументами.  """
+
+    @abstractmethod
+    def add_task(self, task: Callable) -> None:
+        """ Метод добавляющий задачу в очередь. """
+
+    @abstractmethod
+    def notify_queue(self) -> None:
+        """ Метод оповещающий очередь о том, что задача выполнена. """

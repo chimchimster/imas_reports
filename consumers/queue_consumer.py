@@ -3,7 +3,7 @@ import json
 import os
 from threading import Thread
 from queue import Queue
-from typing import Any, Callable
+from typing import Any, Callable, ContextManager
 from utils import RemoveDirsMixin
 from tools import WordCreator, PDFCreator
 from kafka import load_kafka_settings, KafkaConsumer
@@ -14,20 +14,21 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
         super().__init__(*args, **kwargs)
         self._queue = queue
 
-    def __enter__(self):
+    def __enter__(self) -> ContextManager:
         self.consume_thread = Thread(target=self.consume)
-        self.tasks_thread = Thread(target=self.worker)
+        self.tasks_thread = Thread(target=self.queue_worker)
 
         self.consume_thread.start()
         self.tasks_thread.start()
 
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)
         self.consume_thread.join()
         self.queue.join()
         self.tasks_thread.join()
+        super().__exit__(exc_type, exc_val, exc_tb)
 
     @property
     def queue(self) -> Queue:
@@ -36,7 +37,7 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
     def consume(self) -> None:
         while True:
             key, value = next(self.retrieve_message())
-            print(key)
+
             self.add_task(
                 self.partial_task(
                     self.process_task,
@@ -45,12 +46,12 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
                 )
             )
 
-    def worker(self):
+    def queue_worker(self) -> None:
         while True:
             item = self.queue.get()
             if item is None:
                 break
-            item()
+            item.__call__()
             self.queue.task_done()
 
     def partial_task(self, task: Callable, *args) -> Callable:
