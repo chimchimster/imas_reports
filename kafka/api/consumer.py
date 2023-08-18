@@ -1,9 +1,7 @@
 import sys
-import threading
-import time
-from abc import ABC, abstractmethod
-from typing import Any, Callable
 
+from typing import Any, Callable
+from abc import ABC, abstractmethod
 from confluent_kafka import Consumer, TopicPartition, KafkaError
 
 

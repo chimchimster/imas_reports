@@ -1,12 +1,13 @@
-import functools
-import json
 import os
-import threading
-from threading import Thread, Lock
+import json
+import functools
+
 from queue import Queue
-from typing import Any, Callable, ContextManager
+from threading import Thread
+from tasker import TaskSelector
 from utils import RemoveDirsMixin
 from tools import WordCreator, PDFCreator
+from typing import Any, Callable, ContextManager
 from kafka import load_kafka_settings, KafkaConsumer
 
 
@@ -36,7 +37,7 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
     def consume(self) -> None:
 
         for key, value in self.retrieve_message():
-            print(key)
+
             self.add_task(
                 self.partial_task(
                     self.process_task,
@@ -69,6 +70,8 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
         query: list = json.loads(value)
 
         task_uuid: str = key.decode('utf-8')
+
+        task = TaskSelector(query, task_uuid)
 
         report = WordCreator(query, task_uuid)
 
