@@ -44,7 +44,17 @@ class MergeReport:
                 'merged',
             ),
         )
-        os.mkdir(f'{self.folder.unique_identifier}')
+
+        if not os.path.exists(
+            os.path.join(
+                os.getcwd(),
+                'word',
+                'merged',
+                f'{self.folder.unique_identifier}',
+            )
+        ):
+            os.mkdir(f'{self.folder.unique_identifier}')
+
         os.chdir('../..')
 
     def merge(self):
@@ -52,7 +62,12 @@ class MergeReport:
         self.set_path_to_folder(self.folder)
         self.set_path_to_templates(self.folder)
 
-        master = docx.Document(os.path.join(self.path_to_templates, 'out.docx'))
+        master = docx.Document(
+            os.path.join(
+                self.path_to_templates,
+                'out.docx',
+            )
+        )
         composer = Composer(master)
 
         file_order = [file for file in os.listdir(self.path_to_folder)]
@@ -78,5 +93,8 @@ class MergeReport:
         self.create_result_folder()
         self.set_path_to_result(self.folder)
 
-        output_file = os.path.join(self.path_to_result, 'merged_output.docx')
+        output_file = os.path.join(
+            self.path_to_result,
+            'merged_output.docx',
+        )
         composer.save(output_file)

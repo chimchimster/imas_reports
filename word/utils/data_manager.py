@@ -1,7 +1,6 @@
 import os
 import shutil
 
-from utils import FolderUUID
 from .data_threads import ProcessDataGenerator
 from ..tools import BasePageDataGenerator, TagsGenerator, ContentGenerator, TableContentGenerator
 
@@ -11,7 +10,6 @@ class DataManager:
         self._rest_data = rest_data
         self._result_data = result_data
         self.procs_objs = []
-        self.folder = FolderUUID()
 
     def distribute_content(self):
 
@@ -89,15 +87,23 @@ class DataManager:
                 'word',
             )
         )
-        shutil.copytree(
-            os.path.join(
-                os.getcwd(),
-                'templates',
-            ),
+
+        if not os.path.exists(
             os.path.join(
                 os.getcwd(),
                 'temp_templates',
                 f'{self.folder.unique_identifier}',
-            ),
-        )
+            )
+        ):
+            shutil.copytree(
+                os.path.join(
+                    os.getcwd(),
+                    'templates',
+                ),
+                os.path.join(
+                    os.getcwd(),
+                    'temp_templates',
+                    f'{self.folder.unique_identifier}',
+                ),
+            )
         os.chdir('..')

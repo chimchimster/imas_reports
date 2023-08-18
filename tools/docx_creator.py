@@ -1,8 +1,7 @@
 import re
-import uuid
-
 import requests
 
+from utils import FolderUUID
 from word.utils import DataManager, MergeReport
 
 
@@ -31,10 +30,13 @@ class WordCreator:
             self.generate_word_document(result)
 
     def generate_word_document(self, result) -> None:
-        folder: uuid = self._task_uuid
+
+        folder: FolderUUID = FolderUUID(
+            unique_identifier=self._task_uuid,
+        )
 
         manager = DataManager(self._rest_data, result)
-        setattr(manager.folder, 'unique_identifier', folder)
+        setattr(manager, 'folder', folder)
         manager.distribute_content()
         manager.apply_processes()
 
