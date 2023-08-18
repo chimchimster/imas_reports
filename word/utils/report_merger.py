@@ -57,18 +57,26 @@ class MergeReport:
 
         os.chdir('../..')
 
-    def merge(self):
+    def merge(self) -> None:
+
+        if not os.path.exists(
+            os.path.join(
+                self.path_to_templates,
+                'out.docx',
+            )
+        ):
+            return
 
         self.set_path_to_folder(self.folder)
         self.set_path_to_templates(self.folder)
 
-        master = docx.Document(
+        master: docx.Document = docx.Document(
             os.path.join(
                 self.path_to_templates,
                 'out.docx',
             )
         )
-        composer = Composer(master)
+        composer: Composer = Composer(master)
 
         file_order = [file for file in os.listdir(self.path_to_folder)]
         file_order.sort()

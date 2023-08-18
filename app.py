@@ -19,14 +19,11 @@ for api_route, controller in api_routes:
 if __name__ == '__main__':
     _bs_serv, _topic = load_kafka_settings()
 
-    tasks_queue = Queue()
-
     with QueueConsumer(
         bootstrap_servers=_bs_serv,
         topic=_topic,
         timeout=1.0,
         group_id='none',
-        queue=tasks_queue,
     ) as consumer:
         app.run(host='0.0.0.0', debug=True)
 else:

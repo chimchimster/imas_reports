@@ -1,7 +1,8 @@
 import functools
 import json
 import os
-from threading import Thread
+import threading
+from threading import Thread, Lock
 from queue import Queue
 from typing import Any, Callable, ContextManager
 from utils import RemoveDirsMixin
@@ -10,24 +11,22 @@ from kafka import load_kafka_settings, KafkaConsumer
 
 
 class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
-    def __init__(self, queue: Queue, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
-        self._queue = queue
 
     def __enter__(self) -> ContextManager:
-        self.consume_thread = Thread(target=self.consume)
-        self.tasks_thread = Thread(target=self.queue_worker)
+        self._queue: Queue = Queue()
 
+        self.consume_thread: Thread = Thread(target=self.consume)
         self.consume_thread.start()
-        self.tasks_thread.start()
+
+        self.worker_thread: Thread = Thread(target=self.queue_worker)
+        self.worker_thread.start()
 
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)
         self.consume_thread.join()
-        self.queue.join()
-        self.tasks_thread.join()
+        self.worker_thread.join()
         super().__exit__(exc_type, exc_val, exc_tb)
 
     @property
@@ -35,9 +34,9 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
         return self._queue
 
     def consume(self) -> None:
-        while True:
-            key, value = next(self.retrieve_message())
 
+        for key, value in self.retrieve_message():
+            print(key)
             self.add_task(
                 self.partial_task(
                     self.process_task,
@@ -47,6 +46,7 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
             )
 
     def queue_worker(self) -> None:
+
         while True:
             item = self.queue.get()
             if item is None:
@@ -68,7 +68,7 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
 
         query: list = json.loads(value)
 
-        task_uuid = key.decode('utf-8')
+        task_uuid: str = key.decode('utf-8')
 
         report = WordCreator(query, task_uuid)
 

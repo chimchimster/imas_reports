@@ -1,4 +1,6 @@
 import sys
+import threading
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Callable
 
@@ -12,7 +14,7 @@ class KafkaConsumer(ABC):
             topic: str,
             timeout: float,
             group_id: str,
-            enable_auto_commit: bool = True,
+            enable_auto_commit: bool = False,
     ) -> None:
         self._bootstrap_servers = bootstrap_servers
         self._topic = topic
@@ -46,25 +48,32 @@ class KafkaConsumer(ABC):
     def timeout(self) -> float:
         return self._timeout
 
-    def __assign_consumer_to_topic_and_partition(self) -> None:
-        self.consumer.assign([TopicPartition(self.topic, 0), ])
+    def __print_assignment(self, consumer, partitions) -> None:
+        sys.stdout.write(f'Assignment: {partitions}')
+
+    def __subscribe_consumer(self) -> None:
+        self.consumer.subscribe([self.topic], on_assign=self.__print_assignment)
 
     def retrieve_message(self) -> tuple[bytes, str]:
 
-        self.__assign_consumer_to_topic_and_partition()
+        self.__subscribe_consumer()
 
-        while True:
-            msg = self.consumer.poll(self.timeout)
+        try:
+            while True:
+                msg = self.consumer.poll(self.timeout)
 
-            if msg is None:
-                continue
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
+                if msg is None:
                     continue
-                else:
-                    sys.stdout.write(f"Error: {msg.error().str()}")
+                if msg.error():
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                        continue
+                    else:
+                        sys.stdout.write(f"Error: {msg.error().str()}")
 
-            yield msg.key(), msg.value().decode('utf-8')
+                self.consumer.commit(message=msg)
+                yield msg.key(), msg.value().decode('utf-8')
+        except KeyboardInterrupt:
+            sys.stderr.write('Завершение чтения сообщений из очереди.')
 
     @abstractmethod
     def consume(self) -> tuple[str]:
