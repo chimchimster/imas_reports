@@ -1,12 +1,14 @@
 import os
+import time
 import uuid
 import docx
 import shutil
 
 from typing import Any
+from docx.shared import Mm
 from docxcompose.composer import Composer
-from multiprocessing import Process, Semaphore
 from docxtpl import DocxTemplate, InlineImage
+from multiprocessing import Process, Semaphore
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
 
 

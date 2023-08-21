@@ -66,11 +66,6 @@ class DataManager(PropertyMethodsMixin):
                     base_page_obj.folder = self.folder
                     self.procs_objs.append(base_page_obj)
 
-    def _execute_process(self, proc_obj):
-        process = ProcessDataGenerator(proc_obj)
-        if process:
-            process.run()
-
     def apply_processes(self):
 
         procs = []

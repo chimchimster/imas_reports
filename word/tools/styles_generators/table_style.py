@@ -162,8 +162,8 @@ class TableStylesGenerator(TableContentGenerator):
                 'Краткое содержание', 'Пост', 'Қысқаша мазмұны', 'Summary', 'Post'
         ):
 
-            pattern = r"\b" + r"\b|\b".join(map(re.escape, tags)) + r"\b"
-            split_parts = re.split(f"({pattern})", run.text.lower())
+            pattern = r'({})'.format('|'.join(map(re.escape, tags)))
+            split_parts = re.split(pattern, run.text.lower())
 
             back_color = tags_highlight_settings.get('back_color')
 

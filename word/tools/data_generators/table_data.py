@@ -91,9 +91,9 @@ class TableContentGenerator(PropertyMethodsMixin):
                     return []
 
                 if categories:
-                    try:
+                    if _table_data[0].get('name_cat'):
                         return [table for table in _table_data if table['name_cat'] in categories]
-                    except:
+                    elif _table_data[0].get('type'):
                         return [table for table in _table_data if soc_types[table['type']] in categories]
 
                 return _table_data
@@ -191,17 +191,16 @@ class TableContentGenerator(PropertyMethodsMixin):
                 sorted_table_data = sort_by_date(table_data)
 
             return sorted_table_data
-        # TODO: изменить
+
+        def translate(_key: str, _translator_type):
+            news = sort_data(self.response_part.get(_key))
+            if news:
+                self.__apply_translator(_translator_type, news)
+
         if self._type == 'smi':
-            f_news = self.response_part.get('f_news')
-            f_news = sort_data(f_news)
-            if f_news:
-                self.__apply_translator(self.translator_smi, f_news)
+            translate('f_news', self.translator_smi)
         else:
-            f_news2 = self.response_part.get('f_news2')
-            f_news2 = sort_data(f_news2)
-            if f_news2:
-                self.__apply_translator(self.translator_soc, f_news2)
+            translate('f_news2', self.translator_soc)
 
     def __apply_translator(self, translator, news):
 

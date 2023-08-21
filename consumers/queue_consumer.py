@@ -1,4 +1,3 @@
-import os
 import json
 import functools
 
@@ -77,6 +76,6 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
         )
         task.select_particular_class()
 
-        # self.remove_dir(task_uuid)
+        self.remove_dir(task_uuid)
 
         print(f'I have done task {task_uuid}')
