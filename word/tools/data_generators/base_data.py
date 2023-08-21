@@ -1,23 +1,24 @@
 import time
 from datetime import datetime
+from word.mixins import PropertyMethodsMixin
 
 
-class BasePageDataGenerator:
+class BasePageDataGenerator(PropertyMethodsMixin):
     """ Генерирует заглавную страницу docx документа.
         Флаг 'base' исплользуется в word/utils/data_threads
         в переопределенном методе run объекта ThreadDataGenerator. """
 
-    flag = 'base'
+    flag: str = 'base'
 
-    def __init__(self, result_data: dict, static_rest_data: dict) -> None:
-        self._result_data = result_data
-        self._static_rest_data = static_rest_data
-        self.data_collection = {}
+    def __init__(self, response_part: dict, static_settings: dict) -> None:
+        self._response_part = response_part
+        self._static_settings = static_settings
+        self._data_collection = {}
 
     def generate_data(self) -> None:
-        project_name: str = self._result_data.get('analyzer_name', 'Undefined')
-        start_time: str = self._result_data.get('s_date', 'undefined') + ' ' + self._result_data.get('s_time', 'undefined')
-        end_time: str = self._result_data.get('f_date', 'undefined') + ' ' + self._result_data.get('f_time', 'undefined')
+        project_name: str = self.response_part.get('analyzer_name', 'Undefined')
+        start_time: str = self.response_part.get('s_date', 'undefined') + ' ' + self.response_part.get('s_time', 'undefined')
+        end_time: str = self.response_part.get('f_date', 'undefined') + ' ' + self.response_part.get('f_time', 'undefined')
         date_of_export: str = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
         self.data_collection['project_name'] = project_name

@@ -1,30 +1,44 @@
 import re
 
+from docxtpl import DocxTemplate, InlineImage
 from .table_style import TableStylesGenerator
 
 
 class SchedulerStylesGenerator(TableStylesGenerator):
 
-    def __init__(self, template, tags, settings=None, tags_highlight_settings=None):
-        super().__init__(template, tags, settings, tags_highlight_settings)
+    def __init__(
+            self,
+            template: DocxTemplate,
+            settings: dict,
+            static_settings: dict,
+            tags: list,
+            tags_highlight_settings: dict,
+    ) -> None:
+        super().__init__(
+            template,
+            settings,
+            static_settings,
+            tags,
+            tags_highlight_settings,
+        )
 
     def apply_scheduler_styles(self):
 
-        def manage_styles(paragraph, curr_run, prev_run, rows):
+        def manage_styles(_paragraph, _curr_run, _prev_run, _rows):
 
-            prev_run_text = prev_run.text.rstrip(':')
+            prev_run_text = _prev_run.text.rstrip(':')
 
             def get_setting():
-                for row in rows:
-                    id = row.get('id')
-                    if self.translator_smi.get(id) == prev_run_text or self.translator_soc.get(id) == prev_run_text:
+                for row in _rows:
+                    _id = row.get('id')
+                    if self.translator_smi.get(_id) == prev_run_text or self.translator_soc.get(_id) == prev_run_text:
                         return row
                 return None
 
-            setting = get_setting()
+            _setting = get_setting()
 
-            if setting:
-                self.apply_run_styles(curr_run, setting)
+            if _setting:
+                self.apply_run_styles(_curr_run, _setting)
 
             if prev_run_text in (
                     'Заголовок',
@@ -36,25 +50,25 @@ class SchedulerStylesGenerator(TableStylesGenerator):
                     'Summary',
                     'Post',
             ):
-                paragraph._p.remove(prev_run._r)
+                _paragraph._p.remove(_prev_run._r)
 
             if prev_run_text == '№':
-                paragraph._p.remove(curr_run._r)
-                paragraph._p.remove(prev_run._r)
+                _paragraph._p.remove(_curr_run._r)
+                _paragraph._p.remove(_prev_run._r)
 
         if not self._settings:
             return
 
-        scheduler = self._template.paragraphs
+        scheduler = self.template.paragraphs
 
         prev_run = None
-        rows = self._settings['list_rows']
+        rows = self.settings['list_rows']
         for paragraph in scheduler:
             for idx, run in enumerate(paragraph.runs, start=1):
                 curr_run = run
 
                 if prev_run:
-                    self.highlight_tag(curr_run, paragraph, self._tags, prev_run.text, self._tags_highlight_settings)
+                    self.highlight_tag(curr_run, paragraph, self.tags, prev_run.text, self.tags_highlight_settings)
 
                 if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', curr_run.text.strip()):
                     if prev_run.text.strip(':') == 'URL':

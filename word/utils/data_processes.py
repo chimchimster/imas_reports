@@ -1,15 +1,11 @@
-import multiprocessing
 import os
 import uuid
-from concurrent.futures import ProcessPoolExecutor
-
 import docx
 import shutil
 
-
 from typing import Any
 from docxcompose.composer import Composer
-from multiprocessing import Pool, Process, Barrier, Lock, Semaphore, Queue
+from multiprocessing import Process, Semaphore
 from docxtpl import DocxTemplate, InlineImage
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
 
@@ -27,7 +23,7 @@ class ProcessDataGenerator(Process):
                     'temp_templates',
                     f'{self.proc_obj.folder.unique_identifier}',
                     'template_parts',
-                    'table.docx'
+                    'table.docx',
                 ),
             'table_of_contents':
                 os.path.join(
@@ -36,7 +32,7 @@ class ProcessDataGenerator(Process):
                     'temp_templates',
                     f'{self.proc_obj.folder.unique_identifier}',
                     'template_parts',
-                    'table_of_contents.docx'
+                    'table_of_contents.docx',
                 ),
             'tags':
                 os.path.join(
@@ -45,7 +41,7 @@ class ProcessDataGenerator(Process):
                     'temp_templates',
                     f'{self.proc_obj.folder.unique_identifier}',
                     'template_parts',
-                    'tags.docx'
+                    'tags.docx',
                 ),
             'base': os.path.join(
                 os.getcwd(),
@@ -53,7 +49,7 @@ class ProcessDataGenerator(Process):
                 'temp_templates',
                 f'{self.proc_obj.folder.unique_identifier}',
                 'template_parts',
-                'base.docx'
+                'base.docx',
             ),
         }
 
@@ -63,14 +59,14 @@ class ProcessDataGenerator(Process):
 
         data = self.proc_obj.data_collection
 
-        report_format = self.proc_obj._static_rest_data.get('format', 'word_rus')
-        report_lang = report_format.split('_')[1]
+        report_format = self.proc_obj.static_settings.get('format', 'word_rus')
+        report_lang = report_format.split('_')[1] # TODO: от этого "ужаса" нужно избавиться на уровне клиентской части
 
         if self.proc_obj.flag == 'table':
 
             def create_temp_template_folder() -> None:
 
-                _type_of_table = self.proc_obj._type
+                _type_of_table = self.proc_obj.type
 
                 _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
 
@@ -87,7 +83,7 @@ class ProcessDataGenerator(Process):
 
             def create_temp_result_folder() -> None:
 
-                _type_of_table = self.proc_obj._type
+                _type_of_table = self.proc_obj.type
 
                 _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
 
@@ -102,7 +98,7 @@ class ProcessDataGenerator(Process):
                 if not os.path.exists(path_to_temp_results_folder):
                     os.mkdir(path_to_temp_results_folder)
 
-            def chunk_data_process(*args):
+            def chunk_data_process(*args) -> None:
 
                 def copy_table_template(_uuid: uuid, _path_to_copied_file: str) -> None:
                     table_docx_obj = self.templates.get('table')
@@ -115,7 +111,8 @@ class ProcessDataGenerator(Process):
 
                     _uuid: uuid = uuid.uuid4()
 
-                    _type_of_table: str = self.proc_obj._type
+                    _type_of_table: str = self.proc_obj.type
+                    _is_table: bool = self.proc_obj.settings.get('table')
 
                     temp_table_template_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
                     temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
@@ -147,28 +144,36 @@ class ProcessDataGenerator(Process):
                             {
                                 'columns': proc_data[0].keys(),
                                 'data': proc_data,
-                                'is_table': True,
+                                'is_table': _is_table,
                             }, autoescape=True)
 
                     except IndexError:
                         raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
-                    # _semaphore.release()
+                    settings: dict = {k: v for (k, v) in self.proc_obj.settings.items()}
+                    static_settings: dict = self.proc_obj.static_settings
 
-                    settings: dict = {k: v for (k, v) in self.proc_obj._rest_data.items()}
+                    tags: list = self.proc_obj.response_part.get('query_ar')
+                    tags_highlight_settings: dict = self.proc_obj.settings.get('tag_highlight')
 
-                    tags: str = self.proc_obj._data.get('query_ar')
-
-                    tags_highlight_settings: dict = self.proc_obj._rest_data.get('tag_highlight')
-
-                    static_rest_data: dict = self.proc_obj._static_rest_data
-
-                    if self.proc_obj._rest_data.get('table'):
-                        styles = TableStylesGenerator(_template, tags, settings, tags_highlight_settings, static_rest_data)
+                    if self.proc_obj.settings.get('table'):
+                        styles = TableStylesGenerator(
+                            _template,
+                            settings,
+                            static_settings,
+                            tags,
+                            tags_highlight_settings,
+                            )
                         setattr(styles, 'pointer', pointer)
                         styles.apply_table_styles()
                     else:
-                        styles = SchedulerStylesGenerator(_template, tags, settings, tags_highlight_settings)
+                        styles = SchedulerStylesGenerator(
+                            _template,
+                            settings,
+                            static_settings,
+                            tags,
+                            tags_highlight_settings,
+                            )
                         setattr(styles, 'pointer', pointer)
                         styles.apply_scheduler_styles()
 
@@ -177,7 +182,7 @@ class ProcessDataGenerator(Process):
             def merge_procs_tables() -> None:
 
                 _uuid: str = str(self.proc_obj.folder.unique_identifier)
-                _type_of_table: str = self.proc_obj._type
+                _type_of_table: str = self.proc_obj.type
 
                 results_folder_name: str = '_'.join((_type_of_table, _uuid))
 
@@ -210,17 +215,20 @@ class ProcessDataGenerator(Process):
                         )
                     )
 
-                    def delete_paragraph(_paragraph):
-                        p = _paragraph._element
-                        p.getparent().remove(p)
-                        p._p = p._element = None
+                    def delete_paragraph(_paragraph) -> None:
+                        """ Метод позволяет убрать пустое пространство между таблицами. """
+
+                        if self.proc_obj.settings.get('table'):
+                            p = _paragraph._element
+                            p.getparent().remove(p)
+                            p._p = p._element = None
 
                     for paragraph in doc.paragraphs:
                         delete_paragraph(paragraph)
 
                     composer.append(doc)
 
-                position = self.proc_obj._rest_data.get('position')
+                position = self.proc_obj.settings.get('position')
 
                 composer.save(
                     os.path.join(
@@ -238,11 +246,11 @@ class ProcessDataGenerator(Process):
             max_processes = 8
             step = 10
 
-            semaphore = multiprocessing.Semaphore(max_processes)
+            semaphore = Semaphore(max_processes)
 
             processes = []
             for pointer, chunk in enumerate(range(0, len(data), step)):
-                process = multiprocessing.Process(target=chunk_data_process,
+                process = Process(target=chunk_data_process,
                                                   args=(pointer, data[chunk:chunk + step], semaphore))
                 processes.append(process)
                 process.start()
@@ -256,7 +264,7 @@ class ProcessDataGenerator(Process):
 
             template = DocxTemplate(self.templates.get('table_of_contents'))
 
-            position = self.proc_obj._rest_data.get('position')
+            position = self.proc_obj.settings.get('position')
 
             output_path = os.path.join(
                 os.getcwd(),
@@ -285,7 +293,7 @@ class ProcessDataGenerator(Process):
 
             template = DocxTemplate(self.templates.get('tags'))
 
-            position = self.proc_obj._rest_data.get('position')
+            position = self.proc_obj.settings.get('position')
 
             output_path = os.path.join(
                 os.getcwd(),

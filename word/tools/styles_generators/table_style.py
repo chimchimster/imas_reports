@@ -4,6 +4,7 @@ import docx
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import RGBColor, Pt, Cm
 from docx.oxml import parse_xml, OxmlElement
+from docxtpl import DocxTemplate, InlineImage
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 from ..data_generators.table_data import TableContentGenerator
@@ -14,23 +15,30 @@ class TableStylesGenerator(TableContentGenerator):
     translator_smi = {}
     translator_soc = {}
 
-    def __init__(self, template, tags, settings=None, tags_highlight_settings=None, static_rest_data=None):
+    def __init__(
+            self,
+            template: DocxTemplate,
+            settings: dict,
+            static_settings: dict,
+            tags: list,
+            tags_highlight_settings: dict,
+    ):
         self._template = template
-        self._tags = tags
         self._settings = settings
+        self._static_settings = static_settings
+        self._tags = tags
         self._tags_highlight_settings = tags_highlight_settings
-        self._static_rest_data = static_rest_data
         self.pick_language('styles')
 
     def apply_table_styles(self):
 
-        table = self._template.tables[0]
+        table = self.template.tables[0]
         table.style = 'Table Grid'
 
-        if not self._settings:
+        if not self.settings:
             return
 
-        if self._settings.get('id') == 'soc':
+        if self.settings.get('id') == 'soc':
             self.choose_particular_table_styles(self.translator_soc, table, 'soc')
         else:
             self.choose_particular_table_styles(self.translator_smi, table, 'smi')
@@ -57,7 +65,7 @@ class TableStylesGenerator(TableContentGenerator):
                 case 'Тональность' | 'Реңкілік' | 'Sentiment':
                     table_obj.columns[idx].width = Cm(6)
 
-        format = self._static_rest_data.get('format', 'word_rus')
+        format = self.static_settings.get('format', 'word_rus')
 
         lang = format.split('_')[1]
 
@@ -68,7 +76,7 @@ class TableStylesGenerator(TableContentGenerator):
         elif lang == 'eng':
             link_name = 'Link'
 
-        for column in self._settings['columns']:
+        for column in self.settings['columns']:
             if column.get('id') in translator_obj:
                 column_name_en = column.get('id')
                 column_name = translator_obj[column_name_en]
@@ -86,7 +94,7 @@ class TableStylesGenerator(TableContentGenerator):
                                 paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                                 for run in paragraph.runs:
 
-                                    self.highlight_tag(run, paragraph, self._tags, column_name, self._tags_highlight_settings)
+                                    self.highlight_tag(run, paragraph, self.tags, column_name, self.tags_highlight_settings)
 
                                     if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text) and column_name == 'URL':
                                         hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), link_name, '#0000FF', '#000080')

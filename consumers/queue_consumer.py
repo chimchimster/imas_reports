@@ -6,7 +6,6 @@ from queue import Queue
 from threading import Thread
 from tasker import TaskSelector
 from utils import RemoveDirsMixin
-from tools import WordCreator, PDFCreator
 from typing import Any, Callable, ContextManager
 from kafka import load_kafka_settings, KafkaConsumer
 
@@ -71,44 +70,13 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
 
         task_uuid: str = key.decode('utf-8')
 
-        task = TaskSelector(query, task_uuid)
+        task: TaskSelector = TaskSelector(
+            query,
+            task_uuid,
+            'docx',
+        )
+        task.select_particular_class()
 
-        report = WordCreator(query, task_uuid)
-
-        report.render_report()
-
-        # response = send_from_directory(
-        #     os.path.join(
-        #         os.getcwd(),
-        #         'word',
-        #         'merged',
-        #         task_uuid,
-        #     ),
-        #     'merged_output.docx',
-        # )
-
-        dirs_to_delete = [
-            os.path.join(
-                os.getcwd(),
-                'word',
-                'merged',
-            ),
-            os.path.join(
-                os.getcwd(),
-                'word',
-                'temp',
-            ),
-            os.path.join(
-                os.getcwd(),
-                'word',
-                'temp_templates',
-            ),
-        ]
-
-        for _dir in dirs_to_delete:
-            self.remove_dir(_dir, task_uuid)
-
-        self.remove_temp_tables_dirs(task_uuid)
+        # self.remove_dir(task_uuid)
 
         print(f'I have done task {task_uuid}')
-        # return response

@@ -1,14 +1,22 @@
-class ContentGenerator:
+from word.mixins import PropertyMethodsMixin
 
-    flag = 'content'
 
-    def __init__(self, data, static_rest_data, rest_data):
-        self._data = data
-        self._rest_data = rest_data
-        self._static_rest_data = static_rest_data
-        self.data_collection = {'soc': [], 'smi': []}
+class ContentGenerator(PropertyMethodsMixin):
 
-    def generate_data(self):
+    flag: str = 'content'
+
+    def __init__(
+            self,
+            response_part,
+            settings,
+            static_settings,
+    ) -> None:
+        self._response_part = response_part
+        self._settings = settings
+        self._static_settings = static_settings
+        self._data_collection = {'soc': [], 'smi': []}
+
+    def generate_data(self) -> None:
 
         cut = 150
 
@@ -25,21 +33,21 @@ class ContentGenerator:
                 except IndexError:
                     pass
 
-        def check_length_of_title_or_text(post):
+        def check_length_of_title_or_text(_post):
 
-            post = post.strip()
+            _post = _post.strip()
 
-            if len(post) > 150:
-                return post[:cut] + ' ...'
+            if len(_post) > 150:
+                return _post[:cut] + ' ...'
 
-            return post
+            return _post
 
-        if self._rest_data.get('id') == 'contents':
-            count_soc = self._rest_data.get('soc')
-            count_smi = self._rest_data.get('smi')
+        if self.settings.get('id') == 'contents':
+            count_soc = self.settings.get('soc')
+            count_smi = self.settings.get('smi')
 
-            soc_posts = self._data.get('f_news2')
-            smi_posts = self._data.get('f_news')
+            soc_posts = self.response_part.get('f_news2')
+            smi_posts = self.response_part.get('f_news')
 
             if count_smi > 0:
                 collect_titles_or_texts(smi_posts, count_smi, 'title')

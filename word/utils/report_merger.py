@@ -59,14 +59,6 @@ class MergeReport:
 
     def merge(self) -> None:
 
-        if not os.path.exists(
-            os.path.join(
-                self.path_to_templates,
-                'out.docx',
-            )
-        ):
-            return
-
         self.set_path_to_folder(self.folder)
         self.set_path_to_templates(self.folder)
 

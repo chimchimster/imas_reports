@@ -2,26 +2,34 @@ from datetime import datetime
 from operator import itemgetter
 
 from word.local import ReportLanguagePicker
+from word.mixins import PropertyMethodsMixin
 
 
-class TableContentGenerator:
+class TableContentGenerator(PropertyMethodsMixin):
 
-    flag = 'table'
+    flag: str = 'table'
 
-    translator_smi = {}
-    translator_soc = {}
+    translator_smi: dict = {}
+    translator_soc: dict = {}
 
-    def __init__(self, data, rest_data, static_rest_data, _type):
-        self._data = data
-        self._rest_data = rest_data
-        self._static_rest_data = static_rest_data
+    def __init__(
+            self,
+            response_part: dict,
+            settings: dict,
+            static_settings: dict,
+            _type: str,
+    ) -> None:
+        self._response_part = response_part
+        self._settings = settings
+        self._static_settings = static_settings
         self._type = _type
+        self._data_collection = []
         self.pick_language('content')
-        self.data_collection = []
 
     def pick_language(self, _type):
 
-        obj_format = self._static_rest_data.get('format')
+        obj_format = self.static_settings.get('format')
+
         if not obj_format:
             obj_format = 'word_rus'
 
@@ -49,7 +57,7 @@ class TableContentGenerator:
         }
 
         def sort_data(table_data):
-            order = self._rest_data.get('order')
+            order = self.settings.get('order')
 
             if not order:
                 return
@@ -183,14 +191,14 @@ class TableContentGenerator:
                 sorted_table_data = sort_by_date(table_data)
 
             return sorted_table_data
-
+        # TODO: изменить
         if self._type == 'smi':
-            f_news = self._data.get('f_news')
+            f_news = self.response_part.get('f_news')
             f_news = sort_data(f_news)
             if f_news:
                 self.__apply_translator(self.translator_smi, f_news)
         else:
-            f_news2 = self._data.get('f_news2')
+            f_news2 = self.response_part.get('f_news2')
             f_news2 = sort_data(f_news2)
             if f_news2:
                 self.__apply_translator(self.translator_soc, f_news2)
@@ -234,15 +242,15 @@ class TableContentGenerator:
 
         def update_collection():
 
-            def choose_tag(tags, value_string):
+            def choose_tag(_tags, value_string):
 
-                for tag in tags:
-                    if tag.lower() in value_string.lower():
-                        return tag.lower()
+                for _tag in _tags:
+                    if _tag.lower() in value_string.lower():
+                        return _tag.lower()
                 return ''
 
-            text_length = self._rest_data.get('text_length')
-            tags = self._data.get('query_ar')
+            text_length = self.settings.get('text_length')
+            tags = self.response_part.get('query_ar')
 
             for i in range(len(news)):
                 news[i] = {**{'number': i + 1}, **news[i]}
@@ -269,7 +277,9 @@ class TableContentGenerator:
                                 continue
 
                             if tag == '':
-                                result[translator[key]] = value[:text_length] + ' ...' if text_length < len(value) else value[:text_length]
+                                result[translator[key]] = (
+                                        value[:text_length] + ' ...') if text_length < len(value) \
+                                    else value[:text_length]
                                 continue
 
                             tag_start = temp_val.find(tag)
@@ -284,17 +294,17 @@ class TableContentGenerator:
                 sorted_result = {k: v for (k, v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
                 self.data_collection.append(sorted_result)
 
-        if self._rest_data.get('id') == 'soc':
-            delete_unused_columns(self._rest_data, translator_for_rest_soc)
-        elif self._rest_data.get('id') == 'smi':
-            delete_unused_columns(self._rest_data, translator_for_rest_smi)
+        if self.settings.get('id') == 'soc':
+            delete_unused_columns(self.settings, translator_for_rest_soc)
+        elif self.settings.get('id') == 'smi':
+            delete_unused_columns(self.settings, translator_for_rest_smi)
 
         news = [{k: v for (k, v) in n.items() if k not in to_delete} for n in news]
 
-        if self._rest_data.get('id') == 'soc':
-            to_sort = sort_columns(self._rest_data, translator_for_rest_soc)
-        elif self._rest_data.get('id') == 'smi':
-            to_sort = sort_columns(self._rest_data, translator_for_rest_smi)
+        if self.settings.get('id') == 'soc':
+            to_sort = sort_columns(self.settings, translator_for_rest_soc)
+        elif self.settings.get('id') == 'smi':
+            to_sort = sort_columns(self.settings, translator_for_rest_smi)
 
         update_collection()
 

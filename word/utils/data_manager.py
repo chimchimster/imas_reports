@@ -1,44 +1,69 @@
 import os
 import shutil
 
-from .data_threads import ProcessDataGenerator
+from word.mixins import PropertyMethodsMixin
+from .data_processes import ProcessDataGenerator
 from ..tools import BasePageDataGenerator, TagsGenerator, ContentGenerator, TableContentGenerator
 
 
-class DataManager:
-    def __init__(self, rest_data, result_data):
-        self._rest_data = rest_data
-        self._result_data = result_data
-        self.procs_objs = []
+class DataManager(PropertyMethodsMixin):
+    def __init__(
+            self,
+            client_side_settings: list,
+            response: dict,
+    ):
+        self._client_side_settings = client_side_settings
+        self._response = response
+        self._procs_objs: list = []
+        self._folder = None
 
-    def distribute_content(self):
+    def distribute_content(self) -> None:
 
         self.create_temp_folder()
         self.create_temp_templates()
 
-        static_rest_data = self._rest_data[-1]
-
-        for data in self._rest_data:
-            match data.get('id'):
+        for client_side_setting in self.client_side_settings:
+            match client_side_setting.get('id'):
                 case 'tags':
-                    tags_obj = TagsGenerator(self._result_data, static_rest_data, data)
-                    setattr(tags_obj, 'folder', self.folder)
+                    tags_obj: TagsGenerator = TagsGenerator(
+                        self.response,
+                        client_side_setting,
+                        self.static_client_side_settings,
+                    )
+                    tags_obj.folder = self.folder
                     self.procs_objs.append(tags_obj)
                 case 'contents':
-                    contents_obj = ContentGenerator(self._result_data, static_rest_data, data)
-                    setattr(contents_obj, 'folder', self.folder)
+                    contents_obj: ContentGenerator = ContentGenerator(
+                        self.response,
+                        client_side_setting,
+                        self.static_client_side_settings,
+                    )
+                    contents_obj.folder = self.folder
                     self.procs_objs.append(contents_obj)
                 case 'smi':
-                    smi_table_obj = TableContentGenerator(self._result_data, data, static_rest_data, 'smi')
-                    setattr(smi_table_obj, 'folder', self.folder)
+                    smi_table_obj = TableContentGenerator(
+                        self.response,
+                        client_side_setting,
+                        self.static_client_side_settings,
+                        'smi',
+                    )
+                    smi_table_obj.folder = self.folder
                     self.procs_objs.append(smi_table_obj)
                 case 'soc':
-                    soc_table_obj = TableContentGenerator(self._result_data, data, static_rest_data, 'soc')
-                    setattr(soc_table_obj, 'folder', self.folder)
+                    soc_table_obj = TableContentGenerator(
+                        self.response,
+                        client_side_setting,
+                        self.static_client_side_settings,
+                        'soc',
+                    )
+                    soc_table_obj.folder = self.folder
                     self.procs_objs.append(soc_table_obj)
                 case _:
-                    base_page_obj = BasePageDataGenerator(self._result_data, static_rest_data)
-                    setattr(base_page_obj, 'folder', self.folder)
+                    base_page_obj = BasePageDataGenerator(
+                        self.response,
+                        self.static_client_side_settings,
+                    )
+                    base_page_obj.folder = self.folder
                     self.procs_objs.append(base_page_obj)
 
     def _execute_process(self, proc_obj):
