@@ -1,10 +1,10 @@
 import re
 import docx
 
+from docxtpl import DocxTemplate
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import RGBColor, Pt, Cm
 from docx.oxml import parse_xml, OxmlElement
-from docxtpl import DocxTemplate, InlineImage
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
 from ..data_generators.table_data import TableContentGenerator

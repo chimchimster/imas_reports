@@ -32,6 +32,11 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
     def queue(self) -> Queue:
         return self._queue
 
+    @staticmethod
+    def partial_task(task: Callable, *args) -> Callable:
+
+        return functools.partial(task, *args)
+
     def consume(self) -> None:
 
         for key, value in self.retrieve_message():
@@ -52,10 +57,6 @@ class QueueConsumer(KafkaConsumer, RemoveDirsMixin):
                 break
             item.__call__()
             self.queue.task_done()
-
-    def partial_task(self, task: Callable, *args) -> Callable:
-
-        return functools.partial(task, *args)
 
     def add_task(self, task: Callable) -> None:
         self.queue.put(task)

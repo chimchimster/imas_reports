@@ -5,7 +5,12 @@ import json
 class ReportLanguagePicker:
     """ Определяет язык формирования отчета. """
 
-    langs_dir = os.path.join(os.getcwd(), 'word', 'local', 'langs')
+    langs_dir = os.path.join(
+        os.getcwd(),
+        'word',
+        'local',
+        'langs',
+    )
 
     def __init__(self, document_format: str) -> None:
         try:

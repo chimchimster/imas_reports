@@ -39,5 +39,15 @@
         "sentiment": "Sentiment",
         "category": "Social media"
     }
+  },
+  "titles": {
+    "scheduler": {
+      "soc": "Social media summary",
+      "smi": "Mass media summary"
+    },
+    "table": {
+      "soc": "Social media table",
+      "smi": "Mass media table"
+    }
   }
 }

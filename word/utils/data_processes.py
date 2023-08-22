@@ -1,12 +1,12 @@
 import os
-import time
 import uuid
 import docx
 import shutil
 
 from typing import Any
-from docx.shared import Mm
+from docx.shared import Pt, RGBColor
 from docxcompose.composer import Composer
+from word.local import ReportLanguagePicker
 from docxtpl import DocxTemplate, InlineImage
 from multiprocessing import Process, Semaphore
 from ..tools import TableStylesGenerator, SchedulerStylesGenerator
@@ -62,7 +62,7 @@ class ProcessDataGenerator(Process):
         data = self.proc_obj.data_collection
 
         report_format = self.proc_obj.static_settings.get('format', 'word_rus')
-        report_lang = report_format.split('_')[1] # TODO: от этого "ужаса" нужно избавиться на уровне клиентской части
+        report_lang = report_format.split('_')[1]  # TODO: от этого "ужаса" нужно избавиться на уровне клиентской части
 
         if self.proc_obj.flag == 'table':
 
@@ -103,9 +103,9 @@ class ProcessDataGenerator(Process):
             def chunk_data_process(*args) -> None:
 
                 def copy_table_template(_uuid: uuid, _path_to_copied_file: str) -> None:
-                    table_docx_obj = self.templates.get('table')
+                    path_to_obj_table = self.templates.get('table')
 
-                    shutil.copy(table_docx_obj, _path_to_copied_file)
+                    shutil.copy(path_to_obj_table, _path_to_copied_file)
 
                 _pointer, proc_data, _semaphore = args
 
@@ -116,8 +116,10 @@ class ProcessDataGenerator(Process):
                     _type_of_table: str = self.proc_obj.type
                     _is_table: bool = self.proc_obj.settings.get('table')
 
-                    temp_table_template_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
-                    temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+                    temp_table_template_folder_name: str = '_'.join(
+                        (_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+                    temp_table_result_folder_name: str = '_'.join(
+                        (_type_of_table, str(self.proc_obj.folder.unique_identifier)))
 
                     path_to_copied_file: str = os.path.join(
                         os.getcwd(),
@@ -165,7 +167,7 @@ class ProcessDataGenerator(Process):
                             static_settings,
                             tags,
                             tags_highlight_settings,
-                            )
+                        )
                         setattr(styles, 'pointer', pointer)
                         styles.apply_table_styles()
                     else:
@@ -175,7 +177,7 @@ class ProcessDataGenerator(Process):
                             static_settings,
                             tags,
                             tags_highlight_settings,
-                            )
+                        )
                         setattr(styles, 'pointer', pointer)
                         styles.apply_scheduler_styles()
 
@@ -183,6 +185,7 @@ class ProcessDataGenerator(Process):
 
             def merge_procs_tables() -> None:
 
+                _is_table: bool = self.proc_obj.settings.get('table')
                 _uuid: str = str(self.proc_obj.folder.unique_identifier)
                 _type_of_table: str = self.proc_obj.type
 
@@ -203,7 +206,40 @@ class ProcessDataGenerator(Process):
                     'out.docx',
                 )
 
+                def choose_title(_is_table_: bool, _type_: str) -> str:
+                    lang_dicts: dict = ReportLanguagePicker(report_format)()
+
+                    dict_obj = lang_dicts.get('titles')
+
+                    def inner(name, __type):
+                        obj = dict_obj.get(name)
+                        if __type == 'soc':
+                            return obj.get('soc')
+                        return obj.get('smi')
+
+                    if _is_table_:
+                        return inner('table', _type_)
+                    else:
+                        return inner('scheduler', _type_)
+
                 master: docx.Document = docx.Document(path_to_out_file)
+                title = choose_title(_is_table, _type_of_table)
+
+                style_heading = master.styles['Intense Quote']
+
+                _paragraph = master.paragraphs[0]
+                p = _paragraph._element
+                p.getparent().remove(p)
+                p._p = p._element = None
+
+                paragraph = master.add_paragraph(style=style_heading)
+                paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.CENTER
+
+                run = paragraph.add_run(title)
+                run.font.size = Pt(20)
+                run.font.name = 'Arial'
+                run.font.color.rgb = RGBColor(0, 0, 0)
+
                 composer: Composer = Composer(master)
 
                 sorted_list_dir: list = sorted(os.listdir(path_to_results), key=lambda x: int(x.split('_')[0]))
@@ -225,12 +261,16 @@ class ProcessDataGenerator(Process):
                             p.getparent().remove(p)
                             p._p = p._element = None
 
+                    counter = -1
                     for paragraph in doc.paragraphs:
+                        counter += 1
+                        if counter == 0:
+                            continue
                         delete_paragraph(paragraph)
 
                     composer.append(doc)
 
-                position = self.proc_obj.settings.get('position')
+                _position = self.proc_obj.settings.get('position')
 
                 composer.save(
                     os.path.join(
@@ -238,7 +278,7 @@ class ProcessDataGenerator(Process):
                         'word',
                         'temp',
                         str(_uuid),
-                        f'output-{position}-table.docx',
+                        f'output-{_position}-table.docx',
                     )
                 )
 
@@ -253,7 +293,7 @@ class ProcessDataGenerator(Process):
             processes = []
             for pointer, chunk in enumerate(range(0, len(data), step)):
                 process = Process(target=chunk_data_process,
-                                                  args=(pointer, data[chunk:chunk + step], semaphore))
+                                  args=(pointer, data[chunk:chunk + step], semaphore))
                 processes.append(process)
                 process.start()
 
@@ -264,7 +304,8 @@ class ProcessDataGenerator(Process):
 
         elif self.proc_obj.flag == 'content':
 
-            template = DocxTemplate(self.templates.get('table_of_contents'))
+            path_to_obj_table_of_contents = self.templates.get('table_of_contents')
+            template = DocxTemplate(path_to_obj_table_of_contents)
 
             position = self.proc_obj.settings.get('position')
 
@@ -293,16 +334,17 @@ class ProcessDataGenerator(Process):
 
         elif self.proc_obj.flag == 'tags':
 
-            template = DocxTemplate(self.templates.get('tags'))
+            path_to_obj_tags = self.templates.get('tags')
+            template = DocxTemplate(path_to_obj_tags)
 
-            position = self.proc_obj.settings.get('position')
+            _position = self.proc_obj.settings.get('position')
 
             output_path = os.path.join(
                 os.getcwd(),
                 'word',
                 'temp',
                 f'{self.proc_obj.folder.unique_identifier}',
-                f'output-{position}-atags.docx',
+                f'output-{_position}-atags.docx',
             )
 
             try:
@@ -317,8 +359,8 @@ class ProcessDataGenerator(Process):
         elif self.proc_obj.flag == 'base':
 
             position = 0
-
-            template = DocxTemplate(self.templates.get('base'))
+            path_to_obj_base = self.templates.get('base')
+            template = DocxTemplate(path_to_obj_base)
 
             output_path = os.path.join(
                 os.getcwd(),

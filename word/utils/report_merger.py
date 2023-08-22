@@ -95,6 +95,6 @@ class MergeReport:
 
         output_file = os.path.join(
             self.path_to_result,
-            'merged_output.docx',
+            f'{self.folder.unique_identifier}.docx',
         )
         composer.save(output_file)
