@@ -4,6 +4,7 @@ import docx
 from docxtpl import DocxTemplate
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import RGBColor, Pt, Cm
+from word.local import ReportLanguagePicker
 from docx.oxml import parse_xml, OxmlElement
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
 
@@ -65,16 +66,11 @@ class TableStylesGenerator(TableContentGenerator):
                 case 'Тональность' | 'Реңкілік' | 'Sentiment':
                     table_obj.columns[idx].width = Cm(6)
 
-        format = self.static_settings.get('format', 'word_rus')
+        _format = self.static_settings.get('format', 'word_rus')
 
-        lang = format.split('_')[1]
+        dict_languages = ReportLanguagePicker(_format)()
 
-        link_name = 'Ссылка'
-
-        if lang == 'kaz':
-            link_name = 'Cілтеме'
-        elif lang == 'eng':
-            link_name = 'Link'
+        link_name = dict_languages.get('link', 'Ссылка')
 
         for column in self.settings['columns']:
             if column.get('id') in translator_obj:

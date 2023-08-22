@@ -206,40 +206,44 @@ class ProcessDataGenerator(Process):
                     'out.docx',
                 )
 
-                def choose_title(_is_table_: bool, _type_: str) -> str:
-                    lang_dicts: dict = ReportLanguagePicker(report_format)()
+                def add_heading_to_table(_master: docx.Document) -> None:
+                    def choose_title(_is_table_: bool, _type_: str) -> str:
+                        lang_dicts: dict = ReportLanguagePicker(report_format)()
 
-                    dict_obj = lang_dicts.get('titles')
+                        dict_obj = lang_dicts.get('titles')
 
-                    def inner(name, __type):
-                        obj = dict_obj.get(name)
-                        if __type == 'soc':
-                            return obj.get('soc')
-                        return obj.get('smi')
+                        def inner(name, __type):
+                            obj = dict_obj.get(name)
+                            if __type == 'soc':
+                                return obj.get('soc')
+                            return obj.get('smi')
 
-                    if _is_table_:
-                        return inner('table', _type_)
-                    else:
-                        return inner('scheduler', _type_)
+                        if _is_table_:
+                            return inner('table', _type_)
+                        else:
+                            return inner('scheduler', _type_)
+
+                    title = choose_title(_is_table, _type_of_table)
+
+                    style_heading = _master.styles['Intense Quote']
+
+                    _paragraph = _master.paragraphs[0]
+                    p = _paragraph._element
+                    p.getparent().remove(p)
+                    p._p = p._element = None
+
+                    paragraph = _master.add_paragraph(style=style_heading)
+                    paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.CENTER
+
+                    run = paragraph.add_run(title)
+                    run.font.size = Pt(20)
+                    run.font.name = 'Arial'
+                    run.font.bold = False
+                    run.font.italic = False
+                    run.font.color.rgb = RGBColor(0, 0, 0)
 
                 master: docx.Document = docx.Document(path_to_out_file)
-                title = choose_title(_is_table, _type_of_table)
-
-                style_heading = master.styles['Intense Quote']
-
-                _paragraph = master.paragraphs[0]
-                p = _paragraph._element
-                p.getparent().remove(p)
-                p._p = p._element = None
-
-                paragraph = master.add_paragraph(style=style_heading)
-                paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.CENTER
-
-                run = paragraph.add_run(title)
-                run.font.size = Pt(20)
-                run.font.name = 'Arial'
-                run.font.color.rgb = RGBColor(0, 0, 0)
-
+                add_heading_to_table(master)
                 composer: Composer = Composer(master)
 
                 sorted_list_dir: list = sorted(os.listdir(path_to_results), key=lambda x: int(x.split('_')[0]))
@@ -261,11 +265,7 @@ class ProcessDataGenerator(Process):
                             p.getparent().remove(p)
                             p._p = p._element = None
 
-                    counter = -1
                     for paragraph in doc.paragraphs:
-                        counter += 1
-                        if counter == 0:
-                            continue
                         delete_paragraph(paragraph)
 
                     composer.append(doc)

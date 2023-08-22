@@ -1,5 +1,6 @@
 import re
 
+from word.local import ReportLanguagePicker
 from docxtpl import DocxTemplate, InlineImage
 from .table_style import TableStylesGenerator
 
@@ -50,6 +51,7 @@ class SchedulerStylesGenerator(TableStylesGenerator):
                     'Summary',
                     'Post',
             ):
+                _curr_run._r.text = _curr_run._r.text.lstrip()
                 _paragraph._p.remove(_prev_run._r)
 
             if prev_run_text == '№':
@@ -60,6 +62,12 @@ class SchedulerStylesGenerator(TableStylesGenerator):
             return
 
         scheduler = self.template.paragraphs
+
+        _format = self.static_settings.get('format', 'word_rus')
+
+        dict_languages = ReportLanguagePicker(_format)()
+
+        link_name = dict_languages.get('link', 'Ссылка')
 
         prev_run = None
         rows = self.settings['list_rows']
@@ -72,7 +80,7 @@ class SchedulerStylesGenerator(TableStylesGenerator):
 
                 if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', curr_run.text.strip()):
                     if prev_run.text.strip(':') == 'URL':
-                        self.add_hyperlink(paragraph, curr_run.text.strip(), 'Ссылка', '#0000FF', '#000080')
+                        self.add_hyperlink(paragraph, curr_run.text.strip(), link_name, '#0000FF', '#000080')
 
                         paragraph._p.remove(curr_run._r)
 
