@@ -1,8 +1,9 @@
-import time
-from datetime import datetime
 import os
 import json
+import time
 import pytest
+
+from datetime import datetime
 from ..tools import BasePageDataGenerator
 
 

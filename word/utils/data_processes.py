@@ -286,7 +286,7 @@ class ProcessDataGenerator(Process):
             create_temp_result_folder()
 
             max_processes = 8
-            step = 10
+            step = 100
 
             semaphore = Semaphore(max_processes)
 

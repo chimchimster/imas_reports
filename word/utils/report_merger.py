@@ -75,7 +75,10 @@ class MergeReport:
 
         for idx, file in enumerate(file_order):
 
-            file_path = os.path.join(self.path_to_folder, file)
+            file_path = os.path.join(
+                self.path_to_folder,
+                file,
+            )
 
             if os.path.isfile(file_path) and file.endswith('.docx'):
                 doc = docx.Document(file_path)
@@ -97,4 +100,5 @@ class MergeReport:
             self.path_to_result,
             f'{self.folder.unique_identifier}.docx',
         )
+
         composer.save(output_file)

@@ -136,13 +136,13 @@ class TableStylesGenerator(TableContentGenerator):
     @staticmethod
     def define_color_of_sentiment_cell(value):
         match value.text.strip():
-            case 'Нейтральная':
+            case 'Нейтральная' | 'Бейтарап' | 'Neutral':
                 shading_elm = parse_xml(r'<w:shd {} w:fill="#FFFF00"/>'.format(nsdecls('w')))
                 value._tc.get_or_add_tcPr().append(shading_elm)
-            case 'Негативная':
+            case 'Негативная' | 'Негатив' | 'Negative':
                 shading_elm = parse_xml(r'<w:shd {} w:fill="#FF0000"/>'.format(nsdecls('w')))
                 value._tc.get_or_add_tcPr().append(shading_elm)
-            case 'Позитивная':
+            case 'Позитивная' | 'Позитив' | 'Positive':
                 shading_elm = parse_xml(r'<w:shd {} w:fill="#008000"/>'.format(nsdecls('w')))
                 value._tc.get_or_add_tcPr().append(shading_elm)
 

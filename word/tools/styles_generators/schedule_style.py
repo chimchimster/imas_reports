@@ -27,7 +27,7 @@ class SchedulerStylesGenerator(TableStylesGenerator):
 
         def manage_styles(_paragraph, _curr_run, _prev_run, _rows):
 
-            prev_run_text = _prev_run.text.rstrip(':')
+            prev_run_text = _prev_run.text.rstrip()
 
             def get_setting():
                 for row in _rows:
@@ -41,24 +41,27 @@ class SchedulerStylesGenerator(TableStylesGenerator):
             if _setting:
                 self.apply_run_styles(_curr_run, _setting)
 
-            if prev_run_text in (
-                    'Заголовок',
-                    'Краткое содержание',
-                    'Пост',
-                    'Хабарлама тақырыбы',
-                    'Қысқаша мазмұны',
-                    'Title',
-                    'Summary',
-                    'Post',
-            ):
-                _curr_run._r.text = _curr_run._r.text.lstrip()
-                _paragraph._p.remove(_prev_run._r)
 
-            if prev_run_text == '№':
-                _paragraph._p.remove(_curr_run._r)
-                _paragraph._p.remove(_prev_run._r)
+            # Скорее всего ненужная функция, пока что непонятно, обсуждает начальство.
+            # Если не решат, то в ближайшие коммиты будет удалено.
+            # if prev_run_text in (
+            #     'Заголовок',
+            #     'Краткое содержание',
+            #     'Пост',
+            #     'Хабарлама тақырыбы',
+            #     'Қысқаша мазмұны',
+            #     'Title',
+            #     'Summary',
+            #     'Post',
+            # ):
+            #     # _curr_run._r.text = _curr_run._r.text.lstrip()
+            #     _paragraph._p.remove(_prev_run._r)
+            #
+            # if prev_run_text == '№':
+            #     _paragraph._p.remove(_curr_run._r)
+            #     _paragraph._p.remove(_prev_run._r)
 
-        if not self._settings:
+        if not self.settings:
             return
 
         scheduler = self.template.paragraphs
@@ -76,10 +79,11 @@ class SchedulerStylesGenerator(TableStylesGenerator):
                 curr_run = run
 
                 if prev_run:
-                    self.highlight_tag(curr_run, paragraph, self.tags, prev_run.text, self.tags_highlight_settings)
+                    prev_run_text = prev_run.text[:-2]
+                    self.highlight_tag(curr_run, paragraph, self.tags, prev_run_text, self.tags_highlight_settings)
 
                 if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', curr_run.text.strip()):
-                    if prev_run.text.strip(':') == 'URL':
+                    if prev_run.text[:-2] == 'URL':
                         self.add_hyperlink(paragraph, curr_run.text.strip(), link_name, '#0000FF', '#000080')
 
                         paragraph._p.remove(curr_run._r)
