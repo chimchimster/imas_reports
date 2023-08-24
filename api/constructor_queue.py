@@ -3,13 +3,13 @@ import json
 
 from flask import request
 from flask_restful import Resource
-from kafka import load_kafka_settings, KafkaProducer, KafkaConsumer
+from kafka import load_kafka_settings, KafkaProducer
 
 
 class DocxReportQueue(Resource):
     def post(self) -> json:
         """ В ответ на метод POST создается задача
-            и отправляется в очередь Kafka.
+            и отправляется в брокер Kafka.
             Для задачи генерируется уникальный ключ,
             который возвращается пользователю для
             отслеживания состояния выполнения задачи. """
@@ -29,7 +29,7 @@ class DocxReportQueue(Resource):
         bs_serv, reports_topic, reports_ready_topic = load_kafka_settings()
 
         producer: KafkaProducer = KafkaProducer(
-            bootstrap_servers=bs_serv,
+            bootstrap_server=bs_serv,
             topic=reports_topic,
             timeout=1000,
         )
@@ -39,7 +39,7 @@ class DocxReportQueue(Resource):
             message=json_bytes,
         )
 
-        # producer.producer_poll()
-        # producer.producer_flush()
-        # print(1)
+        producer.producer_poll()
+        producer.producer_flush()
+
         return response_json, 200

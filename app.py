@@ -14,16 +14,16 @@ for api_route, controller in api_routes:
 
 
 if __name__ == '__main__':
-    bootstrap_servers, reports_topic, reports_ready_topic = load_kafka_settings()
+    bootstrap_server, reports_topic, reports_ready_topic = load_kafka_settings()
 
     with KafkaManager(
-        bootstrap_servers=bootstrap_servers,
+        bootstrap_server=bootstrap_server,
         reports_topic=reports_topic,
         reports_ready_topic=reports_ready_topic,
         producer_timeout=1000,
         consumer_timeout=1.0,
         group_id='none',
-    ):
+    ) as manager:
         app.run(host='0.0.0.0', debug=True)
 else:
     print('Дружище, ты пойми, это не библиотека. Постарайся не импортировать файлы с точкой входа.')

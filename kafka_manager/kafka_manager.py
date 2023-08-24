@@ -1,4 +1,5 @@
 import json
+import threading
 
 from threading import Thread
 from tasker import TaskSelector
@@ -11,14 +12,14 @@ class KafkaManager(RemoveDirsMixin):
 
     def __init__(
             self,
-            bootstrap_servers: str,
+            bootstrap_server: str,
             reports_topic: str,
             reports_ready_topic: str,
             producer_timeout: int,
             consumer_timeout: float,
             group_id: str,
     ):
-        self._bootstrap_servers = bootstrap_servers
+        self._bootstrap_server = bootstrap_server
         self._reports_topic = reports_topic
         self._reports_ready_topic = reports_ready_topic
         self._producer_timeout = producer_timeout
@@ -26,8 +27,8 @@ class KafkaManager(RemoveDirsMixin):
         self._group_id = group_id
 
     @property
-    def bootstrap_servers(self):
-        return self._bootstrap_servers
+    def bootstrap_server(self):
+        return self._bootstrap_server
 
     @property
     def reports_topic(self):
@@ -52,7 +53,7 @@ class KafkaManager(RemoveDirsMixin):
     def __enter__(self) -> ContextManager:
 
         self.consumer = KafkaConsumer(
-            bootstrap_servers=self.bootstrap_servers,
+            bootstrap_server=self.bootstrap_server,
             reports_topic=self.reports_topic,
             reports_ready_topic=self.reports_ready_topic,
             timeout=self.consumer_timeout,
@@ -68,34 +69,39 @@ class KafkaManager(RemoveDirsMixin):
         self.consume_thread.join()
 
     def consume(self) -> None:
-
         for key, value in self.consumer.retrieve_message_from_reports_topic():
             print(key, value)
             self.process_task(key, value)
 
     def process_task(self, key: bytes, value: str) -> Any:
 
+        status_message = 'done'
+
         query: list = json.loads(value)
 
         task_uuid: str = key.decode('utf-8')
 
-        task: TaskSelector = TaskSelector(
-            query,
-            task_uuid,
-            'docx',
-        )
-        task.select_particular_class()
+        try:
+            task: TaskSelector = TaskSelector(
+                query,
+                task_uuid,
+                'docx',
+            )
+            task.select_particular_class()
+        except Exception as e:
+            status_message = f'error: traceback: {str(e)}'
 
         self.remove_dir(task_uuid)
 
         producer = KafkaProducer(
-            bootstrap_servers=self.bootstrap_servers,
+            bootstrap_server=self.bootstrap_server,
             topic=self.reports_ready_topic,
             timeout=self.producer_timeout,
         )
 
         producer.send_message(
             key=str(task_uuid),
+            message=f'{status_message}'
         )
         producer.producer_poll()
         producer.producer_flush()

@@ -6,11 +6,11 @@ from confluent_kafka import Producer, KafkaError
 class KafkaProducer:
     def __init__(
             self,
-            bootstrap_servers: str,
+            bootstrap_server: str,
             topic: str,
             timeout: int,
     ) -> None:
-        self._bootstrap_servers = bootstrap_servers
+        self._bootstrap_server = bootstrap_server
         self._topic = topic
         self._timeout = timeout
         self._producer = self.__configure_producer()
@@ -18,7 +18,7 @@ class KafkaProducer:
     def __configure_producer(self) -> Producer:
 
         conf = {
-            'bootstrap.servers': self.bootstrap_servers,
+            'bootstrap.servers': self.bootstrap_server,
         }
 
         prdcr: Producer = Producer(conf)
@@ -26,8 +26,8 @@ class KafkaProducer:
         return prdcr
 
     @property
-    def bootstrap_servers(self) -> str:
-        return self._bootstrap_servers
+    def bootstrap_server(self) -> str:
+        return self._bootstrap_server
 
     @property
     def topic(self) -> str:
@@ -57,7 +57,7 @@ class KafkaProducer:
             if error is not None:
                 sys.stderr.write(f'Отправка сообщения не удалась.\n Ошибка:\n{error}')
             else:
-                sys.stdout.write(f'Удачная отправка сообщения в партицию {msg.partition()}\nтопика: {msg.topic()}')
+                sys.stdout.write(f'Удачная отправка сообщения в партицию {msg.partition()} топика {msg.topic()}\n\n')
 
         try:
             self.producer.produce(

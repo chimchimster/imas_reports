@@ -1,4 +1,5 @@
 import sys
+import threading
 
 from typing import Any, Callable
 from abc import ABC, abstractmethod
@@ -8,14 +9,14 @@ from confluent_kafka import Consumer, TopicPartition, KafkaError
 class KafkaConsumer:
     def __init__(
             self,
-            bootstrap_servers: str,
+            bootstrap_server: str,
             reports_topic: str,
             reports_ready_topic: str,
             timeout: float,
             group_id: str,
             enable_auto_commit: bool = False,
     ) -> None:
-        self._bootstrap_servers = bootstrap_servers
+        self._bootstrap_server = bootstrap_server
         self._reports_topic = reports_topic
         self._reports_ready_topic = reports_ready_topic
         self._timeout = timeout
@@ -27,9 +28,9 @@ class KafkaConsumer:
     def __configure_consumer(self) -> Consumer:
 
         conf = {
-            'bootstrap.servers': self._bootstrap_servers,
-            'group.id': self._group_id,
-            'enable.auto.commit': self._enable_auto_commit,
+            'bootstrap.servers': self.bootstrap_server,
+            'group.id': self.group_id,
+            'enable.auto.commit': self.enable_auto_commit,
         }
 
         cnsmr: Consumer = Consumer(conf)
@@ -52,15 +53,34 @@ class KafkaConsumer:
     def timeout(self) -> float:
         return self._timeout
 
-    def __callback_print_assignment(self, consumer, partitions) -> None:
-        sys.stdout.write(f'Assignment consumer {consumer} on partition {partitions}')
+    @property
+    def bootstrap_server(self) -> str:
+        return self._bootstrap_server
 
-    def __subscribe_consumer(self, topic: str) -> None:
-        self.consumer.subscribe([topic], on_assign=self.__callback_print_assignment)
+    @property
+    def group_id(self) -> str:
+        return self._group_id
+
+    @property
+    def enable_auto_commit(self) -> bool:
+        return self._enable_auto_commit
+
+    @staticmethod
+    def __callback_print_assignment(consumer, partitions) -> None:
+        print(f'Assignment consumer {consumer} on partition {partitions}')
+
+    def __subscribe_consumer(self, topics: list[str]) -> None:
+
+        self.consumer.subscribe(topics, on_assign=self.__callback_print_assignment)
 
     def retrieve_message_from_reports_topic(self) -> tuple[bytes, str]:
-
-        self.__subscribe_consumer(self.reports_topic)
+        lock = threading.Lock()
+        self.__subscribe_consumer(
+            [
+                self.reports_topic,
+                self.reports_ready_topic
+             ],
+        )
 
         try:
             while True:
@@ -74,23 +94,22 @@ class KafkaConsumer:
                     else:
                         sys.stdout.write(f"Error: {msg.error().str()}")
 
+                print(f'I received message into reports_topic with key {msg.key()}')
                 self.consumer.commit(message=msg)
-
                 yield msg.key(), msg.value().decode('utf-8')
 
-                sys.stdout.write(f'I received message into reports_topic with key {msg.key()}')
-                self.wait_until_message_appears_in_reports_ready_topic(msg.key())
+                with lock:
+                    self.wait_until_message_appears_in_reports_ready_topic(msg.key())
 
         except KeyboardInterrupt:
-            sys.stderr.write('Завершение чтения сообщений из очереди.')
+            sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
 
     def wait_until_message_appears_in_reports_ready_topic(self, key: bytes) -> None:
-
-        self.__subscribe_consumer(self.reports_ready_topic)
 
         try:
             while True:
                 msg = self.consumer.poll(1.0)
+
                 if msg is None:
                     continue
                 if msg.error():
@@ -99,9 +118,12 @@ class KafkaConsumer:
                     else:
                         sys.stdout.write(f"Error: {msg.error().str()}")
 
+                print(msg.key())
+
                 if msg.key() == key:
-                    sys.stdout.write(f'I received message in reports_READY_topic with key: {msg.key()}')
+                    print(msg.key(), msg.value())
+                    print(f'I received message in reports_READY_topic with key: {msg.key()}')
                     break
 
         except KeyboardInterrupt:
-            sys.stderr.write('Завершение чтения сообщений из очереди.')
+            sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
