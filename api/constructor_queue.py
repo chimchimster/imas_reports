@@ -26,11 +26,11 @@ class DocxReportQueue(Resource):
 
         response_json: json = json.dumps(response_data)
 
-        bs_serv, topic = load_kafka_settings()
+        bs_serv, reports_topic, reports_ready_topic = load_kafka_settings()
 
         producer: KafkaProducer = KafkaProducer(
             bootstrap_servers=bs_serv,
-            topic=topic,
+            topic=reports_topic,
             timeout=1000,
         )
 
@@ -39,7 +39,7 @@ class DocxReportQueue(Resource):
             message=json_bytes,
         )
 
-        producer.producer_poll()
-        producer.producer_flush()
-
+        # producer.producer_poll()
+        # producer.producer_flush()
+        # print(1)
         return response_json, 200

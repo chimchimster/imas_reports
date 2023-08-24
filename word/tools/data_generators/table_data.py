@@ -267,7 +267,14 @@ class TableContentGenerator(PropertyMethodsMixin):
                     value = value.strip() if isinstance(value, str) else value
 
                     if key in translator:
-                        if translator[key] in ('Пост', 'Краткое содержание', 'Қысқаша мазмұны', 'Post', 'Title'):
+                        if translator[key] in (
+                                'Пост',
+                                'Краткое содержание',
+                                'Қысқаша мазмұны',
+                                'Post',
+                                'Title',
+                                'Summary',
+                        ):
                             tag = choose_tag(tags, value)
                             temp_val = value.lower()
 

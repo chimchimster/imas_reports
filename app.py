@@ -1,11 +1,8 @@
-import functools
-from queue import Queue
 from flask import Flask
 from flask_cors import CORS
-from threading import Thread
 from flask_restful import Api
 from routes import api_routes
-from consumers import QueueConsumer
+from kafka_manager import KafkaManager
 from kafka import load_kafka_settings
 
 app = Flask(__name__, static_folder='static')
@@ -17,14 +14,16 @@ for api_route, controller in api_routes:
 
 
 if __name__ == '__main__':
-    _bs_serv, _topic = load_kafka_settings()
+    bootstrap_servers, reports_topic, reports_ready_topic = load_kafka_settings()
 
-    with QueueConsumer(
-        bootstrap_servers=_bs_serv,
-        topic=_topic,
-        timeout=1.0,
+    with KafkaManager(
+        bootstrap_servers=bootstrap_servers,
+        reports_topic=reports_topic,
+        reports_ready_topic=reports_ready_topic,
+        producer_timeout=1000,
+        consumer_timeout=1.0,
         group_id='none',
-    ) as consumer:
+    ):
         app.run(host='0.0.0.0', debug=True)
 else:
     print('Дружище, ты пойми, это не библиотека. Постарайся не импортировать файлы с точкой входа.')

@@ -5,17 +5,19 @@ from abc import ABC, abstractmethod
 from confluent_kafka import Consumer, TopicPartition, KafkaError
 
 
-class KafkaConsumer(ABC):
+class KafkaConsumer:
     def __init__(
             self,
             bootstrap_servers: str,
-            topic: str,
+            reports_topic: str,
+            reports_ready_topic: str,
             timeout: float,
             group_id: str,
             enable_auto_commit: bool = False,
     ) -> None:
         self._bootstrap_servers = bootstrap_servers
-        self._topic = topic
+        self._reports_topic = reports_topic
+        self._reports_ready_topic = reports_ready_topic
         self._timeout = timeout
         self._group_id = group_id
         self._enable_auto_commit = enable_auto_commit
@@ -39,22 +41,26 @@ class KafkaConsumer(ABC):
         return self._consumer
 
     @property
-    def topic(self) -> str:
-        return self._topic
+    def reports_topic(self) -> str:
+        return self._reports_topic
+
+    @property
+    def reports_ready_topic(self) -> str:
+        return self._reports_ready_topic
 
     @property
     def timeout(self) -> float:
         return self._timeout
 
-    def __print_assignment(self, consumer, partitions) -> None:
-        sys.stdout.write(f'Assignment: {partitions}')
+    def __callback_print_assignment(self, consumer, partitions) -> None:
+        sys.stdout.write(f'Assignment consumer {consumer} on partition {partitions}')
 
-    def __subscribe_consumer(self) -> None:
-        self.consumer.subscribe([self.topic], on_assign=self.__print_assignment)
+    def __subscribe_consumer(self, topic: str) -> None:
+        self.consumer.subscribe([topic], on_assign=self.__callback_print_assignment)
 
-    def retrieve_message(self) -> tuple[bytes, str]:
+    def retrieve_message_from_reports_topic(self) -> tuple[bytes, str]:
 
-        self.__subscribe_consumer()
+        self.__subscribe_consumer(self.reports_topic)
 
         try:
             while True:
@@ -69,30 +75,33 @@ class KafkaConsumer(ABC):
                         sys.stdout.write(f"Error: {msg.error().str()}")
 
                 self.consumer.commit(message=msg)
+
                 yield msg.key(), msg.value().decode('utf-8')
+
+                sys.stdout.write(f'I received message into reports_topic with key {msg.key()}')
+                self.wait_until_message_appears_in_reports_ready_topic(msg.key())
+
         except KeyboardInterrupt:
             sys.stderr.write('Завершение чтения сообщений из очереди.')
 
-    @abstractmethod
-    def consume(self) -> tuple[str]:
-        """ Метод обрабатывающий сообщения в очереди задач Кафка. """
+    def wait_until_message_appears_in_reports_ready_topic(self, key: bytes) -> None:
 
-    @abstractmethod
-    def process_task(self, key: bytes, value: str) -> Any:
-        """ Метод обрабатывабщий операции полученные из очереди задач. """
+        self.__subscribe_consumer(self.reports_ready_topic)
 
-    @abstractmethod
-    def queue_worker(self) -> None:
-        """ Метод обрабатывающий операции в очереди. """
+        try:
+            while True:
+                msg = self.consumer.poll(1.0)
+                if msg is None:
+                    continue
+                if msg.error():
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                        continue
+                    else:
+                        sys.stdout.write(f"Error: {msg.error().str()}")
 
-    @abstractmethod
-    def partial_task(self, task: Callable, *args) -> Callable:
-        """ Метод позволяющий добавлять задачи в виде функций с аргументами.  """
+                if msg.key() == key:
+                    sys.stdout.write(f'I received message in reports_READY_topic with key: {msg.key()}')
+                    break
 
-    @abstractmethod
-    def add_task(self, task: Callable) -> None:
-        """ Метод добавляющий задачу в очередь. """
-
-    @abstractmethod
-    def notify_queue(self) -> None:
-        """ Метод оповещающий очередь о том, что задача выполнена. """
+        except KeyboardInterrupt:
+            sys.stderr.write('Завершение чтения сообщений из очереди.')

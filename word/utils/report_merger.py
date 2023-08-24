@@ -102,3 +102,6 @@ class MergeReport:
         )
 
         composer.save(output_file)
+
+        from kafka import KafkaProducer
+
