@@ -1,6 +1,6 @@
 import sys
-import threading
 
+from threading import Thread, Event
 from typing import Any, Callable
 from abc import ABC, abstractmethod
 from confluent_kafka import Consumer, TopicPartition, KafkaError
@@ -74,7 +74,7 @@ class KafkaConsumer:
         self.consumer.subscribe(topics, on_assign=self.__callback_print_assignment)
 
     def retrieve_message_from_reports_topic(self) -> tuple[bytes, str]:
-        lock = threading.Lock()
+
         self.__subscribe_consumer(
             [
                 self.reports_topic,
@@ -96,15 +96,23 @@ class KafkaConsumer:
 
                 print(f'I received message into reports_topic with key {msg.key()}')
                 self.consumer.commit(message=msg)
+
+                notification_event = Event()
+
+                notification_thread = Thread(
+                    target=self.wait_until_message_appears_in_reports_ready_topic,
+                    args=(msg.key(), notification_event),
+                )
+                notification_thread.start()
+
                 yield msg.key(), msg.value().decode('utf-8')
 
-                with lock:
-                    self.wait_until_message_appears_in_reports_ready_topic(msg.key())
+                notification_event.wait()
 
         except KeyboardInterrupt:
             sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
 
-    def wait_until_message_appears_in_reports_ready_topic(self, key: bytes) -> None:
+    def wait_until_message_appears_in_reports_ready_topic(self, key: bytes, event: Event) -> None:
 
         try:
             while True:
@@ -127,3 +135,5 @@ class KafkaConsumer:
 
         except KeyboardInterrupt:
             sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
+        finally:
+            event.set()

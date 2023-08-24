@@ -2,6 +2,7 @@ import uuid
 import json
 
 from flask import request
+from threading import Thread
 from flask_restful import Resource
 from kafka import load_kafka_settings, KafkaProducer
 
