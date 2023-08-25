@@ -1,6 +1,7 @@
+import functools
 import json
-import threading
 
+from queue import Queue
 from threading import Thread
 from tasker import TaskSelector
 from utils import RemoveDirsMixin
@@ -26,6 +27,26 @@ class KafkaManager(RemoveDirsMixin):
         self._consumer_timeout = consumer_timeout
         self._group_id = group_id
 
+    def __enter__(self) -> ContextManager:
+
+        self._queue: Queue = Queue()
+
+        self.consumer: KafkaConsumer = KafkaConsumer(
+            bootstrap_server=self.bootstrap_server,
+            reports_topic=self.reports_topic,
+            reports_ready_topic=self.reports_ready_topic,
+            timeout=self.consumer_timeout,
+            group_id=self.group_id,
+        )
+
+        self.consume_thread: Thread = Thread(target=self.consume)
+        self.consume_thread.start()
+
+        self.queue_thread: Thread = Thread(target=self.handle_queue)
+        self.queue_thread.start()
+
+        return self
+
     @property
     def bootstrap_server(self):
         return self._bootstrap_server
@@ -50,28 +71,39 @@ class KafkaManager(RemoveDirsMixin):
     def group_id(self):
         return self._group_id
 
-    def __enter__(self) -> ContextManager:
+    @property
+    def queue(self) -> Queue:
+        return self._queue
 
-        self.consumer = KafkaConsumer(
-            bootstrap_server=self.bootstrap_server,
-            reports_topic=self.reports_topic,
-            reports_ready_topic=self.reports_ready_topic,
-            timeout=self.consumer_timeout,
-            group_id=self.group_id,
-        )
+    @staticmethod
+    def partial_task(task: Callable, *args) -> Callable:
 
-        self.consume_thread: Thread = Thread(target=self.consume)
-        self.consume_thread.start()
+        return functools.partial(task, *args)
 
-        return self
+    def handle_queue(self) -> None:
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        self.consume_thread.join()
+        while True:
+            item = self.queue.get()
+            if item is None:
+                break
+            item.__call__()
+            self.notify_queue()
+
+    def add_task(self, task: Callable) -> None:
+        self.queue.put(task)
+
+    def notify_queue(self) -> None:
+        self.queue.task_done()
 
     def consume(self) -> None:
         for key, value in self.consumer.retrieve_message_from_reports_topic():
-            print(key, value)
-            self.process_task(key, value)
+            self.add_task(
+                self.partial_task(
+                    self.process_task,
+                    key,
+                    value,
+                )
+            )
 
     def process_task(self, key: bytes, value: str) -> Any:
 
@@ -88,8 +120,8 @@ class KafkaManager(RemoveDirsMixin):
                 'docx',
             )
             task.select_particular_class()
-        except Exception as e:
-            status_message = f'error: traceback: {str(e)}'
+        except Exception:
+            status_message = 'error'
 
         self.remove_dir(task_uuid)
 
@@ -107,3 +139,8 @@ class KafkaManager(RemoveDirsMixin):
         producer.producer_flush()
 
         print(f'I have done task {task_uuid}')
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        self.queue.put(None)
+        self.consume_thread.join()
+        self.queue_thread.join()

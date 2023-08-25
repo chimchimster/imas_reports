@@ -78,7 +78,6 @@ class KafkaConsumer:
         self.__subscribe_consumer(
             [
                 self.reports_topic,
-                self.reports_ready_topic
              ],
         )
 
@@ -94,25 +93,13 @@ class KafkaConsumer:
                     else:
                         sys.stdout.write(f"Error: {msg.error().str()}")
 
-                print(f'I received message into reports_topic with key {msg.key()}')
                 self.consumer.commit(message=msg)
-
-                notification_event = Event()
-
-                notification_thread = Thread(
-                    target=self.wait_until_message_appears_in_reports_ready_topic,
-                    args=(msg.key(), notification_event),
-                )
-                notification_thread.start()
-
                 yield msg.key(), msg.value().decode('utf-8')
-
-                notification_event.wait()
 
         except KeyboardInterrupt:
             sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
 
-    def wait_until_message_appears_in_reports_ready_topic(self, key: bytes, event: Event) -> None:
+    def wait_until_message_appears_in_reports_ready_topic(self, key: bytes) -> None:
 
         try:
             while True:
@@ -135,5 +122,3 @@ class KafkaConsumer:
 
         except KeyboardInterrupt:
             sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
-        finally:
-            event.set()
