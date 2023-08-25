@@ -87,11 +87,11 @@ class MergeReport:
                     run = master.add_paragraph().add_run()
                     run.add_break(docx.enum.text.WD_BREAK.PAGE)
 
-                composer.append(doc)
-
                 if idx == 0:
                     run = master.add_paragraph().add_run()
                     run.add_break(docx.enum.text.WD_BREAK.PAGE)
+
+                composer.append(doc)
 
         self.create_result_folder()
         self.set_path_to_result(self.folder)
@@ -102,6 +102,4 @@ class MergeReport:
         )
 
         composer.save(output_file)
-
-        from kafka import KafkaProducer
 

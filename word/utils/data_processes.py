@@ -208,6 +208,7 @@ class ProcessDataGenerator(Process):
 
                 def add_heading_to_table(_master: docx.Document) -> None:
                     def choose_title(_is_table_: bool, _type_: str) -> str:
+
                         lang_dicts: dict = ReportLanguagePicker(report_format)()
 
                         dict_obj = lang_dicts.get('titles')

@@ -1,6 +1,7 @@
 from datetime import datetime
 from operator import itemgetter
 
+from .utils import DataSorter
 from word.local import ReportLanguagePicker
 from word.mixins import PropertyMethodsMixin
 
@@ -56,11 +57,14 @@ class TableContentGenerator(PropertyMethodsMixin):
             10: 'TikTok',
         }
 
-        def sort_data(table_data):
+        def sort_data(table_data) -> list[list]:
+            """ Данная функция работает, но применяет сортировки значительно медленее, чем Pandas.
+                Поэтому функция использоваться в дальнейшем не будет. Оставляю ее как архивную. """
+
             order = self.settings.get('order')
 
             if not order:
-                return
+                return table_data
 
             date = order.get('date')
             predominantly = order.get('predominantly')
@@ -193,7 +197,13 @@ class TableContentGenerator(PropertyMethodsMixin):
             return sorted_table_data
 
         def translate(_key: str, _translator_type):
-            news = sort_data(self.response_part.get(_key))
+
+            order = self.settings.get('order')
+
+            table_data = self.response_part.get(_key, [{}])
+
+            news = DataSorter(table_data, order).sort_data()
+
             if news:
                 self.__apply_translator(_translator_type, news)
 

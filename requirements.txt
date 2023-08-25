@@ -4,6 +4,7 @@ blinker==1.6.2
 certifi==2023.7.22
 charset-normalizer==3.2.0
 click==8.1.6
+confluent-kafka==2.2.0
 docopt==0.6.2
 docx==0.2.4
 docxcompose==1.4.0
@@ -24,10 +25,14 @@ pipreqs==0.4.13
 pluggy==1.2.0
 pytest==7.4.0
 python-docx==0.8.11
+python-dotenv==1.0.0
 pytz==2023.3
 requests==2.31.0
 six==1.16.0
+snakeviz==2.2.0
 tomli==2.0.1
+tornado==6.3.2
 urllib3==2.0.4
 Werkzeug==2.3.6
 yarg==0.1.9
+

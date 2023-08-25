@@ -1,5 +1,6 @@
 import functools
 import json
+import time
 
 from queue import Queue
 from threading import Thread
@@ -112,17 +113,21 @@ class KafkaManager(RemoveDirsMixin):
         query: list = json.loads(value)
 
         task_uuid: str = key.decode('utf-8')
-
+        start_time = 0
+        end_time = 0
         try:
+            start_time = time.time()
             task: TaskSelector = TaskSelector(
                 query,
                 task_uuid,
                 'docx',
             )
             task.select_particular_class()
+            end_time = time.time()
         except Exception:
             status_message = 'error'
 
+        print(end_time - start_time)
         self.remove_dir(task_uuid)
 
         producer = KafkaProducer(
