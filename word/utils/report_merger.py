@@ -88,7 +88,7 @@ class MergeReport:
                     run = master.add_paragraph().add_run()
                     run.add_break(docx.enum.text.WD_BREAK.PAGE)
 
-                if idx == 0:
+                if idx == 1:
                     run = master.add_paragraph().add_run()
                     run.add_break(docx.enum.text.WD_BREAK.PAGE)
 

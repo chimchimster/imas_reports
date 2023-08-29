@@ -118,7 +118,7 @@ class DataSorter:
             ]
 
         if sort_key is not None:
-            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 0)
+            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 1)
             return sorted_dataframe
 
         return dataframe
@@ -144,7 +144,7 @@ class DataSorter:
             ]
 
         if sort_key is not None:
-            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 0)
+            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 1)
             return sorted_dataframe
 
         return dataframe
@@ -168,7 +168,7 @@ class DataSorter:
             ]
 
         if sort_key is not None:
-            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 0)
+            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 1)
             return sorted_dataframe
 
         return dataframe
@@ -195,7 +195,7 @@ class DataSorter:
             ]
 
         if sort_key is not None:
-            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 0)
+            sorted_dataframe = dataframe.sort_values(by=sort_key, ascending=date == 1)
             return sorted_dataframe
 
         return dataframe
@@ -206,9 +206,9 @@ class DataSorter:
         sorted_dataframe = None
 
         if 'nd_date' in dataframe.columns:
-            sorted_dataframe = dataframe.sort_values(by='nd_date', ascending=date == 0)
+            sorted_dataframe = dataframe.sort_values(by='nd_date', ascending=date == 1)
         elif 'date' in dataframe.columns:
-            sorted_dataframe = dataframe.sort_values(by='date', ascending=date == 0)
+            sorted_dataframe = dataframe.sort_values(by='date', ascending=date == 1)
         if sorted_dataframe is not None:
             return sorted_dataframe
 

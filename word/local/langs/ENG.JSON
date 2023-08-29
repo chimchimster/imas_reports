@@ -65,5 +65,12 @@
     "10": "okt",
     "11": "nov",
     "12": "dec"
+  },
+  "messages_count": {
+    "title": "Total number of messages",
+    "messages": "Messages",
+    "positive": "Positive",
+    "negative": "Negative",
+    "neutral": "Neutral"
   }
 }

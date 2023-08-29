@@ -12,11 +12,11 @@ class RemoveDirsMixin:
         #     'word',
         #     'merged',
         # ),
-        os.path.join(
-            os.getcwd(),
-            'word',
-            'temp',
-        ),
+        # os.path.join(
+        #     os.getcwd(),
+        #     'word',
+        #     'temp',
+        # ),
         os.path.join(
             os.getcwd(),
             'word',
