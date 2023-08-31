@@ -3,7 +3,7 @@ import uuid
 import docx
 import shutil
 
-from docxtpl import DocxTemplate
+from docxtpl import DocxTemplate, InlineImage
 from docx.shared import RGBColor, Pt
 from docxcompose.composer import Composer
 
@@ -13,7 +13,8 @@ from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
 
 from word.local import ReportLanguagePicker
 from word.tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
-                        TableContentGenerator, TableStylesGenerator, SchedulerStylesGenerator)
+                        TableContentGenerator, TableStylesGenerator, SchedulerStylesGenerator,
+                        HighchartsCreator)
 
 
 class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
@@ -78,7 +79,8 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             _type_of_table: str = self.proc_obj.type
             _is_table: bool = self.proc_obj.settings.get('table')
 
-            temp_table_template_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+            temp_table_template_folder_name: str = '_'.join(
+                (_type_of_table, str(self.proc_obj.folder.unique_identifier)))
             temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
 
             path_to_copied_file: str = os.path.join(
@@ -310,13 +312,13 @@ class TagsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
-                    os.getcwd(),
-                    'word',
-                    'temp_templates',
-                    f'{self.proc_obj.folder.unique_identifier}',
-                    'template_parts',
-                    'tags.docx',
-                )
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'tags.docx',
+        )
 
     def apply(self) -> None:
         path_to_obj_tags = self.template_path
@@ -347,13 +349,13 @@ class BaseProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
-                os.getcwd(),
-                'word',
-                'temp_templates',
-                f'{self.proc_obj.folder.unique_identifier}',
-                'template_parts',
-                'base.docx',
-            )
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'base.docx',
+        )
 
     def apply(self) -> None:
         position = 0
@@ -397,7 +399,6 @@ class TotalMessagesCountProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         )
 
     def apply(self) -> None:
-
         template: DocxTemplate = DocxTemplate(self._template_path)
 
         _position = self.proc_obj.settings.get('position')
@@ -438,3 +439,45 @@ class TotalMessagesCountProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         template.render(context, autoescape=True)
 
         template.save(output_path)
+
+
+class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'messages_dynamics.docx',
+        )
+
+    def apply(self) -> None:
+        template: DocxTemplate = DocxTemplate(self._template_path)
+
+        highcharts_messages_dynamic_object = HighchartsCreator(
+            'rus',
+            self.proc_obj.folder,
+        )
+
+        query_string = highcharts_messages_dynamic_object.generate_query_string_for_generating_linear_diagram(
+            [
+                {'name': 'name1', },
+            ],
+            [
+                {'surname': 'surname1'},
+            ]
+        )
+
+        response = highcharts_messages_dynamic_object.do_post_request_to_highcharts_server(query_string)
+
+        highcharts_messages_dynamic_object.save_data_as_png(response)
+
+        dynamics_image = InlineImage(template, image_descriptor='PLAINTEXT',)
+
+        template.render({'messages_dynamics': dynamics_image}, autoescape=True)
+
+        template.save('file.docx')
+

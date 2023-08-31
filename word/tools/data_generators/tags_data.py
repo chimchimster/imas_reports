@@ -1,4 +1,4 @@
-from .utils import DataGeneratorMixin
+from .mixins import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 
 

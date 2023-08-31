@@ -9,7 +9,7 @@ class FabricMixin:
     @classmethod
     def select_particular_class(cls, obj_type: str, *args, apply: bool = True) -> Any:
         """ Метод либо определяющий у какого из экзмепляров
-            будет вызван метод apply() либо возвращающий экземпляр класса. """
+            будет вызван метод apply(), либо возвращающий экземпляр класса. """
 
         _instance_of = cls.__available_classes__.get(obj_type)
 

@@ -1,2 +1,3 @@
 from .mixins import FabricMixin
-from .process_runners import TableProcess, ContentProcess, TagsProcess, BaseProcess, TotalMessagesCountProcess
+from .process_runners import (TableProcess, ContentProcess, TagsProcess,
+                              BaseProcess, TotalMessagesCountProcess, MessagesDynamicsProcess)

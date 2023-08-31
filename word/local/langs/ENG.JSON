@@ -72,5 +72,6 @@
     "positive": "Positive",
     "negative": "Negative",
     "neutral": "Neutral"
-  }
+  },
+  "messages_dynamics": "Messages dynamics"
 }

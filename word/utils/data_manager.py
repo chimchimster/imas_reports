@@ -1,12 +1,11 @@
 import os
 import shutil
 
-from word.mixins import PropertyMethodsMixin
-
 from .tools import FabricMixin
+from word.mixins import PropertyMethodsMixin
 from .data_processes import ProcessDataGenerator
 from ..tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
-                     TableContentGenerator, TotalMessagesCountDataGenerator)
+                     TableContentGenerator, TotalMessagesCountDataGenerator, MessagesDynamicsDataGenerator)
 
 
 class DataManager(FabricMixin, PropertyMethodsMixin):
@@ -17,6 +16,7 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         'contents': ContentGenerator,
         'tags': TagsGenerator,
         'count': TotalMessagesCountDataGenerator,
+        'message_dynamic': MessagesDynamicsDataGenerator,
     }
 
     def __init__(
@@ -38,10 +38,9 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
 
             obj_type = client_side_setting.get('id')
 
-            try:
-                # Обработка всех классов кроме, базового отвечающего за главную страницу.
-                if obj_type:
-
+            # Обработка всех классов кроме, базового отвечающего за главную страницу.
+            if obj_type:
+                try:
                     gen_obj = self.select_particular_class(
                         obj_type,
                         self.response,
@@ -49,14 +48,13 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
                         self.static_client_side_settings,
                         apply=False,
                     )
-                    print(gen_obj)
-                    gen_obj.folder = self.folder
+                    setattr(gen_obj, 'folder', self.folder)
                     self.procs_objs.append(gen_obj)
-            except Exception as e:
-                print(e)
+                except Exception as e:
+                    print(e)
         # Главную страницу мы обрабатываем в любом случае.
         # Наличие клиентских настроек не играет никакой роли.
-        # Нужны только вшитые, статические клиентские настройки.
+        # Нужны только вшитые (статические) клиентские настройки.
         base_page_obj = BasePageDataGenerator(
             self.response,
             None,
@@ -89,7 +87,8 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         if not os.path.exists(os.path.join(
                 os.getcwd(),
                 f'{self.folder.unique_identifier}',
-            )):
+            )
+        ):
             os.mkdir(
                 os.path.join(
                     os.getcwd(),

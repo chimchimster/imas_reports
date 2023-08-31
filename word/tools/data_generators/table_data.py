@@ -2,7 +2,8 @@ from datetime import datetime
 
 from word.local import ReportLanguagePicker
 from word.mixins import PropertyMethodsMixin
-from .utils import DataSorter, DataGeneratorMixin
+from .mixins import DataGeneratorMixin
+from .utils import DataSorter
 
 
 class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
