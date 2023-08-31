@@ -1,18 +1,19 @@
 import time
+
 from datetime import datetime
+from .utils import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 
 
-class BasePageDataGenerator(PropertyMethodsMixin):
+class BasePageDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
     """ Генерирует заглавную страницу docx документа.
         Флаг 'base' исплользуется в word/utils/data_threads
         в переопределенном методе run объекта ThreadDataGenerator. """
 
     flag: str = 'base'
 
-    def __init__(self, response_part: dict, static_settings: dict) -> None:
-        self._response_part = response_part
-        self._static_settings = static_settings
+    def __init__(self, response_part, settings, static_settings):
+        super().__init__(response_part, settings, static_settings)
         self._data_collection = {}
 
     def generate_data(self) -> None:

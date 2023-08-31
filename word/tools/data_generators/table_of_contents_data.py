@@ -1,19 +1,13 @@
+from .utils import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 
 
-class ContentGenerator(PropertyMethodsMixin):
+class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
     flag: str = 'content'
 
-    def __init__(
-            self,
-            response_part,
-            settings,
-            static_settings,
-    ) -> None:
-        self._response_part = response_part
-        self._settings = settings
-        self._static_settings = static_settings
+    def __init__(self, response_part, settings, static_settings):
+        super().__init__(response_part, settings, static_settings)
         self._data_collection = {'soc': [], 'smi': []}
 
     def generate_data(self) -> None:

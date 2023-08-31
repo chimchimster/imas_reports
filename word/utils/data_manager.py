@@ -2,11 +2,23 @@ import os
 import shutil
 
 from word.mixins import PropertyMethodsMixin
+
+from .tools import FabricMixin
 from .data_processes import ProcessDataGenerator
-from ..tools import BasePageDataGenerator, TagsGenerator, ContentGenerator, TableContentGenerator
+from ..tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
+                     TableContentGenerator, TotalMessagesCountDataGenerator)
 
 
-class DataManager(PropertyMethodsMixin):
+class DataManager(FabricMixin, PropertyMethodsMixin):
+
+    __available_classes__ = {
+        'smi': TableContentGenerator,
+        'soc': TableContentGenerator,
+        'contents': ContentGenerator,
+        'tags': TagsGenerator,
+        'count': TotalMessagesCountDataGenerator,
+    }
+
     def __init__(
             self,
             client_side_settings: list,
@@ -22,49 +34,36 @@ class DataManager(PropertyMethodsMixin):
         self.create_temp_folder()
         self.create_temp_templates()
 
-        for client_side_setting in self.client_side_settings:
-            match client_side_setting.get('id'):
-                case 'tags':
-                    tags_obj: TagsGenerator = TagsGenerator(
+        for client_side_setting in self.client_side_settings[:-1]:
+
+            obj_type = client_side_setting.get('id')
+
+            try:
+                # Обработка всех классов кроме, базового отвечающего за главную страницу.
+                if obj_type:
+
+                    gen_obj = self.select_particular_class(
+                        obj_type,
                         self.response,
                         client_side_setting,
                         self.static_client_side_settings,
+                        apply=False,
                     )
-                    tags_obj.folder = self.folder
-                    self.procs_objs.append(tags_obj)
-                case 'contents':
-                    contents_obj: ContentGenerator = ContentGenerator(
-                        self.response,
-                        client_side_setting,
-                        self.static_client_side_settings,
-                    )
-                    contents_obj.folder = self.folder
-                    self.procs_objs.append(contents_obj)
-                case 'smi':
-                    smi_table_obj = TableContentGenerator(
-                        self.response,
-                        client_side_setting,
-                        self.static_client_side_settings,
-                        'smi',
-                    )
-                    smi_table_obj.folder = self.folder
-                    self.procs_objs.append(smi_table_obj)
-                case 'soc':
-                    soc_table_obj = TableContentGenerator(
-                        self.response,
-                        client_side_setting,
-                        self.static_client_side_settings,
-                        'soc',
-                    )
-                    soc_table_obj.folder = self.folder
-                    self.procs_objs.append(soc_table_obj)
-                case _:
-                    base_page_obj = BasePageDataGenerator(
-                        self.response,
-                        self.static_client_side_settings,
-                    )
-                    base_page_obj.folder = self.folder
-                    self.procs_objs.append(base_page_obj)
+                    print(gen_obj)
+                    gen_obj.folder = self.folder
+                    self.procs_objs.append(gen_obj)
+            except Exception as e:
+                print(e)
+        # Главную страницу мы обрабатываем в любом случае.
+        # Наличие клиентских настроек не играет никакой роли.
+        # Нужны только вшитые, статические клиентские настройки.
+        base_page_obj = BasePageDataGenerator(
+            self.response,
+            None,
+            self.static_client_side_settings,
+        )
+        base_page_obj.folder = self.folder
+        self.procs_objs.append(base_page_obj)
 
     def apply_processes(self):
 

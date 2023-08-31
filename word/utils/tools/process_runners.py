@@ -1,22 +1,22 @@
 import os
-import shutil
 import uuid
-
-from multiprocessing import Semaphore, Process
-
 import docx
+import shutil
 
 from docxtpl import DocxTemplate
 from docx.shared import RGBColor, Pt
 from docxcompose.composer import Composer
-from .mixins import PropertyProcessesMixin
-from .abstract_process_runner import AbstractRunner
+
+from multiprocessing import Semaphore, Process
+
+from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
+
 from word.local import ReportLanguagePicker
 from word.tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
                         TableContentGenerator, TableStylesGenerator, SchedulerStylesGenerator)
 
 
-class TableProcess(AbstractRunner, PropertyProcessesMixin):
+class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
@@ -242,7 +242,7 @@ class TableProcess(AbstractRunner, PropertyProcessesMixin):
                 )
             )
 
-    def run_proc_obj(self) -> None:
+    def apply(self) -> None:
         self.create_temp_template_folder()
         self.create_temp_result_folder()
 
@@ -264,7 +264,7 @@ class TableProcess(AbstractRunner, PropertyProcessesMixin):
         self.merge_procs_tables()
 
 
-class ContentProcess(AbstractRunner, PropertyProcessesMixin):
+class ContentProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path: str = os.path.join(
@@ -276,7 +276,7 @@ class ContentProcess(AbstractRunner, PropertyProcessesMixin):
             'table_of_contents.docx',
         )
 
-    def run_proc_obj(self) -> None:
+    def apply(self) -> None:
         path_to_obj_table_of_contents = self.template_path
         template = DocxTemplate(path_to_obj_table_of_contents)
 
@@ -306,7 +306,7 @@ class ContentProcess(AbstractRunner, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class TagsProcess(AbstractRunner, PropertyProcessesMixin):
+class TagsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -318,7 +318,7 @@ class TagsProcess(AbstractRunner, PropertyProcessesMixin):
                     'tags.docx',
                 )
 
-    def run_proc_obj(self) -> None:
+    def apply(self) -> None:
         path_to_obj_tags = self.template_path
         template = DocxTemplate(path_to_obj_tags)
 
@@ -343,7 +343,7 @@ class TagsProcess(AbstractRunner, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class BaseProcess(AbstractRunner, PropertyProcessesMixin):
+class BaseProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -355,7 +355,7 @@ class BaseProcess(AbstractRunner, PropertyProcessesMixin):
                 'base.docx',
             )
 
-    def run_proc_obj(self) -> None:
+    def apply(self) -> None:
         position = 0
         path_to_obj_base = self.template_path
         template = DocxTemplate(path_to_obj_base)
@@ -384,18 +384,19 @@ class BaseProcess(AbstractRunner, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class TotalMessagesCountProcess(AbstractRunner, PropertyProcessesMixin):
+class TotalMessagesCountProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
             os.getcwd(),
+            'word',
             'temp_templates',
             f'{self.proc_obj.folder.unique_identifier}',
             'template_parts',
             'total_messages_count.docx',
         )
 
-    def run_proc_obj(self) -> None:
+    def apply(self) -> None:
 
         template: DocxTemplate = DocxTemplate(self._template_path)
 

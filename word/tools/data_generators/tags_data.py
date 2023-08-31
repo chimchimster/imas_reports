@@ -1,19 +1,13 @@
+from .utils import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 
 
-class TagsGenerator(PropertyMethodsMixin):
+class TagsGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
     flag: str = 'tags'
 
-    def __init__(
-            self,
-            response_part: dict,
-            settings: dict,
-            static_settings: dict,
-    ):
-        self._response_part = response_part
-        self._settings = settings
-        self._static_settings = static_settings
+    def __init__(self, response_part, settings, static_settings):
+        super().__init__(response_part, settings, static_settings)
         self._folder = None
         self._data_collection = []
 

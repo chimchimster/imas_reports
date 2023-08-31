@@ -1,9 +1,9 @@
 from typing import Any
 from multiprocessing import Process
-from .tools import TableProcess, ContentProcess, TagsProcess, BaseProcess, TotalMessagesCountProcess
+from .tools import TableProcess, ContentProcess, TagsProcess, BaseProcess, TotalMessagesCountProcess, FabricMixin
 
 
-class ProcessDataGenerator(Process):
+class ProcessDataGenerator(FabricMixin, Process):
 
     __available_classes__ = {
         'table': TableProcess,
@@ -27,15 +27,4 @@ class ProcessDataGenerator(Process):
 
         process_type: str = self.proc_obj.flag
 
-        self.select_particular_class(process_type, self.proc_obj, data, report_format)
-
-    @classmethod
-    def select_particular_class(cls, process_type: str, *args) -> None:
-
-        _instance_of = cls.__available_classes__.get(process_type)
-
-        if not _instance_of:
-            return
-
-        instance: Any = _instance_of(*args)
-        instance.run_proc_obj()
+        self.select_particular_class(process_type, self.proc_obj, data, report_format, apply=True)
