@@ -1,2 +1,2 @@
-from .utils import HighchartsCreator
+from .utils import HighchartsCreator, MetricsGenerator
 from .messages_dynamics_data import MessagesDynamicsDataGenerator

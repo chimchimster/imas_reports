@@ -5,12 +5,13 @@ import requests
 from functools import wraps
 from typing import Any, Callable
 from dataclasses import dataclass
+from word.local import ReportLanguagePicker
 
 
 class HighchartsCreator:
 
-    def __init__(self, lang: str, folder) -> None:
-        self._lang = lang
+    def __init__(self, report_format: str, folder) -> None:
+        self._report_format = report_format
         self._folder = folder
         self._headers: dict = {
             'content-type': 'application/json',
@@ -24,8 +25,8 @@ class HighchartsCreator:
         return self._folder
 
     @property
-    def lang(self) -> str:
-        return self._lang
+    def report_format(self) -> str:
+        return self._report_format
 
     @staticmethod
     def __get_highcharts_server() -> str:
@@ -33,7 +34,7 @@ class HighchartsCreator:
         return os.environ.get('HIGHCHARTS_SERVER')
 
     @staticmethod
-    def generate_query_string_for_generating_bar_diagram(
+    def generate_query_for_bar_diagram(
             chart_categories: list[dict],
             chart_series: list[dict],
             chart_colors: list[str],
@@ -114,7 +115,7 @@ class HighchartsCreator:
         return json.dumps(data)
 
     @staticmethod
-    def generate_query_string_for_generating_column_diagram(
+    def generate_query_for_column_diagram(
 
             chart_categories: list[dict],
             chart_series: list[dict],
@@ -196,7 +197,7 @@ class HighchartsCreator:
         return json.dumps(data)
 
     @staticmethod
-    def generate_query_string_for_generating_pie_diagram(
+    def generate_query_for_pie_diagram(
             chart_categories: list[dict],
             chart_series: list[dict],
             chart_color: list[str],
@@ -255,7 +256,7 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
-    def generate_query_string_for_generating_linear_diagram(
+    def generate_query_for_linear_diagram(
             self,
             chart_categories: list[dict],
             chart_series: list[dict],
@@ -265,7 +266,9 @@ class HighchartsCreator:
             _categories=chart_categories,
         )
 
-        setattr(linear_obj, 'folder', self.folder)
+        langs_dict: dict = ReportLanguagePicker(self.report_format)()
+
+        y_title: str = langs_dict.get('messages_dynamics')
 
         data = {
             'infile': {
@@ -289,7 +292,7 @@ class HighchartsCreator:
                 },
                 'yAxis': {
                     'title': {
-                        'text': "ЗАГОЛОВОК",
+                        'text': y_title,
                     },
                     'labels': {
                         'formatter': None
@@ -341,55 +344,45 @@ class HighchartsCreator:
         return json.dumps(data)
 
     def do_post_request_to_highcharts_server(self, data: str) -> requests.models.Response:
-        response = requests.post(self._highcharts_server,
-                                 data=data.encode(),
-                                 headers=self._headers,
-                                 verify=False)
+        response = requests.post(
+            self._highcharts_server,
+            data=data.encode(),
+            headers=self._headers,
+            verify=False,
+        )
         return response
 
-    def save_data_as_png(self, response: requests.models.Response):
+    def save_data_as_png(self, response: requests.models.Response, path_to_image: str) -> None:
 
-        def create_highcharts_temp_images_directory():
+        path_to_highcharts_temp_images = os.path.join(
+            os.getcwd(),
+            'word',
+            'highcharts_temp_images',
+        )
 
-            if not os.path.exists(
-                    os.path.join(
-                        os.getcwd(),
-                        'word',
-                        'highcharts_temp_images',
-                    )
-            ):
-                os.mkdir(
-                    os.path.join(
-                        os.getcwd(),
-                        'word',
-                        'highcharts_temp_images',
-                    )
-                )
+        def create_highcharts_temp_images_directory() -> None:
+            if not os.path.exists(path_to_highcharts_temp_images):
+                os.mkdir(path_to_highcharts_temp_images)
 
-            return create_highcharts_temp_images_directory
-
-        def create_unique_folder():
+        def create_unique_folder() -> None:
 
             if not os.path.exists(
                     os.path.join(
-                        os.getcwd(),
-                        'word',
-                        'highcharts_temp_images',
+                        path_to_highcharts_temp_images,
                         f'{self.folder.unique_identifier}'
                     )
             ):
                 os.mkdir(
                     os.path.join(
-                        os.getcwd(),
-                        'word',
-                        'highcharts_temp_images',
+                        path_to_highcharts_temp_images,
                         f'{self.folder.unique_identifier}'
                     )
                 )
 
-            return create_unique_folder
+        create_highcharts_temp_images_directory()
+        create_unique_folder()
 
-        with open('bytes-png.png', 'wb') as file:
+        with open(path_to_image, 'wb') as file:
             for _bytes in response:
                 file.write(_bytes)
 

@@ -1,4 +1,3 @@
-from .utils import HighchartsCreator
 from ..mixins import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 

@@ -15,6 +15,11 @@ class RemoveDirsMixin:
         os.path.join(
             os.getcwd(),
             'word',
+            'highcharts_temp_images',
+        ),
+        os.path.join(
+            os.getcwd(),
+            'word',
             'temp',
         ),
         os.path.join(

@@ -4,7 +4,7 @@ import docx
 import shutil
 
 from docxtpl import DocxTemplate, InlineImage
-from docx.shared import RGBColor, Pt
+from docx.shared import RGBColor, Pt, Cm
 from docxcompose.composer import Composer
 
 from multiprocessing import Semaphore, Process
@@ -14,7 +14,7 @@ from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
 from word.local import ReportLanguagePicker
 from word.tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
                         TableContentGenerator, TableStylesGenerator, SchedulerStylesGenerator,
-                        HighchartsCreator)
+                        HighchartsCreator, MetricsGenerator)
 
 
 class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
@@ -457,27 +457,53 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def apply(self) -> None:
         template: DocxTemplate = DocxTemplate(self._template_path)
 
-        highcharts_messages_dynamic_object = HighchartsCreator(
+        _position: str = self.proc_obj.settings.get('position')
+
+        messages_dynamic = HighchartsCreator(
             'rus',
             self.proc_obj.folder,
         )
 
-        query_string = highcharts_messages_dynamic_object.generate_query_string_for_generating_linear_diagram(
-            [
-                {'name': 'name1', },
-            ],
-            [
-                {'surname': 'surname1'},
+        chart_categories = MetricsGenerator(
+            None,
+            None,
+            '2023-07-28',
+            '2023-08-28',
+        )
+
+        categories = chart_categories.define_timedelta()
+        query_string: str = messages_dynamic.generate_query_for_linear_diagram(
+            chart_categories=categories,
+            chart_series=[
+                100, 200, 300, 400, 500, 5,4,5,6,7,8,9,0,6,5,4,3,4,5,6,7,5,6,4
             ]
         )
 
-        response = highcharts_messages_dynamic_object.do_post_request_to_highcharts_server(query_string)
+        class_name = self.__class__.__name__
 
-        highcharts_messages_dynamic_object.save_data_as_png(response)
+        path_to_image = os.path.join(
+            os.getcwd(),
+            'word',
+            'highcharts_temp_images',
+            f'{self.proc_obj.folder.unique_identifier}',
+            class_name + '.png'
+        )
 
-        dynamics_image = InlineImage(template, image_descriptor='PLAINTEXT',)
+        output_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp',
+            f'{self.proc_obj.folder.unique_identifier}',
+            f'output-{_position}-messages-dynamics.docx'
+        )
+
+        response = messages_dynamic.do_post_request_to_highcharts_server(query_string)
+
+        messages_dynamic.save_data_as_png(response, path_to_image)
+
+        dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(5))
 
         template.render({'messages_dynamics': dynamics_image}, autoescape=True)
 
-        template.save('file.docx')
+        template.save(output_path)
 
