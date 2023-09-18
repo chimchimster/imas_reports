@@ -5,22 +5,28 @@ class MetricsGenerator:
 
     def __init__(
             self,
-            smi_news: int,
-            soc_news: int,
-            start_date: str,
-            end_date: str,
+            smi_news: list[dict] = None,
+            soc_news: list[dict] = None,
+            start_date: str = None,
+            end_date: str = None,
+            positive_count: int = None,
+            negative_count: int = None,
+            neutral_count: int = None,
     ) -> None:
         self._smi_news = smi_news
         self._soc_news = soc_news
         self._start_date = start_date
         self._end_date = end_date
+        self._positive_count = positive_count
+        self._negative_count = negative_count
+        self._neutral_count = neutral_count
 
     @property
-    def smi_news(self) -> int:
+    def smi_news(self) -> list:
         return self._smi_news
 
     @property
-    def soc_news(self) -> int:
+    def soc_news(self) -> list:
         return self._soc_news
 
     @property
@@ -30,6 +36,18 @@ class MetricsGenerator:
     @property
     def end_date(self) -> str:
         return self._end_date
+
+    @property
+    def positive(self) -> int:
+        return self._positive_count
+
+    @property
+    def negative(self) -> int:
+        return self._negative_count
+
+    @property
+    def neutral(self) -> int:
+        return self._neutral_count
 
     def define_timedelta(self) -> list:
         """ Определяем даты (временные промежутки по оси X) для chart_categories. """
@@ -43,3 +61,53 @@ class MetricsGenerator:
         timedelta_days = (end_date_obj - start_date_obj).days
         date_list = [start_date_obj + timedelta(days=date) for date in range(timedelta_days + 1)]
         return [date.strftime('%Y-%m-%d') for date in date_list]
+
+    def count_messages(self) -> list | None:
+        """ Считаем количество сообщений по дням/часам. """
+
+        counter = {}
+
+        def count(messages: list, date_format: str = '%d-%m-%Y') -> None:
+
+            for data in messages:
+                timestamp = None
+                if 'nd_date' in data:
+                    timestamp = datetime.fromtimestamp(data['nd_date'])
+                elif 'date' in data:
+                    timestamp = datetime.fromtimestamp(data['date'])
+
+                if not timestamp:
+                    return
+
+                timestamp = timestamp.strftime(date_format)
+
+                if timestamp not in counter:
+                    counter[timestamp] = 0
+                else:
+                    counter[timestamp] += 1
+
+        count(self.soc_news)
+        count(self.smi_news)
+
+        if len(counter) == 1:
+            """ Значит отчет должен формироваться не по дням, а по часам. """
+            counter.clear()
+            count(self.soc_news, '%H')
+            count(self.smi_news, '%H')
+
+        if counter:
+            return list(counter.values().__reversed__())
+        return
+
+    def count_sentiments(self) -> dict:
+        """ Ситчаем процентное соотношение тональностей. """
+
+        sentiments = {'positive': 0, 'negative': 0, 'neutral': 0}
+
+        total = self.positive + self.negative + self.neutral
+
+        sentiments['positive'] = self.positive * 100 / total
+        sentiments['negative'] = self.negative * 100 / total
+        sentiments['neutral'] = self.neutral * 100 / total
+
+        return sentiments

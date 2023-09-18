@@ -3,9 +3,6 @@ import uuid
 import docx
 import shutil
 
-from PIL import Image
-import urllib.request
-
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import RGBColor, Pt, Cm
 from docxcompose.composer import Composer
@@ -462,21 +459,26 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         _position: str = self.proc_obj.settings.get('position')
 
-        image_url: str = self.proc_obj.response_part.get('highcharts_1')
+        messages_dynamic = HighchartsCreator(
+            self.report_format,
+            self.proc_obj.folder,
+        )
+
+        chart = MetricsGenerator(
+            smi_news=self.proc_obj.response_part.get('f_news'),
+            soc_news=self.proc_obj.response_part.get('f_news2'),
+            start_date=self.proc_obj.response_part.get('s_date'),
+            end_date=self.proc_obj.response_part.get('f_date'),
+        )
+
+        categories = chart.define_timedelta()
+        chart_series = chart.count_messages()
+        query_string: str = messages_dynamic.linear(
+            chart_categories=categories,
+            chart_series=chart_series,
+        )
 
         class_name = self.__class__.__name__
-
-        def create_temp_folder() -> None:
-            path = os.path.join(
-                    os.getcwd(),
-                    'word',
-                    'highcharts_temp_images',
-                    f'{self.proc_obj.folder.unique_identifier}',
-                )
-            if not os.path.exists(path):
-                os.mkdir(path)
-
-        create_temp_folder()
 
         path_to_image = os.path.join(
             os.getcwd(),
@@ -494,16 +496,20 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             f'output-{_position}-messages-dynamics.docx'
         )
 
-        urllib.request.urlretrieve(image_url, path_to_image)
+        response = messages_dynamic.do_post_request_to_highcharts_server(query_string)
+
+        messages_dynamic.save_data_as_png(response, path_to_image)
 
         dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(5))
 
-        template.render({'messages_dynamics': dynamics_image}, autoescape=True)
+        title: str = ReportLanguagePicker(self.report_format)().get('messages_dynamics')
+
+        template.render({'title': title, 'messages_dynamics': dynamics_image}, autoescape=True)
 
         template.save(output_path)
 
 
-class MessagesSentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -513,50 +519,20 @@ class MessagesSentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             f'{self.proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
-            'messages_sentiments.docx',
+            'sentiments.docx',
         )
 
-    def apply(self):
+    def apply(self) -> None:
         template: DocxTemplate = DocxTemplate(self._template_path)
 
         _position: str = self.proc_obj.settings.get('position')
 
-        image_url: str = self.proc_obj.response_part.get('highcharts_2')
-
-        def create_temp_folder() -> None:
-            path = os.path.join(
-                    os.getcwd(),
-                    'word',
-                    'highcharts_temp_images',
-                    f'{self.proc_obj.folder.unique_identifier}',
-                )
-            if not os.path.exists(path):
-                os.mkdir(path)
-
-        create_temp_folder()
-
-        class_name = self.__class__.__name__
-
-        path_to_image = os.path.join(
-            os.getcwd(),
-            'word',
-            'highcharts_temp_images',
-            f'{self.proc_obj.folder.unique_identifier}',
-            class_name + '.png'
+        sentiments = HighchartsCreator(
+            self.report_format,
+            self.proc_obj.folder,
         )
 
-        output_path = os.path.join(
-            os.getcwd(),
-            'word',
-            'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
-            f'output-{_position}-messages-sentiments.docx'
-        )
+        news_count = self.proc_obj.response_part.get('news_count')
 
-        urllib.request.urlretrieve(image_url, path_to_image)
-
-        sentiments_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(5))
-
-        template.render({'messages_sentiments': sentiments_image}, autoescape=True)
-
-        template.save(output_path)
+        diagram_type: str = self.proc_obj.settings.get('type')
+        print(diagram_type)

@@ -41,18 +41,16 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
 
             # Обработка всех классов кроме, базового отвечающего за главную страницу.
             if obj_type:
-                try:
-                    gen_obj = self.select_particular_class(
-                        obj_type,
-                        self.response,
-                        client_side_setting,
-                        self.static_client_side_settings,
-                        apply=False,
-                    )
-                    setattr(gen_obj, 'folder', self.folder)
-                    self.procs_objs.append(gen_obj)
-                except Exception as e:
-                    print(e)
+                gen_obj = self.select_particular_class(
+                    obj_type,
+                    self.response,
+                    client_side_setting,
+                    self.static_client_side_settings,
+                    apply=False,
+                )
+                setattr(gen_obj, 'folder', self.folder)
+                self.procs_objs.append(gen_obj)
+
         # Главную страницу мы обрабатываем в любом случае.
         # Наличие клиентских настроек не играет никакой роли.
         # Нужны только вшитые (статические) клиентские настройки.

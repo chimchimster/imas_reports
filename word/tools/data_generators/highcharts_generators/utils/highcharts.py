@@ -18,7 +18,6 @@ class HighchartsCreator:
             'Accept': 'application/json',
         }
         self._highcharts_server: str = self.__get_highcharts_server()
-        self._highcharts_settings_storage_object = HighchartsObject()
 
     @property
     def folder(self):
@@ -34,7 +33,7 @@ class HighchartsCreator:
         return os.environ.get('HIGHCHARTS_SERVER')
 
     @staticmethod
-    def generate_query_for_bar_diagram(
+    def bar(
             chart_categories: list[dict],
             chart_series: list[dict],
             chart_colors: list[str],
@@ -115,7 +114,7 @@ class HighchartsCreator:
         return json.dumps(data)
 
     @staticmethod
-    def generate_query_for_column_diagram(
+    def column(
 
             chart_categories: list[dict],
             chart_series: list[dict],
@@ -197,7 +196,7 @@ class HighchartsCreator:
         return json.dumps(data)
 
     @staticmethod
-    def generate_query_for_pie_diagram(
+    def pie(
             chart_categories: list[dict],
             chart_series: list[dict],
             chart_color: list[str],
@@ -256,7 +255,7 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
-    def generate_query_for_linear_diagram(
+    def linear(
             self,
             chart_categories: list[dict],
             chart_series: list[dict],

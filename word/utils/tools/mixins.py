@@ -67,3 +67,14 @@ class PropertyProcessesMixin:
     @property
     def report_lang(self) -> str:
         return self._report_lang
+
+
+class DiagramPickerMixin:
+
+    __available_methods__ = {
+        'pie': '',
+        'bar': '',
+        'column': '',
+        'linear': '',
+    }
+
