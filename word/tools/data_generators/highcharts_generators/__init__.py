@@ -1,2 +1,3 @@
 from .utils import HighchartsCreator, MetricsGenerator
 from .messages_dynamics_data import MessagesDynamicsDataGenerator
+from .sentiments_data import SentimentsDataGenerator

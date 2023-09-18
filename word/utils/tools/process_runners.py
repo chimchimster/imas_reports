@@ -3,6 +3,9 @@ import uuid
 import docx
 import shutil
 
+from PIL import Image
+import urllib.request
+
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import RGBColor, Pt, Cm
 from docxcompose.composer import Composer
@@ -459,27 +462,21 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         _position: str = self.proc_obj.settings.get('position')
 
-        messages_dynamic = HighchartsCreator(
-            'rus',
-            self.proc_obj.folder,
-        )
-
-        chart_categories = MetricsGenerator(
-            None,
-            None,
-            '2023-07-28',
-            '2023-08-28',
-        )
-
-        categories = chart_categories.define_timedelta()
-        query_string: str = messages_dynamic.generate_query_for_linear_diagram(
-            chart_categories=categories,
-            chart_series=[
-                100, 200, 300, 400, 500, 5,4,5,6,7,8,9,0,6,5,4,3,4,5,6,7,5,6,4
-            ]
-        )
+        image_url: str = self.proc_obj.response_part.get('highcharts_1')
 
         class_name = self.__class__.__name__
+
+        def create_temp_folder() -> None:
+            path = os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'highcharts_temp_images',
+                    f'{self.proc_obj.folder.unique_identifier}',
+                )
+            if not os.path.exists(path):
+                os.mkdir(path)
+
+        create_temp_folder()
 
         path_to_image = os.path.join(
             os.getcwd(),
@@ -497,9 +494,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             f'output-{_position}-messages-dynamics.docx'
         )
 
-        response = messages_dynamic.do_post_request_to_highcharts_server(query_string)
-
-        messages_dynamic.save_data_as_png(response, path_to_image)
+        urllib.request.urlretrieve(image_url, path_to_image)
 
         dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(5))
 
@@ -507,3 +502,61 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         template.save(output_path)
 
+
+class MessagesSentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'messages_sentiments.docx',
+        )
+
+    def apply(self):
+        template: DocxTemplate = DocxTemplate(self._template_path)
+
+        _position: str = self.proc_obj.settings.get('position')
+
+        image_url: str = self.proc_obj.response_part.get('highcharts_2')
+
+        def create_temp_folder() -> None:
+            path = os.path.join(
+                    os.getcwd(),
+                    'word',
+                    'highcharts_temp_images',
+                    f'{self.proc_obj.folder.unique_identifier}',
+                )
+            if not os.path.exists(path):
+                os.mkdir(path)
+
+        create_temp_folder()
+
+        class_name = self.__class__.__name__
+
+        path_to_image = os.path.join(
+            os.getcwd(),
+            'word',
+            'highcharts_temp_images',
+            f'{self.proc_obj.folder.unique_identifier}',
+            class_name + '.png'
+        )
+
+        output_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp',
+            f'{self.proc_obj.folder.unique_identifier}',
+            f'output-{_position}-messages-sentiments.docx'
+        )
+
+        urllib.request.urlretrieve(image_url, path_to_image)
+
+        sentiments_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(5))
+
+        template.render({'messages_sentiments': sentiments_image}, autoescape=True)
+
+        template.save(output_path)

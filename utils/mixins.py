@@ -39,7 +39,7 @@ class RemoveDirsMixin:
             'temp_tables',
             'templates',
         ),
-    ]
+     ]
     
     def remove_dir(self, _uuid: str) -> None:
         """ Метод удаляющий директории. """
