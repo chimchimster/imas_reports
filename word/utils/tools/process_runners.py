@@ -1,3 +1,4 @@
+import math
 import os
 import uuid
 import docx
@@ -9,7 +10,7 @@ from docxcompose.composer import Composer
 
 from multiprocessing import Semaphore, Process
 
-from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
+from .mixins import PropertyProcessesMixin, AbstractRunnerMixin, DiagramPickerInjector
 
 from word.local import ReportLanguagePicker
 from word.tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
@@ -502,7 +503,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(5))
 
-        title: str = ReportLanguagePicker(self.report_format)().get('messages_dynamics')
+        title: str = ReportLanguagePicker(self.report_format)().get('titles').get('messages_dynamics')
 
         template.render({'title': title, 'messages_dynamics': dynamics_image}, autoescape=True)
 
@@ -532,7 +533,105 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             self.proc_obj.folder,
         )
 
-        news_count = self.proc_obj.response_part.get('news_count')
+        news_count: list = self.proc_obj.response_part.get('news_counts')
+
+        news_count_union: dict = {}
+
+        for n_c in news_count:
+            news_count_union.update(n_c)
 
         diagram_type: str = self.proc_obj.settings.get('type')
-        print(diagram_type)
+        data_labels: bool = self.proc_obj.settings.get('data_labels')
+
+        chart = MetricsGenerator(
+            positive_count=news_count_union.get('pos'),
+            negative_count=news_count_union.get('neg'),
+            neutral_count=news_count_union.get('neu'),
+        )
+
+        class_name = self.__class__.__name__
+
+        path_to_image = os.path.join(
+            os.getcwd(),
+            'word',
+            'highcharts_temp_images',
+            f'{self.proc_obj.folder.unique_identifier}',
+            class_name + '.png'
+        )
+
+        output_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp',
+            f'{self.proc_obj.folder.unique_identifier}',
+            f'output-{_position}-messages-sentiments.docx'
+        )
+
+        title = ReportLanguagePicker(self.report_format)().get('titles').get('sentiments')
+        sentiments_translate = ReportLanguagePicker(self.report_format)().get('sentiments')
+        positive_title = sentiments_translate.get('positive')
+        negative_title = sentiments_translate.get('negative')
+        neutral_title = sentiments_translate.get('neutral')
+
+        sentiments_count = chart.count_percentage_of_sentiments()
+
+        positive_count = news_count_union.get('pos')
+        negative_count = news_count_union.get('neg')
+        neutral_count = news_count_union.get('neu')
+
+        positive_percent = sentiments_count.get('pos', 0)
+        negative_percent = sentiments_count.get('neg', 0)
+        neutral_percent = sentiments_count.get('neu', 0)
+
+        chart_categories = [
+            {
+                'name': positive_title,
+                'y': sentiments_count.get('pos', 0),
+            },
+            {
+                'name': neutral_title,
+                'y': sentiments_count.get('neu', 0),
+            },
+            {
+                'name': negative_title,
+                'y': sentiments_count.get('neg', 0),
+            },
+        ]
+
+        chart_series = [
+            {
+                'type': diagram_type,
+                'data': chart_categories,
+            },
+        ]
+
+        query_string: str = DiagramPickerInjector(
+            sentiments,
+            diagram_type,
+            chart_color=['#1BB394', '#EC5D5D', '#F2C94C'],
+            chart_categories=[chart.get('name') for chart in chart_categories],
+            data_labels=data_labels,
+            chart_series=chart_series,
+        ).pick_and_execute()
+
+        response = sentiments.do_post_request_to_highcharts_server(query_string)
+
+        sentiments.save_data_as_png(response, path_to_image)
+
+        dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(7), height=Cm(5))
+
+        template.render({
+            'title': title,
+            'messages_sentiments': dynamics_image,
+            'positive_title': positive_title,
+            'negative_title': negative_title,
+            'neutral_title': neutral_title,
+            'positive_count': positive_count,
+            'negative_count': negative_count,
+            'neutral_count': neutral_count,
+            'positive_percent': positive_percent,
+            'negative_percent': negative_percent,
+            'neutral_percent': neutral_percent
+        }, autoescape=True)
+
+        template.save(output_path)

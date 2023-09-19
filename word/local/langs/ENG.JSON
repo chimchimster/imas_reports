@@ -48,7 +48,9 @@
     "table": {
       "soc": "Social media table",
       "smi": "Mass media table"
-    }
+    },
+    "messages_dynamics": "Messages dynamics",
+    "sentiments": "Messages sentiments"
   },
   "link": "Link",
   "months": {
@@ -73,5 +75,9 @@
     "negative": "Negative",
     "neutral": "Neutral"
   },
-  "messages_dynamics": "Messages dynamics"
+  "sentiments": {
+    "positive": "Positive",
+    "negative": "Negative",
+    "neutral": "Neutral"
+  }
 }

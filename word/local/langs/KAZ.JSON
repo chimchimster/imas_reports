@@ -48,7 +48,9 @@
     "table": {
       "soc": "Әлеуметтік желілер бойынша кесте",
       "smi": "БАҚ бойынша кесте"
-    }
+    },
+    "messages_dynamics": "Хабарлама динамикасы",
+    "sentiments": "Хабарлама үні"
   },
   "link": "Cілтеме",
   "months": {
@@ -73,5 +75,9 @@
     "negative": "Теріс",
     "neutral": "Бейтарап"
   },
-  "messages_dynamics": "Хабарлама динамикасы"
+  "sentiments": {
+    "positive": "Оң",
+    "negative": "Теріс",
+    "neutral": "Бейтарап"
+  }
 }

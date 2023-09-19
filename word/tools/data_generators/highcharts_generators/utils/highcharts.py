@@ -34,18 +34,18 @@ class HighchartsCreator:
 
     @staticmethod
     def bar(
-            chart_categories: list[dict],
-            chart_series: list[dict],
-            chart_colors: list[str],
-            width: int,
-            height: int,
-            font_size: int,
-            labels: bool,
-            data_labels: bool,
+            chart_categories: list[dict] = None,
+            chart_series: list[dict] = None,
+            chart_color: list[str] = None,
+            width: int = 250,
+            height: int = 75,
+            font_size: int = 12,
+            labels: bool = False,
+            data_labels: bool = False,
     ) -> str:
         bar_object = HighchartsObject(
             _series=chart_series,
-            _colors=chart_colors,
+            _colors=chart_color,
             _categories=chart_categories,
             _width=width,
             _height=height,
@@ -115,16 +115,15 @@ class HighchartsCreator:
 
     @staticmethod
     def column(
-
-            chart_categories: list[dict],
-            chart_series: list[dict],
-            chart_color: list[str],
-            width: int,
-            height: int,
-            labels: bool,
-            data_labels: bool,
-            color_by_point: bool,
-            font_size: int,
+            chart_categories: list[dict] = None,
+            chart_series: list[dict] = None,
+            chart_color: list[str] = None,
+            width: int = 200,
+            height: int = 200,
+            font_size: int = 12,
+            labels: bool = False,
+            data_labels: bool = False,
+            color_by_point: bool = False,
     ) -> str:
         column_obj = HighchartsObject(
             _categories=chart_categories,
@@ -197,19 +196,27 @@ class HighchartsCreator:
 
     @staticmethod
     def pie(
-            chart_categories: list[dict],
-            chart_series: list[dict],
-            chart_color: list[str],
-            width: int,
-            labels: bool,
-            font_size: int,
-            legend: bool,
+            chart_categories: list[dict] = None,
+            chart_series: list[dict] = None,
+            chart_color: list[str] = None,
+            width: int = 200,
+            height: int = 145,
+            labels: bool = False,
+            font_size: int = 12,
+            legend: bool = False,
+            data_labels: bool = None,
     ) -> str:
+
+        print('chart_categories', chart_categories)
+        print('chart_series', chart_series)
+        print('chart_color', chart_color)
+
         pie_obj = HighchartsObject(
             _series=chart_series,
             _categories=chart_categories,
             _colors=chart_color,
             _width=width,
+            _height=height,
             _labels=labels,
             _font_size=font_size,
             _legend=legend,
@@ -257,8 +264,8 @@ class HighchartsCreator:
 
     def linear(
             self,
-            chart_categories: list[dict],
-            chart_series: list[dict],
+            chart_categories: list = None,
+            chart_series: list = None,
     ) -> str:
         linear_obj = HighchartsObject(
             _series=chart_series,
@@ -388,12 +395,12 @@ class HighchartsCreator:
 
 @dataclass
 class HighchartsObject:
-    _series: list | None = None
-    _colors: list | None = None
-    _categories: list | None = None
-    _width: int | None = None
-    _height: int | None = None
-    _font_size: int | None = None
+    _series: list = None
+    _colors: list = None
+    _categories: list = None
+    _width: int = None
+    _height: int = None
+    _font_size: int = None
     _labels: bool = False
     _data_labels: bool = False
     _color_by_point: bool = False
@@ -410,7 +417,7 @@ class HighchartsObject:
         return wrapper
 
     @property
-    def series(self) -> list | None:
+    def series(self) -> list:
         return self._series
 
     @series.setter
@@ -419,7 +426,7 @@ class HighchartsObject:
         self._series = value
 
     @property
-    def colors(self) -> list | None:
+    def colors(self) -> list:
         return self._colors
 
     @colors.setter
@@ -428,7 +435,7 @@ class HighchartsObject:
         self._colors = value
 
     @property
-    def categories(self) -> list | None:
+    def categories(self) -> list:
         return self._categories
 
     @categories.setter
@@ -437,7 +444,7 @@ class HighchartsObject:
         self._categories = value
 
     @property
-    def width(self) -> int | None:
+    def width(self) -> int:
         return self._width
 
     @width.setter
@@ -446,7 +453,7 @@ class HighchartsObject:
         self._width = value
 
     @property
-    def height(self) -> int | None:
+    def height(self) -> int:
         return self._height
 
     @height.setter
@@ -455,7 +462,7 @@ class HighchartsObject:
         self._height = value
 
     @property
-    def font_size(self) -> int | None:
+    def font_size(self) -> int:
         return self._font_size
 
     @font_size.setter
@@ -464,7 +471,7 @@ class HighchartsObject:
         self._font_size = value
 
     @property
-    def labels(self) -> bool | None:
+    def labels(self) -> bool:
         return self._labels
 
     @labels.setter
@@ -473,7 +480,7 @@ class HighchartsObject:
         self._labels = value
 
     @property
-    def data_labels(self) -> bool | None:
+    def data_labels(self) -> bool:
         return self._data_labels
 
     @data_labels.setter
@@ -482,7 +489,7 @@ class HighchartsObject:
         self._data_labels = value
 
     @property
-    def color_by_point(self) -> bool | None:
+    def color_by_point(self) -> bool:
         return self._color_by_point
 
     @color_by_point.setter
@@ -491,7 +498,7 @@ class HighchartsObject:
         self._color_by_point = value
 
     @property
-    def legend(self) -> bool | None:
+    def legend(self) -> bool:
         return self._legend
 
     @legend.setter

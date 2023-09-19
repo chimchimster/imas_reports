@@ -99,15 +99,15 @@ class MetricsGenerator:
             return list(counter.values().__reversed__())
         return
 
-    def count_sentiments(self) -> dict:
+    def count_percentage_of_sentiments(self) -> dict:
         """ Ситчаем процентное соотношение тональностей. """
 
-        sentiments = {'positive': 0, 'negative': 0, 'neutral': 0}
+        sentiments_percents = {'pos': 0, 'neg': 0, 'neu': 0}
 
         total = self.positive + self.negative + self.neutral
 
-        sentiments['positive'] = self.positive * 100 / total
-        sentiments['negative'] = self.negative * 100 / total
-        sentiments['neutral'] = self.neutral * 100 / total
+        sentiments_percents['pos'] = round(self.positive * 100 / total, 2)
+        sentiments_percents['neg'] = round(self.negative * 100 / total, 2)
+        sentiments_percents['neu'] = round(self.neutral * 100 / total, 2)
 
-        return sentiments
+        return sentiments_percents

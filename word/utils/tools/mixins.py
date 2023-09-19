@@ -69,12 +69,41 @@ class PropertyProcessesMixin:
         return self._report_lang
 
 
-class DiagramPickerMixin:
+class DiagramPickerInjector:
+    """ Класс-инъектор, получает инстанс класса и в зависимости от условия применяет необходимый метод. """
 
-    __available_methods__ = {
-        'pie': '',
-        'bar': '',
-        'column': '',
-        'linear': '',
-    }
+    __available_diagrams__ = {}
 
+    def __init__(self, instance: Any, type_of_diagram: str, *args, **kwargs):
+        self._instance = instance
+        self._type_of_diagram = type_of_diagram
+        self._args = args
+        self._kwargs = kwargs
+        self._set_diagrams()
+
+    @property
+    def instance(self) -> Any:
+        return self._instance
+
+    @property
+    def func_args(self) -> tuple:
+        return self._args
+
+    @property
+    def func_kwargs(self) -> dict:
+        return self._kwargs
+
+    @property
+    def type_of_diagram(self) -> str:
+        return self._type_of_diagram
+
+    def _set_diagrams(self):
+        self.__available_diagrams__['pie'] = self._instance.pie
+        self.__available_diagrams__['column'] = self._instance.column
+        self.__available_diagrams__['linear'] = self._instance.linear
+        self.__available_diagrams__['bar'] = self._instance.bar
+
+    def pick_and_execute(self) -> str:
+        """ Выбираем нужную диаграмму из доступных и отправляем на отрисовку. """
+
+        return self.__available_diagrams__.get(self.type_of_diagram)(*self.func_args, **self.func_kwargs)
