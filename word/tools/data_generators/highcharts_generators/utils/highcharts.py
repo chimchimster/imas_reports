@@ -256,7 +256,7 @@ class HighchartsCreator:
                 'series': pie_obj.series,
             }
         }
-
+        print(data)
         return json.dumps(data)
 
     def linear(

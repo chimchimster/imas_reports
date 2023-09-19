@@ -12,6 +12,8 @@ class MetricsGenerator:
             positive_count: int = None,
             negative_count: int = None,
             neutral_count: int = None,
+            soc_count: int = None,
+            smi_count: int = None,
     ) -> None:
         self._smi_news = smi_news
         self._soc_news = soc_news
@@ -20,6 +22,16 @@ class MetricsGenerator:
         self._positive_count = positive_count
         self._negative_count = negative_count
         self._neutral_count = neutral_count
+        self._soc_count = soc_count
+        self._smi_count = smi_count
+
+    @property
+    def soc_count(self) -> int:
+        return self._soc_count
+
+    @property
+    def smi_count(self) -> int:
+        return self._smi_count
 
     @property
     def smi_news(self) -> list:
@@ -111,3 +123,15 @@ class MetricsGenerator:
         sentiments_percents['neu'] = round(self.neutral * 100 / total, 2)
 
         return sentiments_percents
+
+    def count_percentage_of_distribution(self) -> dict:
+        """ Ситчаем процентное соотношение по СМИ, Соцсетям. """
+
+        distribution_percents = {'smi': 0, 'soc': 0}
+
+        total = self.smi_count + self.soc_count
+
+        distribution_percents['smi'] = round(self.smi_count * 100 / total, 2)
+        distribution_percents['soc'] = round(self.soc_count * 100 / total, 2)
+
+        return distribution_percents

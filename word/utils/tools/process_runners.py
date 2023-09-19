@@ -660,13 +660,20 @@ class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             self.proc_obj.folder,
         )
 
-        soc_count: int = self.proc_obj.response_part.get('soc_count')
-        smi_count: int = self.proc_obj.response_part.get('smi_count')
+        soc_count: int = int(self.proc_obj.response_part.get('soc_count'))
+        smi_count: int = int(self.proc_obj.response_part.get('smi_count'))
 
         langs_dict: dict = ReportLanguagePicker(self.report_format)().get('titles')
         title: str = langs_dict.get('distribution')
         soc_title: str = langs_dict.get('soc')
         smi_title: str = langs_dict.get('smi')
+
+        chart = MetricsGenerator(
+            smi_count=smi_count,
+            soc_count=soc_count,
+        )
+
+        distribution_percents = chart.count_percentage_of_distribution()
 
         class_name = self.__class__.__name__
 
@@ -725,6 +732,12 @@ class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         template.render({
             'title': title,
             'messages_distribution': dynamics_image,
+            'smi_title': smi_title,
+            'soc_title': soc_title,
+            'smi_count': smi_count,
+            'soc_count': soc_count,
+            'smi_percent': distribution_percents.get('smi'),
+            'soc_percent': distribution_percents.get('soc'),
         }, autoescape=True)
 
         template.save(output_path)
