@@ -43,6 +43,7 @@ class HighchartsCreator:
             labels: bool = False,
             data_labels: bool = False,
     ) -> str:
+
         bar_object = HighchartsObject(
             _series=chart_series,
             _colors=chart_color,
@@ -72,7 +73,7 @@ class HighchartsCreator:
                         'text': None,
                     },
                     'labels': {
-                        'enabled': bar_object.labels,
+                        'enabled': True,
                         'style': {
                             'width': '160px',
                             'fontSize': bar_object.font_size,
@@ -100,7 +101,7 @@ class HighchartsCreator:
                         'dataLabels': {
                             'enabled': bar_object.data_labels,
                             'style': {
-                                'color': bar_object.colors,
+                                'color': ['#1BB394', '#EC5D5D', '#F2C94C'],
                                 'fontSize': bar_object.font_size,
                                 'fontWeight': 'bold',
                             }
@@ -123,7 +124,7 @@ class HighchartsCreator:
             font_size: int = 12,
             labels: bool = False,
             data_labels: bool = False,
-            color_by_point: bool = False,
+            color_by_point: bool = True,
     ) -> str:
         column_obj = HighchartsObject(
             _categories=chart_categories,
@@ -146,7 +147,7 @@ class HighchartsCreator:
                 'chart': {
                     'type': 'column',
                     'width': column_obj.width,
-                    'height': column_obj.width
+                    'height': column_obj.height
                 },
                 'xAxis': {
                     'gridLineWidth': 0,
@@ -206,10 +207,6 @@ class HighchartsCreator:
             legend: bool = False,
             data_labels: bool = None,
     ) -> str:
-
-        print('chart_categories', chart_categories)
-        print('chart_series', chart_series)
-        print('chart_color', chart_color)
 
         pie_obj = HighchartsObject(
             _series=chart_series,
@@ -401,9 +398,9 @@ class HighchartsObject:
     _width: int = None
     _height: int = None
     _font_size: int = None
-    _labels: bool = False
+    _labels: bool = True
     _data_labels: bool = False
-    _color_by_point: bool = False
+    _color_by_point: bool = True
     _legend: bool = False
 
     @staticmethod

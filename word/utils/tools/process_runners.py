@@ -586,15 +586,15 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         chart_categories = [
             {
                 'name': positive_title,
-                'y': sentiments_count.get('pos', 0),
-            },
-            {
-                'name': neutral_title,
-                'y': sentiments_count.get('neu', 0),
+                'y': positive_count,
             },
             {
                 'name': negative_title,
-                'y': sentiments_count.get('neg', 0),
+                'y': negative_count,
+            },
+            {
+                'name': neutral_title,
+                'y': neutral_count,
             },
         ]
 
@@ -618,7 +618,7 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         sentiments.save_data_as_png(response, path_to_image)
 
-        dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(7), height=Cm(5))
+        dynamics_image = InlineImage(template, image_descriptor=path_to_image)
 
         template.render({
             'title': title,
@@ -632,6 +632,99 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'positive_percent': positive_percent,
             'negative_percent': negative_percent,
             'neutral_percent': neutral_percent
+        }, autoescape=True)
+
+        template.save(output_path)
+
+
+class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'distribution.docx',
+        )
+
+    def apply(self) -> None:
+        template: DocxTemplate = DocxTemplate(self._template_path)
+
+        _position: str = self.proc_obj.settings.get('position')
+
+        sentiments = HighchartsCreator(
+            self.report_format,
+            self.proc_obj.folder,
+        )
+
+        soc_count: int = self.proc_obj.response_part.get('soc_count')
+        smi_count: int = self.proc_obj.response_part.get('smi_count')
+
+        langs_dict: dict = ReportLanguagePicker(self.report_format)().get('titles')
+        title: str = langs_dict.get('distribution')
+        soc_title: str = langs_dict.get('soc')
+        smi_title: str = langs_dict.get('smi')
+
+        class_name = self.__class__.__name__
+
+        path_to_image = os.path.join(
+            os.getcwd(),
+            'word',
+            'highcharts_temp_images',
+            f'{self.proc_obj.folder.unique_identifier}',
+            class_name + '.png'
+        )
+
+        output_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp',
+            f'{self.proc_obj.folder.unique_identifier}',
+            f'output-{_position}-messages-distribution.docx'
+        )
+
+        diagram_type: str = self.proc_obj.settings.get('type')
+        data_labels: bool = self.proc_obj.settings.get('data_labels')
+
+        chart_categories = [
+            {
+                'name': soc_title,
+                'y': soc_count,
+            },
+            {
+                'name': smi_title,
+                'y': smi_count,
+            },
+        ]
+
+        chart_series = [
+            {
+                'type': diagram_type,
+                'data': chart_categories,
+            },
+        ]
+
+        query_string: str = DiagramPickerInjector(
+            sentiments,
+            diagram_type,
+            chart_color=['#1BB394', '#EC5D5D'],
+            chart_categories=[chart.get('name') for chart in chart_categories],
+            data_labels=data_labels,
+            chart_series=chart_series,
+        ).pick_and_execute()
+
+        response = sentiments.do_post_request_to_highcharts_server(query_string)
+
+        sentiments.save_data_as_png(response, path_to_image)
+
+        dynamics_image = InlineImage(template, image_descriptor=path_to_image)
+
+        template.render({
+            'title': title,
+            'messages_distribution': dynamics_image,
         }, autoescape=True)
 
         template.save(output_path)

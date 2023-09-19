@@ -49,8 +49,11 @@
       "soc": "Social media table",
       "smi": "Mass media table"
     },
+    "soc": "Social network",
+    "smi": "Social media",
     "messages_dynamics": "Messages dynamics",
-    "sentiments": "Messages sentiments"
+    "sentiments": "Messages sentiments",
+    "distribution": "Distribution by media, social networks"
   },
   "link": "Link",
   "months": {
