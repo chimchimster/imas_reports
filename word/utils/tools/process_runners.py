@@ -510,7 +510,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         title: str = ReportLanguagePicker(self.report_format)().get('titles').get('messages_dynamics')
 
-        template.render({'title': title, 'messages_dynamics': dynamics_image}, autoescape=True)
+        template.render({'title': title, 'image': dynamics_image}, autoescape=True)
 
         template.save(output_path)
 
@@ -528,7 +528,7 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'sentiments.docx',
         )
 
-    @render_diagram(flag='sentiments')
+    @render_diagram(color_flag='sentiments')
     def apply(self, **kwargs) -> tuple:
         news_count: list = self.proc_obj.response_part.get('news_counts')
         diagram_type: str = kwargs.pop('diagram_type')
@@ -591,7 +591,7 @@ class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'distribution.docx',
         )
 
-    @render_diagram(flag='distribution')
+    @render_diagram(color_flag='distribution')
     def apply(self, **kwargs) -> tuple:
         soc_count: int = int(self.proc_obj.response_part.get('soc_count'))
         smi_count: int = int(self.proc_obj.response_part.get('smi_count'))
@@ -638,12 +638,12 @@ class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'smi_distribution.docx',
         )
 
-    @render_diagram(flag='smi_distribution')
+    @render_diagram(color_flag='smi_distribution', context_flag=True)
     def apply(self, **kwargs) -> tuple:
 
         diagram_type: str = kwargs.pop('diagram_type')
         categories_distribution: list[dict] = self.proc_obj.response_part.get('categoryNames')
-
+        title: str = ReportLanguagePicker(self.report_format)().get('titles').get('smi_distribution')
         categories_distribution: list[dict] = [
             {d['name_cat']:d['COUNTER'] for _,_ in d.items()} for d in categories_distribution
         ]
@@ -653,15 +653,14 @@ class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         for c_d_n in categories_distribution:
             categories_distribution_union.update(c_d_n)
 
-        categories_translate: dict = ReportLanguagePicker(self.report_format)().get('categories_soc')
+        categories_translate: dict = ReportLanguagePicker(self.report_format)().get('categories_smi')
 
         categories_distribution_union: dict = {categories_translate[k]:v for k,v in categories_distribution_union.items()}
 
         percentages_of_smi_distribution: dict = MetricsGenerator().count_percentage_of_smi_distribution(categories_distribution_union)
+        args: tuple = tuple([(k,v) for k, v in categories_distribution_union.items()])
 
-        args: tuple = tuple(categories_distribution_union)
-
-        chart_categories: list[dict] = generate_chart_categories(args)
+        chart_categories: list[dict] = generate_chart_categories(*args)
 
         chart_series: list[dict] = [
             {
@@ -671,8 +670,11 @@ class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         ]
 
         context = {}
-        context.update(percentages_of_smi_distribution)
         context.update(categories_distribution_union)
+        for key, value in context.items():
+            context[key] = [int(value), percentages_of_smi_distribution[key]]
+
+        context['title'] = title
 
         return chart_categories, chart_series, context
 

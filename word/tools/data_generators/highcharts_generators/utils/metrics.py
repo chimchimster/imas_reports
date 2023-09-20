@@ -89,9 +89,9 @@ class MetricsGenerator:
         distribution_percents = {k: 0 for k, _ in categories_distribution.items()}
         categories_distribution_names = list(categories_distribution.keys())
 
-        total = sum(categories_distribution.values())
+        total = sum(map(int, categories_distribution.values()))
 
         for name in categories_distribution_names:
-            distribution_percents[name] = round(categories_distribution[name] * 100 / total, 2)
+            distribution_percents[name] = round(int(categories_distribution[name]) * 100 / total, 2)
 
         return distribution_percents

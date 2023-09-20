@@ -53,7 +53,8 @@
     "smi": "Social media",
     "messages_dynamics": "Messages dynamics",
     "sentiments": "Messages sentiments",
-    "distribution": "Distribution by media, social networks"
+    "distribution": "Distribution by media, social networks",
+    "smi_distribution": "Distribution by category of media sources"
   },
   "link": "Link",
   "months": {
