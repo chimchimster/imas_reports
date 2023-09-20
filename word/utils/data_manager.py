@@ -6,7 +6,7 @@ from word.mixins import PropertyMethodsMixin
 from .data_processes import ProcessDataGenerator
 from ..tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator, SentimentsDataGenerator,
                      TableContentGenerator, TotalMessagesCountDataGenerator, MessagesDynamicsDataGenerator,
-                     DistributionDataGenerator, )
+                     DistributionDataGenerator, SmiDistributionDataGenerator, )
 
 
 class DataManager(FabricMixin, PropertyMethodsMixin):
@@ -20,6 +20,7 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         'message_dynamic': MessagesDynamicsDataGenerator,
         'sentiments': SentimentsDataGenerator,
         'distribution': DistributionDataGenerator,
+        'smi_distribution': SmiDistributionDataGenerator,
     }
 
     def __init__(

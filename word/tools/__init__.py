@@ -10,4 +10,6 @@ from .data_generators.base_data import BasePageDataGenerator
 from .data_generators.total_messages_count_data import TotalMessagesCountDataGenerator
 from .styles_generators.table_style import TableStylesGenerator
 from .styles_generators.schedule_style import SchedulerStylesGenerator
-from .data_generators.highcharts_generators import HighchartsCreator, MessagesDynamicsDataGenerator, MetricsGenerator, SentimentsDataGenerator, DistributionDataGenerator
+from .data_generators.highcharts_generators import (HighchartsCreator, MessagesDynamicsDataGenerator,
+                                                    MetricsGenerator, SentimentsDataGenerator,
+                                                    DistributionDataGenerator, SmiDistributionDataGenerator)

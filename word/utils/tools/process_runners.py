@@ -1,4 +1,3 @@
-import math
 import os
 import uuid
 import docx
@@ -7,7 +6,8 @@ import shutil
 from docxtpl import DocxTemplate, InlineImage
 from docx.shared import RGBColor, Pt, Cm
 from docxcompose.composer import Composer
-
+from .auxiliary_functions import generate_chart_categories
+from .decorators import render_diagram
 from multiprocessing import Semaphore, Process
 
 from .mixins import PropertyProcessesMixin, AbstractRunnerMixin, DiagramPickerInjector
@@ -456,6 +456,10 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         )
 
     def apply(self) -> None:
+
+        """ Не оборачиваю данную функцию в декоратор render_diagram по причине того, что данный процесс использует
+        всего один вид графика - линейный и к тому же в клиентских настройках ничего не приходит. """
+
         template: DocxTemplate = DocxTemplate(self._template_path)
 
         _position: str = self.proc_obj.settings.get('position')
@@ -465,15 +469,16 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             self.proc_obj.folder,
         )
 
-        chart = MetricsGenerator(
-            smi_news=self.proc_obj.response_part.get('f_news'),
-            soc_news=self.proc_obj.response_part.get('f_news2'),
-            start_date=self.proc_obj.response_part.get('s_date'),
-            end_date=self.proc_obj.response_part.get('f_date'),
-        )
+        chart = MetricsGenerator()
 
-        categories = chart.define_timedelta()
-        chart_series = chart.count_messages()
+        start_date = self.proc_obj.response_part.get('s_date')
+        end_date = self.proc_obj.response_part.get('f_date')
+
+        soc_news = self.proc_obj.response_part.get('f_news2')
+        smi_news = self.proc_obj.response_part.get('f_news')
+
+        categories = chart.define_timedelta(start_date, end_date)
+        chart_series = chart.count_messages(soc_news, smi_news)
         query_string: str = messages_dynamic.linear(
             chart_categories=categories,
             chart_series=chart_series,
@@ -523,106 +528,44 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'sentiments.docx',
         )
 
-    def apply(self) -> None:
-        template: DocxTemplate = DocxTemplate(self._template_path)
-
-        _position: str = self.proc_obj.settings.get('position')
-
-        sentiments = HighchartsCreator(
-            self.report_format,
-            self.proc_obj.folder,
-        )
-
+    @render_diagram(flag='sentiments')
+    def apply(self, **kwargs) -> tuple:
         news_count: list = self.proc_obj.response_part.get('news_counts')
-
+        diagram_type: str = kwargs.pop('diagram_type')
         news_count_union: dict = {}
 
         for n_c in news_count:
             news_count_union.update(n_c)
 
-        diagram_type: str = self.proc_obj.settings.get('type')
-        data_labels: bool = self.proc_obj.settings.get('data_labels')
-
-        chart = MetricsGenerator(
-            positive_count=news_count_union.get('pos'),
-            negative_count=news_count_union.get('neg'),
-            neutral_count=news_count_union.get('neu'),
-        )
-
-        class_name = self.__class__.__name__
-
-        path_to_image = os.path.join(
-            os.getcwd(),
-            'word',
-            'highcharts_temp_images',
-            f'{self.proc_obj.folder.unique_identifier}',
-            class_name + '.png'
-        )
-
-        output_path = os.path.join(
-            os.getcwd(),
-            'word',
-            'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
-            f'output-{_position}-messages-sentiments.docx'
-        )
-
         title = ReportLanguagePicker(self.report_format)().get('titles').get('sentiments')
-        sentiments_translate = ReportLanguagePicker(self.report_format)().get('sentiments')
+        sentiments_translate = ReportLanguagePicker(self.report_format)().get('sentiments_translate')
         positive_title = sentiments_translate.get('positive')
         negative_title = sentiments_translate.get('negative')
         neutral_title = sentiments_translate.get('neutral')
-
-        sentiments_count = chart.count_percentage_of_sentiments()
 
         positive_count = news_count_union.get('pos')
         negative_count = news_count_union.get('neg')
         neutral_count = news_count_union.get('neu')
 
+        sentiments_count = MetricsGenerator().count_percentage_of_sentiments(positive_count, negative_count, neutral_count)
+
         positive_percent = sentiments_count.get('pos', 0)
         negative_percent = sentiments_count.get('neg', 0)
         neutral_percent = sentiments_count.get('neu', 0)
 
-        chart_categories = [
-            {
-                'name': positive_title,
-                'y': positive_count,
-            },
-            {
-                'name': negative_title,
-                'y': negative_count,
-            },
-            {
-                'name': neutral_title,
-                'y': neutral_count,
-            },
-        ]
+        chart_categories: list[dict] = generate_chart_categories(
+            (positive_title, positive_count), (negative_title, negative_count), (neutral_title, neutral_count)
+        )
 
-        chart_series = [
+        chart_series: list[dict] = [
             {
                 'type': diagram_type,
                 'data': chart_categories,
             },
         ]
 
-        query_string: str = DiagramPickerInjector(
-            sentiments,
-            diagram_type,
-            chart_color=['#1BB394', '#EC5D5D', '#F2C94C'],
-            chart_categories=[chart.get('name') for chart in chart_categories],
-            data_labels=data_labels,
-            chart_series=chart_series,
-        ).pick_and_execute()
-
-        response = sentiments.do_post_request_to_highcharts_server(query_string)
-
-        sentiments.save_data_as_png(response, path_to_image)
-
-        dynamics_image = InlineImage(template, image_descriptor=path_to_image)
-
-        template.render({
+        return chart_categories, chart_series, {
             'title': title,
-            'messages_sentiments': dynamics_image,
             'positive_title': positive_title,
             'negative_title': negative_title,
             'neutral_title': neutral_title,
@@ -632,9 +575,7 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'positive_percent': positive_percent,
             'negative_percent': negative_percent,
             'neutral_percent': neutral_percent
-        }, autoescape=True)
-
-        template.save(output_path)
+        }
 
 
 class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
@@ -650,94 +591,88 @@ class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'distribution.docx',
         )
 
-    def apply(self) -> None:
-        template: DocxTemplate = DocxTemplate(self._template_path)
-
-        _position: str = self.proc_obj.settings.get('position')
-
-        sentiments = HighchartsCreator(
-            self.report_format,
-            self.proc_obj.folder,
-        )
-
+    @render_diagram(flag='distribution')
+    def apply(self, **kwargs) -> tuple:
         soc_count: int = int(self.proc_obj.response_part.get('soc_count'))
         smi_count: int = int(self.proc_obj.response_part.get('smi_count'))
-
         langs_dict: dict = ReportLanguagePicker(self.report_format)().get('titles')
         title: str = langs_dict.get('distribution')
         soc_title: str = langs_dict.get('soc')
         smi_title: str = langs_dict.get('smi')
+        diagram_type: str = kwargs.pop('diagram_type')
 
-        chart = MetricsGenerator(
-            smi_count=smi_count,
-            soc_count=soc_count,
+        distribution_percents: dict = MetricsGenerator().count_percentage_of_distribution(smi_count, soc_count)
+
+        chart_categories: list[dict] = generate_chart_categories(
+            (soc_title, soc_count), (smi_title, smi_count)
         )
 
-        distribution_percents = chart.count_percentage_of_distribution()
-
-        class_name = self.__class__.__name__
-
-        path_to_image = os.path.join(
-            os.getcwd(),
-            'word',
-            'highcharts_temp_images',
-            f'{self.proc_obj.folder.unique_identifier}',
-            class_name + '.png'
-        )
-
-        output_path = os.path.join(
-            os.getcwd(),
-            'word',
-            'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
-            f'output-{_position}-messages-distribution.docx'
-        )
-
-        diagram_type: str = self.proc_obj.settings.get('type')
-        data_labels: bool = self.proc_obj.settings.get('data_labels')
-
-        chart_categories = [
-            {
-                'name': soc_title,
-                'y': soc_count,
-            },
-            {
-                'name': smi_title,
-                'y': smi_count,
-            },
-        ]
-
-        chart_series = [
+        chart_series: list[dict] = [
             {
                 'type': diagram_type,
                 'data': chart_categories,
             },
         ]
 
-        query_string: str = DiagramPickerInjector(
-            sentiments,
-            diagram_type,
-            chart_color=['#1BB394', '#EC5D5D'],
-            chart_categories=[chart.get('name') for chart in chart_categories],
-            data_labels=data_labels,
-            chart_series=chart_series,
-        ).pick_and_execute()
-
-        response = sentiments.do_post_request_to_highcharts_server(query_string)
-
-        sentiments.save_data_as_png(response, path_to_image)
-
-        dynamics_image = InlineImage(template, image_descriptor=path_to_image)
-
-        template.render({
+        return chart_categories, chart_series, {
             'title': title,
-            'messages_distribution': dynamics_image,
             'smi_title': smi_title,
             'soc_title': soc_title,
             'smi_count': smi_count,
             'soc_count': soc_count,
             'smi_percent': distribution_percents.get('smi'),
             'soc_percent': distribution_percents.get('soc'),
-        }, autoescape=True)
+        }
 
-        template.save(output_path)
+
+class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'smi_distribution.docx',
+        )
+
+    @render_diagram(flag='smi_distribution')
+    def apply(self, **kwargs) -> tuple:
+
+        diagram_type: str = kwargs.pop('diagram_type')
+        categories_distribution: list[dict] = self.proc_obj.response_part.get('categoryNames')
+
+        categories_distribution: list[dict] = [
+            {d['name_cat']:d['COUNTER'] for _,_ in d.items()} for d in categories_distribution
+        ]
+
+        categories_distribution_union: dict = {}
+
+        for c_d_n in categories_distribution:
+            categories_distribution_union.update(c_d_n)
+
+        categories_translate: dict = ReportLanguagePicker(self.report_format)().get('categories_soc')
+
+        categories_distribution_union: dict = {categories_translate[k]:v for k,v in categories_distribution_union.items()}
+
+        percentages_of_smi_distribution: dict = MetricsGenerator().count_percentage_of_smi_distribution(categories_distribution_union)
+
+        args: tuple = tuple(categories_distribution_union)
+
+        chart_categories: list[dict] = generate_chart_categories(args)
+
+        chart_series: list[dict] = [
+            {
+                'type': diagram_type,
+                'data': chart_categories,
+            },
+        ]
+
+        context = {}
+        context.update(percentages_of_smi_distribution)
+        context.update(categories_distribution_union)
+
+        return chart_categories, chart_series, context
+

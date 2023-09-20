@@ -78,9 +78,24 @@
     "negative": "Negative",
     "neutral": "Neutral"
   },
-  "sentiments": {
+  "sentiments_translate": {
     "positive": "Positive",
     "negative": "Negative",
     "neutral": "Neutral"
+  },
+  "categories_smi": {
+    "Государственные источники": "Government sources",
+    "Информационные агентства": "News agencies",
+    "Региональные источники": "Regional sources",
+    "Электронные СМИ": "Electronic media",
+    "Специализированные": "Specialized",
+    "Зарубежные источники": "Foreign sources",
+    "Государственные закупки": "State procurements",
+    "LiveJournal": "LiveJournal",
+    "Печатные СМИ": "Print mass-media",
+    "Телевидение": "Television",
+    "Радио": "Radio",
+    "Агрегаторы СМИ": "Media aggregators",
+    "Печатные издания": "Printed publications"
   }
 }
