@@ -1,7 +1,8 @@
 from typing import Any
 from multiprocessing import Process
 from .tools import (TableProcess, ContentProcess, TagsProcess, BaseProcess, SentimentsProcess, DistributionProcess,
-                    TotalMessagesCountProcess, MessagesDynamicsProcess, FabricMixin, SmiDistributionProcess)
+                    TotalMessagesCountProcess, MessagesDynamicsProcess, FabricMixin, SmiDistributionProcess,
+                    SocDistributionProcess,)
 
 
 class ProcessDataGenerator(FabricMixin, Process):
@@ -16,6 +17,7 @@ class ProcessDataGenerator(FabricMixin, Process):
         'sentiments': SentimentsProcess,
         'distribution': DistributionProcess,
         'smi_distribution': SmiDistributionProcess,
+        'soc_distribution': SocDistributionProcess,
     }
 
     def __init__(self, proc_obj: Any):

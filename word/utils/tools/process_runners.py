@@ -7,10 +7,10 @@ from docxtpl import DocxTemplate, InlineImage
 from docx.shared import RGBColor, Pt, Cm
 from docxcompose.composer import Composer
 from .auxiliary_functions import generate_chart_categories
-from .decorators import render_diagram
+from .decorators import render_diagram, throw_params_for_distribution_diagram
 from multiprocessing import Semaphore, Process
 
-from .mixins import PropertyProcessesMixin, AbstractRunnerMixin, DiagramPickerInjector
+from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
 
 from word.local import ReportLanguagePicker
 from word.tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
@@ -456,7 +456,6 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         )
 
     def apply(self) -> None:
-
         """ Не оборачиваю данную функцию в декоратор render_diagram по причине того, что данный процесс использует
         всего один вид графика - линейный и к тому же в клиентских настройках ничего не приходит. """
 
@@ -547,7 +546,8 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         negative_count = news_count_union.get('neg')
         neutral_count = news_count_union.get('neu')
 
-        sentiments_count = MetricsGenerator().count_percentage_of_sentiments(positive_count, negative_count, neutral_count)
+        sentiments_count = MetricsGenerator().count_percentage_of_sentiments(positive_count, negative_count,
+                                                                             neutral_count)
 
         positive_percent = sentiments_count.get('pos', 0)
         negative_percent = sentiments_count.get('neg', 0)
@@ -639,42 +639,51 @@ class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         )
 
     @render_diagram(color_flag='smi_distribution', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        category_names_key='categoryNames',
+        title_key='smi_distribution',
+        distribution_keys=('name_cat', 'COUNTER'),
+        distribution_translate=True,
+    )
     def apply(self, **kwargs) -> tuple:
+        pass
 
-        diagram_type: str = kwargs.pop('diagram_type')
-        categories_distribution: list[dict] = self.proc_obj.response_part.get('categoryNames')
-        title: str = ReportLanguagePicker(self.report_format)().get('titles').get('smi_distribution')
-        categories_distribution: list[dict] = [
-            {d['name_cat']:d['COUNTER'] for _,_ in d.items()} for d in categories_distribution
-        ]
 
-        categories_distribution_union: dict = {}
+class SocDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'soc_distribution.docx',
+        )
 
-        for c_d_n in categories_distribution:
-            categories_distribution_union.update(c_d_n)
+    @render_diagram(color_flag='soc_distribution', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        category_names_key='categoryNames2',
+        title_key='soc_distribution',
+        distribution_keys=('name', 'COUNTER'),
+    )
+    def apply(self, **kwargs) -> tuple:
+        pass
 
-        categories_translate: dict = ReportLanguagePicker(self.report_format)().get('categories_smi')
 
-        categories_distribution_union: dict = {categories_translate[k]:v for k,v in categories_distribution_union.items()}
+class TopMediaProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'media_top.docx',
+        )
 
-        percentages_of_smi_distribution: dict = MetricsGenerator().count_percentage_of_smi_distribution(categories_distribution_union)
-        args: tuple = tuple([(k,v) for k, v in categories_distribution_union.items()])
-
-        chart_categories: list[dict] = generate_chart_categories(*args)
-
-        chart_series: list[dict] = [
-            {
-                'type': diagram_type,
-                'data': chart_categories,
-            },
-        ]
-
-        context = {}
-        context.update(categories_distribution_union)
-        for key, value in context.items():
-            context[key] = [int(value), percentages_of_smi_distribution[key]]
-
-        context['title'] = title
-
-        return chart_categories, chart_series, context
-
+    def apply(self) -> None:
+        pass
