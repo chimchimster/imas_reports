@@ -13,4 +13,5 @@ from .styles_generators.schedule_style import SchedulerStylesGenerator
 from .data_generators.highcharts_generators import (HighchartsCreator, MessagesDynamicsDataGenerator,
                                                     MetricsGenerator, SentimentsDataGenerator,
                                                     DistributionDataGenerator, SmiDistributionDataGenerator,
-                                                    SocDistributionDataGenerator, )
+                                                    SocDistributionDataGenerator, TopMediaDataGenerator,
+                                                    TopSocDataGenerator,)

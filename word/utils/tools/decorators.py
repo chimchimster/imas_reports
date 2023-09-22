@@ -27,6 +27,18 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
             '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
             '#611de0',
         ],
+        'media_top': [
+            '#181bba', '#2528e8', '#2125eb', '#2327fa',
+            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
+            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
+            '#611de0',
+        ],
+        'soc_top': [
+            '#181bba', '#2528e8', '#2125eb', '#2327fa',
+            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
+            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
+            '#611de0',
+        ],
     }
 
     def outter_wrapper(func: Callable) -> Callable:
@@ -77,7 +89,7 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
 
             highcharts_obj.save_data_as_png(response, path_to_image)
 
-            image: InlineImage = InlineImage(template, image_descriptor=path_to_image, width=Cm(5), height=Cm(7))
+            image: InlineImage = InlineImage(template, image_descriptor=path_to_image)
 
             if context_flag:
 
@@ -114,7 +126,7 @@ def throw_params_for_distribution_diagram(
             title: str = ReportLanguagePicker(self.report_format)().get('titles').get(title_key)
 
             distribution: list[dict] = [
-                {d[distribution_keys[0]]: d[distribution_keys[1]] for _, _ in d.items()} for d in distribution
+                {d[distribution_keys[0]]: int(d[distribution_keys[1]]) for _, _ in d.items()} for d in distribution
             ]
 
             distribution_union: dict = {}

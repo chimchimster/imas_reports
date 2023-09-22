@@ -1,4 +1,6 @@
 import os
+import re
+
 import docx
 
 from utils import FolderUUID
@@ -72,7 +74,7 @@ class MergeReport:
         composer: Composer = Composer(master)
 
         file_order = [file for file in os.listdir(self.path_to_folder)]
-        file_order.sort()
+        file_order.sort(key=lambda file_name: int(re.findall(r'[0-9]+', file_name)[0]))
 
         for idx, file in enumerate(file_order):
 

@@ -7,7 +7,6 @@ from .utils import DataSorter
 
 
 class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
-
     flag: str = 'table'
 
     translator_smi: dict = {}
@@ -35,19 +34,6 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
         self.translator_soc.update(soc)
 
     def generate_data(self):
-
-        soc_types = {
-            1: 'Вконтакте',
-            2: 'Facebook',
-            3: 'Twitter',
-            4: 'Instagram',
-            5: 'LinkedIn',
-            6: 'Youtube',
-            7: 'Одноклассники',
-            8: 'Мой Мир',
-            9: 'Telegram',
-            10: 'TikTok',
-        }
 
         def translate(_key: str, _translator_type):
 
@@ -177,7 +163,8 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
         update_collection()
 
-    def __match_social_medias(self, data):
+    @staticmethod
+    def __match_social_medias(data):
         match data.get('type'):
             case 1:
                 data['type'] = 'Вконтакте'

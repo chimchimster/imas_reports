@@ -37,11 +37,11 @@ class HighchartsCreator:
             chart_categories: list[dict] = None,
             chart_series: list[dict] = None,
             chart_color: list[str] = None,
-            width: int = 250,
-            height: int = 75,
-            font_size: int = 12,
-            labels: bool = False,
-            data_labels: bool = False,
+            width: int = 300,
+            height: int = 300,
+            font_size: int = 8,
+            labels: bool = True,
+            data_labels: bool = True,
     ) -> str:
 
         bar_object = HighchartsObject(
@@ -119,10 +119,10 @@ class HighchartsCreator:
             chart_categories: list[dict] = None,
             chart_series: list[dict] = None,
             chart_color: list[str] = None,
-            width: int = 200,
-            height: int = 200,
-            font_size: int = 12,
-            labels: bool = False,
+            width: int = 300,
+            height: int = 300,
+            font_size: int = 8,
+            labels: bool = True,
             data_labels: bool = False,
             color_by_point: bool = True,
     ) -> str:
@@ -277,8 +277,8 @@ class HighchartsCreator:
             'infile': {
                 'chart': {
                     'type': 'area',
-                    'width': 900,
-                    'height': 300,
+                    'width': 1200,
+                    'height': 450,
                 },
                 'title': {
                     'text': None,

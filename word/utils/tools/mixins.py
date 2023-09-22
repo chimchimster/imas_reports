@@ -43,7 +43,7 @@ class AbstractRunnerMixin(ABC):
         self._report_lang = report_format.split('_')[1]  # TODO: от этого "ужаса" нужно избавиться на уровне клиентской части
 
     @abstractmethod
-    def apply(self) -> None:
+    def apply(self) -> tuple | None:
         """ Метод ответственный за логику каждого из runner's. """
 
 

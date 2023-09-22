@@ -645,7 +645,7 @@ class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         distribution_keys=('name_cat', 'COUNTER'),
         distribution_translate=True,
     )
-    def apply(self, **kwargs) -> tuple:
+    def apply(self) -> tuple:
         pass
 
 
@@ -668,7 +668,7 @@ class SocDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         title_key='soc_distribution',
         distribution_keys=('name', 'COUNTER'),
     )
-    def apply(self, **kwargs) -> tuple:
+    def apply(self) -> tuple:
         pass
 
 
@@ -685,5 +685,34 @@ class TopMediaProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'media_top.docx',
         )
 
-    def apply(self) -> None:
+    @render_diagram(color_flag='media_top', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        category_names_key='itemsCount',
+        title_key='media_top',
+        distribution_keys=('RESOURCE_NAME', 'COUNTER'),
+    )
+    def apply(self) -> dict:
+        pass
+
+
+class TopSocialProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'soc_top.docx',
+        )
+
+    @render_diagram(color_flag='soc_top', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        category_names_key='itemsCount2',
+        title_key='soc_top',
+        distribution_keys=('resource_name', 'COUNTER'),
+    )
+    def apply(self) -> tuple:
         pass

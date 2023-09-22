@@ -55,7 +55,9 @@
     "sentiments": "Messages sentiments",
     "distribution": "Distribution by media, social networks",
     "smi_distribution": "Distribution by category of media sources",
-    "soc_distribution": "Distribution by social networks"
+    "soc_distribution": "Distribution by social networks",
+    "media_top": "Most active media sources",
+    "soc_top": "Most active sources in social networks"
   },
   "link": "Link",
   "months": {

@@ -4,3 +4,5 @@ from .sentiments_data import SentimentsDataGenerator
 from .distribution_data import DistributionDataGenerator
 from .smi_distribution_data import SmiDistributionDataGenerator
 from .soc_distribution_data import SocDistributionDataGenerator
+from .media_top_data import TopMediaDataGenerator
+from .soc_top_data import TopSocDataGenerator
