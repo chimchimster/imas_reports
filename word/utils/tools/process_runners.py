@@ -498,14 +498,14 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'word',
             'temp',
             f'{self.proc_obj.folder.unique_identifier}',
-            f'output-{_position}-messages-dynamics.docx'
+            f'output-{_position}-messages-{class_name}.docx'
         )
 
         response = messages_dynamic.do_post_request_to_highcharts_server(query_string)
 
         messages_dynamic.save_data_as_png(response, path_to_image)
 
-        dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(5))
+        dynamics_image = InlineImage(template, image_descriptor=path_to_image)
 
         title: str = ReportLanguagePicker(self.report_format)().get('titles').get('messages_dynamics')
 

@@ -1,4 +1,5 @@
 import os
+import re
 from functools import wraps
 from typing import Callable
 
@@ -126,7 +127,7 @@ def throw_params_for_distribution_diagram(
             title: str = ReportLanguagePicker(self.report_format)().get('titles').get(title_key)
 
             distribution: list[dict] = [
-                {d[distribution_keys[0]]: int(d[distribution_keys[1]]) for _, _ in d.items()} for d in distribution
+                {d[distribution_keys[0]]: d[distribution_keys[1]] for _, _ in d.items()} for d in distribution
             ]
 
             distribution_union: dict = {}
@@ -153,9 +154,16 @@ def throw_params_for_distribution_diagram(
             ]
 
             context = {}
-            context.update(distribution_union)
-            for key, value in context.items():
-                context[key] = [int(value), percentages_of_soc_distribution[key]]
+
+            if len(distribution_union) > 20:
+                distribution_union = dict(
+                    zip(list(distribution_union.keys())[:20], list(distribution_union.values())[:20])
+                )
+
+            for key, value in distribution_union.items():
+                context[
+                    re.sub(r'^\s+|\s+$', '', re.sub(r'[\r\n]+', ' ', key))
+                ] = [int(value), percentages_of_soc_distribution[key]]
 
             context['title'] = title
 

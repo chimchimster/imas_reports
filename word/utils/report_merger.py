@@ -90,6 +90,12 @@ class MergeReport:
                     run = master.add_paragraph().add_run()
                     run.add_break(docx.enum.text.WD_BREAK.PAGE)
 
+                if file_path.endswith('Process.docx'):
+
+                    last_paragraph = master.paragraphs[-1]
+                    last_run = last_paragraph.runs[-1]
+                    last_run.add_break(docx.enum.text.WD_BREAK.PAGE)
+
                 if idx == 1:
                     run = master.add_paragraph().add_run()
                     run.add_break(docx.enum.text.WD_BREAK.PAGE)
