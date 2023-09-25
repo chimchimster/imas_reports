@@ -3,50 +3,17 @@ import re
 from functools import wraps
 from typing import Callable
 
-from docx.shared import Cm
+
 from word.tools import HighchartsCreator, MetricsGenerator
 from word.local import ReportLanguagePicker
 from .mixins import DiagramPickerInjector
+from .auxiliary_classes import ChartColorDistribution
 
 from docxtpl import DocxTemplate, InlineImage
 from .auxiliary_functions import generate_chart_categories
 
 
 def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callable:
-    colors_palette = {
-        'sentiments': ['#1BB394', '#EC5D5D', '#F2C94C'],
-        'distribution': ['#1BB394', '#EC5D5D'],
-        'smi_distribution': [
-            '#181bba', '#2528e8', '#2125eb', '#2327fa',
-            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
-            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
-            '#611de0',
-        ],
-        'soc_distribution': [
-            '#181bba', '#2528e8', '#2125eb', '#2327fa',
-            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
-            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
-            '#611de0',
-        ],
-        'media_top': [
-            '#181bba', '#2528e8', '#2125eb', '#2327fa',
-            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
-            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
-            '#611de0',
-        ],
-        'soc_top': [
-            '#181bba', '#2528e8', '#2125eb', '#2327fa',
-            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
-            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
-            '#611de0',
-        ],
-        'most_popular_soc': ['#181bba', '#2528e8', '#2125eb', '#2327fa',
-            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
-            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
-            '#611de0',
-        ],
-    }
-
     def outter_wrapper(func: Callable) -> Callable:
         @wraps(func)
         def inner_wrapper(self, **kwargs) -> None:
@@ -82,10 +49,16 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
 
             chart_categories, chart_series, func_kwargs = func(self, diagram_type=diagram_type, **kwargs)
 
+            chart_colors = ['#8B3A3A', '#FFC1C1']
+            if chart_categories:
+                chart_color_distribution = ChartColorDistribution(len(chart_categories), color_flag)
+                colors_palette_obj = chart_color_distribution.set_range_of_colors()
+                chart_colors = getattr(colors_palette_obj, color_flag)
+
             query_string: str = DiagramPickerInjector(
                 highcharts_obj,
                 diagram_type,
-                chart_color=colors_palette.get(color_flag),
+                chart_color=chart_colors,
                 chart_categories=[chart.get('name') for chart in chart_categories],
                 data_labels=data_labels,
                 chart_series=chart_series,
@@ -134,6 +107,8 @@ def throw_params_for_distribution_diagram(
 
             title: str = report_language().get('titles').get(title_key)
 
+            print(self.__class__.__name__)
+
             if not has_distribution:
                 distribution: list[dict, ...] = self.proc_obj.response_part.get(category_names_key)
             elif has_distribution == 'count_most_popular_metrix':
@@ -144,13 +119,32 @@ def throw_params_for_distribution_diagram(
                 )
             elif has_distribution == 'count_top_negative':
                 metrix_soc = self.proc_obj.response_part.get('f_news2')
-                metrix_smi = self.proc_obj.response_part.get('f_news1')
+                metrix_smi = self.proc_obj.response_part.get('f_news')
                 distribution: list[dict, ...] = MetricsGenerator.count_top_negative(
                     metrics_smi=metrix_smi,
                     metrics_soc=metrix_soc,
+                    which=['soc', 'smi']
                 )
 
-                title = report_language().get('top_negative')
+                title = report_language().get('titles').get('top_negative')
+            elif has_distribution == 'count_top_negative_smi':
+                metrix_soc = self.proc_obj.response_part.get('f_news2')
+                metrix_smi = self.proc_obj.response_part.get('f_news')
+                distribution: list[dict, ...] = MetricsGenerator.count_top_negative(
+                    metrics_smi=metrix_smi,
+                    metrics_soc=metrix_soc,
+                    which=['smi']
+                )
+                title = report_language().get('titles').get('smi_top_negative')
+            elif has_distribution == 'count_top_negative_soc':
+                metrix_soc = self.proc_obj.response_part.get('f_news2')
+                metrix_smi = self.proc_obj.response_part.get('f_news')
+                distribution: list[dict, ...] = MetricsGenerator.count_top_negative(
+                    metrics_smi=metrix_smi,
+                    metrics_soc=metrix_soc,
+                    which=['soc']
+                )
+                title = report_language().get('titles').get('soc_top_negative')
 
             distribution: list[dict] = [
                 {d[distribution_keys[0]]: d[distribution_keys[1]] for _, _ in d.items()} for d in distribution

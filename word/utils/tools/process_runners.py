@@ -754,11 +754,57 @@ class TopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'top_negative.docx',
         )
 
-    @render_diagram(color_flag='most_popular_soc', context_flag=True)
+    @render_diagram(color_flag='top_negative', context_flag=True)
     @throw_params_for_distribution_diagram(
         title_key='top_negative',
         distribution_keys=('resource_name', 'counter'),
         has_distribution='count_top_negative',
     )
     def apply(self) -> tuple:
+        pass
+
+
+class SmiTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'smi_top_negative.docx',
+        )
+
+    @render_diagram(color_flag='smi_top_negative', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        title_key='smi_top_negative',
+        distribution_keys=('resource_name', 'counter'),
+        has_distribution='count_top_negative_smi',
+    )
+    def apply(self) -> tuple | None:
+        pass
+
+
+class SocTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'soc_top_negative.docx',
+        )
+
+    @render_diagram(color_flag='soc_top_negative', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        title_key='soc_top_negative',
+        distribution_keys=('resource_name', 'counter'),
+        has_distribution='count_top_negative_soc',
+    )
+    def apply(self) -> tuple | None:
         pass

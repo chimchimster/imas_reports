@@ -125,7 +125,11 @@ class MetricsGenerator:
         return [{"resource_name": count_keys[i][0], "counter": count_keys[i][1]} for i in range(len(count_keys))]
 
     @staticmethod
-    def count_top_negative(metrics_soc: list[dict, ...], metrics_smi: list[dict, ...]) -> list[dict, ...]:
+    def count_top_negative(
+            metrics_soc: list[dict, ...],
+            metrics_smi: list[dict, ...],
+            which: list[str],
+    ) -> list[dict, ...]:
         """ Считаем ТОП негативных источников. """
 
         negative_sentiment = -1
@@ -141,7 +145,11 @@ class MetricsGenerator:
             param=negative_sentiment,
         )
 
-        return negative_soc + negative_smi
-
+        if len(which) == 2:
+            return negative_soc + negative_smi
+        if which[-1] == 'soc':
+            return negative_soc
+        else:
+            return negative_smi
 
 

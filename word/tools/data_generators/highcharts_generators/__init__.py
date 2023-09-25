@@ -8,3 +8,5 @@ from .media_top_data import TopMediaDataGenerator
 from .soc_top_data import TopSocDataGenerator
 from .most_popular_soc import MostPopularSocDataGenerator
 from .top_negative import TopNegativeDataGenerator
+from .smi_top_negative_data import SmiTopNegativeDataGenerator
+from .soc_top_negative_data import SocTopNegativeDataGenerator

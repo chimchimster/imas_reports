@@ -7,7 +7,8 @@ from .data_processes import ProcessDataGenerator
 from ..tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator, SentimentsDataGenerator,
                      TableContentGenerator, TotalMessagesCountDataGenerator, MessagesDynamicsDataGenerator,
                      DistributionDataGenerator, SmiDistributionDataGenerator, SocDistributionDataGenerator,
-                     TopMediaDataGenerator, TopSocDataGenerator, MostPopularSocDataGenerator, TopNegativeDataGenerator,)
+                     TopMediaDataGenerator, TopSocDataGenerator, MostPopularSocDataGenerator, TopNegativeDataGenerator,
+                     SmiTopNegativeDataGenerator, SocTopNegativeDataGenerator,)
 
 
 class DataManager(FabricMixin, PropertyMethodsMixin):
@@ -27,6 +28,8 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         'soc_top': TopSocDataGenerator,
         'most_popular_soc': MostPopularSocDataGenerator,
         'top_negative': TopNegativeDataGenerator,
+        'smi_top_negative': SmiTopNegativeDataGenerator,
+        'soc_top_negative': SocTopNegativeDataGenerator,
     }
 
     def __init__(

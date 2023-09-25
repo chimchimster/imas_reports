@@ -59,7 +59,9 @@
     "media_top": "Most active media sources",
     "soc_top": "Most active sources in social networks",
     "most_popular_soc": "The most active sources on the social network",
-    "top_negative": "Top negative sources"
+    "top_negative": "Top negative sources",
+    "smi_top_negative": "Top negative media sources",
+    "soc_top_negative": "Top negative sources on social networks"
   },
   "link": "Link",
   "months": {
