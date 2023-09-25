@@ -6,3 +6,5 @@ from .smi_distribution_data import SmiDistributionDataGenerator
 from .soc_distribution_data import SocDistributionDataGenerator
 from .media_top_data import TopMediaDataGenerator
 from .soc_top_data import TopSocDataGenerator
+from .most_popular_soc import MostPopularSocDataGenerator
+from .top_negative import TopNegativeDataGenerator

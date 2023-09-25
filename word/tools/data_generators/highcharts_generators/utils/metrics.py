@@ -1,3 +1,5 @@
+from typing import Any
+from collections import Counter
 from datetime import datetime, timedelta
 
 
@@ -95,3 +97,51 @@ class MetricsGenerator:
             distribution_percents[name] = round(int(distribution[name]) * 100 / total, 2)
 
         return distribution_percents
+
+    @staticmethod
+    def define_most_popular_resources(metrics: list[dict, ...]) -> int:
+        """ Определяем по какой именно соц сети будет вестись подсчет публикаций. """
+
+        count_metrix_by_type_of_soc = Counter([dct['type'] for dct in metrics])
+        max_soc_metrix = max(Counter([dct['type'] for dct in metrics]).values())
+
+        return next((key for key, val in count_metrix_by_type_of_soc.items() if val == max_soc_metrix), 0)
+
+    @staticmethod
+    def count_most_popular_metrics(
+            metrics: list[dict, ...],
+            keys: tuple[str, ...] = ('resource_name', 'type'),
+            param: Any = None
+    ) -> list[dict, ...]:
+        """ Считаем сколько публикаций было по каждому конкретному ресурсу. """
+
+        if not param:
+            param = MetricsGenerator.define_most_popular_resources(metrics)
+
+        list_of_keys = [dct[keys[0]] for dct in metrics if dct[keys[1]] == param]
+
+        count_keys = sorted(Counter(list_of_keys).items(), key=lambda x: x[1], reverse=True)[:20]
+
+        return [{"resource_name": count_keys[i][0], "counter": count_keys[i][1]} for i in range(len(count_keys))]
+
+    @staticmethod
+    def count_top_negative(metrics_soc: list[dict, ...], metrics_smi: list[dict, ...]) -> list[dict, ...]:
+        """ Считаем ТОП негативных источников. """
+
+        negative_sentiment = -1
+
+        negative_soc = MetricsGenerator.count_most_popular_metrics(
+            metrics_soc,
+            keys=("resource_name", "sentiment"),
+            param=negative_sentiment,
+        )
+        negative_smi = MetricsGenerator.count_most_popular_metrics(
+            metrics_smi,
+            keys=("RESOURCE_NAME", "sentiment"),
+            param=negative_sentiment,
+        )
+
+        return negative_soc + negative_smi
+
+
+

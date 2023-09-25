@@ -14,4 +14,5 @@ from .data_generators.highcharts_generators import (HighchartsCreator, MessagesD
                                                     MetricsGenerator, SentimentsDataGenerator,
                                                     DistributionDataGenerator, SmiDistributionDataGenerator,
                                                     SocDistributionDataGenerator, TopMediaDataGenerator,
-                                                    TopSocDataGenerator,)
+                                                    TopSocDataGenerator, MostPopularSocDataGenerator,
+                                                    TopNegativeDataGenerator,)

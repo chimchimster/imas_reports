@@ -40,6 +40,11 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
             '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
             '#611de0',
         ],
+        'most_popular_soc': ['#181bba', '#2528e8', '#2125eb', '#2327fa',
+            '#3918a8', '#3e1ab8', '#431bcc', '#491de0',
+            '#4f1ff2', '#5421ff', '#4816a6', '#571cc7',
+            '#611de0',
+        ],
     }
 
     def outter_wrapper(func: Callable) -> Callable:
@@ -117,14 +122,35 @@ def throw_params_for_distribution_diagram(
         title_key: str = None,
         distribution_keys: tuple[str, str] = None,
         distribution_translate: bool = False,
+        has_distribution: str = None,
 ):
     def outter_wrapper(func: Callable):
         @wraps(func)
         def inner_wrapper(self, **kwargs) -> tuple:
 
+            report_language = ReportLanguagePicker(self.report_format)
+
             diagram_type: str = kwargs.pop('diagram_type')
-            distribution: list[dict] = self.proc_obj.response_part.get(category_names_key)
-            title: str = ReportLanguagePicker(self.report_format)().get('titles').get(title_key)
+
+            title: str = report_language().get('titles').get(title_key)
+
+            if not has_distribution:
+                distribution: list[dict, ...] = self.proc_obj.response_part.get(category_names_key)
+            elif has_distribution == 'count_most_popular_metrix':
+                metrics_soc = self.proc_obj.response_part.get('f_news2')
+                distribution: list[dict, ...] = MetricsGenerator.count_most_popular_metrics(metrics_soc)
+                title += ' ' + report_language().get('categories_soc').get(
+                    str(MetricsGenerator.define_most_popular_resources(metrics_soc))
+                )
+            elif has_distribution == 'count_top_negative':
+                metrix_soc = self.proc_obj.response_part.get('f_news2')
+                metrix_smi = self.proc_obj.response_part.get('f_news1')
+                distribution: list[dict, ...] = MetricsGenerator.count_top_negative(
+                    metrics_smi=metrix_smi,
+                    metrics_soc=metrix_soc,
+                )
+
+                title = report_language().get('top_negative')
 
             distribution: list[dict] = [
                 {d[distribution_keys[0]]: d[distribution_keys[1]] for _, _ in d.items()} for d in distribution
@@ -136,7 +162,7 @@ def throw_params_for_distribution_diagram(
                 distribution_union.update(s_m_d)
 
             if distribution_translate:
-                categories_translate: dict = ReportLanguagePicker(self.report_format)().get('categories_smi')
+                categories_translate: dict = report_language().get('categories_smi')
                 distribution_union: dict = {categories_translate[k]: v for k, v in distribution_union.items()}
 
             percentages_of_soc_distribution: dict = MetricsGenerator().count_percentage_of_smi_soc_distribution(

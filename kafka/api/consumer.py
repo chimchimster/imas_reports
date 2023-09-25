@@ -1,8 +1,5 @@
 import sys
 
-from threading import Thread, Event
-from typing import Any, Callable
-from abc import ABC, abstractmethod
 from confluent_kafka import Consumer, TopicPartition, KafkaError
 
 

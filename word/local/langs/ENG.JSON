@@ -57,7 +57,9 @@
     "smi_distribution": "Distribution by category of media sources",
     "soc_distribution": "Distribution by social networks",
     "media_top": "Most active media sources",
-    "soc_top": "Most active sources in social networks"
+    "soc_top": "Most active sources in social networks",
+    "most_popular_soc": "The most active sources on the social network",
+    "top_negative": "Top negative sources"
   },
   "link": "Link",
   "months": {
@@ -101,5 +103,17 @@
     "Радио": "Radio",
     "Агрегаторы СМИ": "Media aggregators",
     "Печатные издания": "Printed publications"
+  },
+  "categories_soc": {
+    "1": "Вконтакте",
+    "2": "Facebook",
+    "3": "Twitter",
+    "4": "Instagram",
+    "5": "LinkedIn",
+    "6": "Youtube",
+    "7": "Одноклассники",
+    "8": "Мой Мир",
+    "9": "Telegram",
+    "10": "TikTok"
   }
 }

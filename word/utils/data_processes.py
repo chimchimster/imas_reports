@@ -2,7 +2,7 @@ from typing import Any
 from multiprocessing import Process
 from .tools import (TableProcess, ContentProcess, TagsProcess, BaseProcess, SentimentsProcess, DistributionProcess,
                     TotalMessagesCountProcess, MessagesDynamicsProcess, FabricMixin, SmiDistributionProcess,
-                    SocDistributionProcess, TopMediaProcess, TopSocialProcess,)
+                    SocDistributionProcess, TopMediaProcess, TopSocialProcess, MostPopularSocProcess, TopNegativeProcess,)
 
 
 class ProcessDataGenerator(FabricMixin, Process):
@@ -20,6 +20,8 @@ class ProcessDataGenerator(FabricMixin, Process):
         'soc_distribution': SocDistributionProcess,
         'media_top': TopMediaProcess,
         'soc_top': TopSocialProcess,
+        'most_popular_soc': MostPopularSocProcess,
+        'top_negative': TopNegativeProcess,
     }
 
     def __init__(self, proc_obj: Any):

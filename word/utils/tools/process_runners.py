@@ -716,3 +716,49 @@ class TopSocialProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     )
     def apply(self) -> tuple:
         pass
+
+
+class MostPopularSocProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'most_popular_soc.docx',
+        )
+
+    @render_diagram(color_flag='most_popular_soc', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        title_key='most_popular_soc',
+        distribution_keys=('resource_name', 'counter'),
+        has_distribution='count_most_popular_metrix',
+    )
+    def apply(self) -> tuple:
+        pass
+
+
+class TopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'top_negative.docx',
+        )
+
+    @render_diagram(color_flag='most_popular_soc', context_flag=True)
+    @throw_params_for_distribution_diagram(
+        title_key='top_negative',
+        distribution_keys=('resource_name', 'counter'),
+        has_distribution='count_top_negative',
+    )
+    def apply(self) -> tuple:
+        pass
