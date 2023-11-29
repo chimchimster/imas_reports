@@ -346,6 +346,9 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
+    def chart_map(self, map_type: str) -> str:
+        pass
+
     def do_post_request_to_highcharts_server(self, data: str) -> requests.models.Response:
         response = requests.post(
             self._highcharts_server,

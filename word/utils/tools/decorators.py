@@ -1,8 +1,10 @@
+import multiprocessing
 import os
 import re
 from functools import wraps
 from typing import Callable
 
+import docx
 
 from word.tools import HighchartsCreator, MetricsGenerator
 from word.local import ReportLanguagePicker
@@ -73,16 +75,44 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
             if context_flag:
 
                 new_func_kwargs = {'context': func_kwargs, 'image': image}
+                try:
+                    template.render({
+                        **new_func_kwargs
+                    }, autoescape=True)
+                except docx.image.exceptions.UnrecognizedImageError:
 
-                template.render({
-                    **new_func_kwargs
-                }, autoescape=True)
+                    image = InlineImage(template, image_descriptor=os.path.join(
+                        os.getcwd(),
+                        'word',
+                        'static',
+                        'data_not_found.png',
+                        ),
+                        width=500,
+                        height=500,
+                    )
+                    new_func_kwargs = {'context': func_kwargs, 'image': image}
+
+                    template.render({
+                        **new_func_kwargs
+                    }, autoescape=True)
+
             else:
                 func_kwargs['image'] = image
-                template.render({
-                    **func_kwargs
-                }, autoescape=True)
 
+                try:
+                    template.render({
+                        **func_kwargs
+                    }, autoescape=True)
+                except docx.image.exceptions.UnrecognizedImageError:
+                    func_kwargs['image'] = InlineImage(template, image_descriptor=os.path.join(
+                        os.getcwd(),
+                        'word',
+                        'static',
+                        'data_not_found.png',
+                        ),
+                        width=500,
+                        height=500,
+                    )
             template.save(output_path)
 
         return inner_wrapper

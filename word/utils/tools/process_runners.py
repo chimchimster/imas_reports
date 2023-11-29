@@ -808,3 +808,20 @@ class SocTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
     )
     def apply(self) -> tuple | None:
         pass
+
+
+class WorldMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
+            os.getcwd(),
+            'word',
+            'temp_templates',
+            f'{self.proc_obj.folder.unique_identifier}',
+            'template_parts',
+            'highcharts',
+            'world_map.docx',
+        )
+
+    def apply(self) -> tuple | None:
+        pass
