@@ -107,8 +107,6 @@ def throw_params_for_distribution_diagram(
 
             title: str = report_language().get('titles').get(title_key)
 
-            print(self.__class__.__name__)
-
             if not has_distribution:
                 distribution: list[dict, ...] = self.proc_obj.response_part.get(category_names_key)
             elif has_distribution == 'count_most_popular_metrix':
