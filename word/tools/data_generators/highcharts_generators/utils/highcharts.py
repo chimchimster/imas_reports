@@ -346,8 +346,64 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
-    def chart_map(self, map_type: str) -> str:
-        pass
+    @staticmethod
+    def world_map(payload: str, stat_map: list[dict]) -> str:
+
+        map_data = [
+            {
+                'hc-key': stat.get('id', 'unknown'),
+                'namekey': stat.get('id', 'unknown'),
+                'value': int(stat.get('sum'), 0),
+            } for stat in stat_map
+        ]
+
+        data = {
+            'credits': {
+                'enabled': False,
+            },
+            'legend': {
+                'enabled': False,
+            },
+            'mapNavigation': {
+                'enabled': False,
+            },
+            'title': {
+                'text': None,
+                'style': {
+                    'display': None,
+                },
+            },
+            'colorAxis': {
+                'min': 0,
+            },
+            'series': [{
+                'data': map_data,
+                'mapData': 'mapdata',
+                'joinBy': 'hc-key',
+                'name': 'Карта',
+                'states': {
+                    'hover': {
+                        'color': '#a4edba'
+                    }
+                },
+            }],
+            'dataLabels': {
+                'enabled': False,
+                'format': '{point.name}'
+            },
+        }
+
+        data = json.dumps(data)
+        data = data.replace('"mapData": "mapdata"', '"mapData":' + payload)
+
+        payload = {'async': True,
+                   'constr': 'Map',
+                   'infile': data,
+                   'scale': False,
+                   'type': 'image/png',
+                   'width': 1000}
+
+        return json.dumps(payload)
 
     def do_post_request_to_highcharts_server(self, data: str) -> requests.models.Response:
         response = requests.post(
@@ -391,6 +447,10 @@ class HighchartsCreator:
         with open(path_to_image, 'wb') as file:
             for _bytes in response:
                 file.write(_bytes)
+
+    @property
+    def highcharts_server(self):
+        return self._highcharts_server
 
 
 @dataclass

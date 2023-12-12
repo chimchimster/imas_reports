@@ -66,7 +66,7 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
                 chart_series=chart_series,
             ).pick_and_execute()
 
-            response: str = highcharts_obj.do_post_request_to_highcharts_server(query_string)
+            response = highcharts_obj.do_post_request_to_highcharts_server(query_string)
 
             highcharts_obj.save_data_as_png(response, path_to_image)
 
@@ -172,6 +172,7 @@ def throw_params_for_distribution_diagram(
                     metrics_soc=metrix_soc,
                     which=['soc']
                 )
+                print(distribution)
                 title = report_language().get('titles').get('soc_top_negative')
 
             distribution: list[dict] = [

@@ -14,7 +14,7 @@ class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
         cut = 150
 
-        def collect_titles_or_texts(news, counter, key):
+        def collect_titles_or_texts(news, counter, key, media_type):
 
             if counter > 50:
                 counter = 50
@@ -23,7 +23,7 @@ class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
                 try:
                     text_obj = news[idx][key][:cut].strip()
 
-                    self.data_collection.append(text_obj + ' ...' if len(text_obj) == cut else text_obj)
+                    self.data_collection[media_type].append(text_obj + ' ...' if len(text_obj) == cut else text_obj)
                 except IndexError:
                     pass
 
@@ -44,16 +44,14 @@ class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
             smi_posts = self.response_part.get('f_news')
 
             if count_smi > 0:
-                collect_titles_or_texts(smi_posts, count_smi, 'title')
+                collect_titles_or_texts(smi_posts, count_smi, 'title', media_type='smi')
             else:
-
                 for post in smi_posts:
                     self.data_collection['smi'].append(check_length_of_title_or_text(post.get('title')))
 
             if count_soc > 0:
-                collect_titles_or_texts(soc_posts, count_soc, 'full_text')
+                collect_titles_or_texts(soc_posts, count_soc, 'full_text', media_type='soc')
             else:
-
                 for post in soc_posts:
                     self.data_collection['soc'].append(check_length_of_title_or_text(post.get('full_text')))
 

@@ -152,4 +152,18 @@ class MetricsGenerator:
         else:
             return negative_smi
 
+    @staticmethod
+    def count_world_map(stats_map: list[dict], countries_hc: list[dict]) -> set[tuple]:
 
+        result = set()
+
+        total = sum([int(stat_map.get('sum')) for stat_map in stats_map])
+
+        for stat_map in stats_map:
+            country_short_code = stat_map.get('id')
+            for country_translate in countries_hc:
+                if country_translate.get('hc') == country_short_code:
+                    sm = stat_map.get('sum')
+                    result.add((country_translate.get('country_name'), sm, round(total / int(sm), 2)))
+
+        return result
