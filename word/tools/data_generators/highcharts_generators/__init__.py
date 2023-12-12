@@ -11,3 +11,4 @@ from .top_negative_data import TopNegativeDataGenerator
 from .smi_top_negative_data import SmiTopNegativeDataGenerator
 from .soc_top_negative_data import SocTopNegativeDataGenerator
 from .world_map_data import WorldMapDataGenerator
+from .kazakhstan_map_data import KazakhstanMapDataGenerator

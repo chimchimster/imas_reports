@@ -3,7 +3,7 @@ from multiprocessing import Process
 from .tools import (TableProcess, ContentProcess, TagsProcess, BaseProcess, SentimentsProcess, DistributionProcess,
                     TotalMessagesCountProcess, MessagesDynamicsProcess, FabricMixin, SmiDistributionProcess,
                     SocDistributionProcess, TopMediaProcess, TopSocialProcess, MostPopularSocProcess, TopNegativeProcess,
-                    SmiTopNegativeProcess, SocTopNegativeProcess, WorldMapProcess,)
+                    SmiTopNegativeProcess, SocTopNegativeProcess, WorldMapProcess, KazakhstanMapProcess,)
 
 
 class ProcessDataGenerator(FabricMixin, Process):
@@ -26,6 +26,7 @@ class ProcessDataGenerator(FabricMixin, Process):
         'smi_top_negative': SmiTopNegativeProcess,
         'soc_top_negative': SocTopNegativeProcess,
         'world_map': WorldMapProcess,
+        'kaz_map': KazakhstanMapProcess,
     }
 
     def __init__(self, proc_obj: Any):

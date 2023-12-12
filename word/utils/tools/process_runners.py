@@ -11,7 +11,7 @@ from docxtpl import DocxTemplate, InlineImage
 from docx.shared import RGBColor, Pt, Cm
 from docxcompose.composer import Composer
 from .auxiliary_functions import generate_chart_categories
-from .decorators import render_diagram, throw_params_for_distribution_diagram
+from .decorators import render_diagram, throw_params_for_distribution_diagram, render_map
 from multiprocessing import Semaphore, Process
 
 from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
@@ -827,72 +827,35 @@ class WorldMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'world_map.docx',
         )
 
+    @render_map(
+        json_marking_title='world_map.JSON',
+        region_key='countries_hc',
+        stat_map_key='stat_map',
+        map_type='world_map',
+    )
     def apply(self):
+        pass
 
-        template: DocxTemplate = DocxTemplate(self._template_path)
 
-        countries_hc = self.proc_obj.response_part.get('countries_hc')
-        stat_map = self.proc_obj.response_part.get('stat_map')
+class KazakhstanMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
-        path_to_stats_map = os.path.join(
+    def __init__(self, proc_object, data, report_format):
+        super().__init__(proc_object, data, report_format)
+        self._template_path = os.path.join(
             os.getcwd(),
             'word',
-            'static',
-            'geo',
-            'world_map.JSON'
-        )
-
-        position = self.proc_obj.settings.get('position')
-
-        path_to_image: str = os.path.join(
-            os.getcwd(),
-            'word',
-            'highcharts_temp_images',
+            'temp_templates',
             f'{self.proc_obj.folder.unique_identifier}',
-            self.__class__.__name__ + '.png'
+            'template_parts',
+            'highcharts',
+            'kaz_map.docx',
         )
 
-        output_path: str = os.path.join(
-            os.getcwd(),
-            'word',
-            'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
-            f'output-{position}-messages-{self.__class__.__name__}.docx'
-        )
-
-        with open(path_to_stats_map, 'r') as stats_map_file:
-
-            highcharts_map_creator_object = HighchartsCreator(self.report_format, self.proc_obj.folder)
-
-            print(type(self.proc_obj.response_part.get('stat_map')), self.proc_obj.response_part.get('stat_map'))
-
-            query_string = highcharts_map_creator_object.world_map(
-                stats_map_file.read(),
-                stat_map,
-            )
-
-            response = highcharts_map_creator_object.do_post_request_to_highcharts_server(query_string)
-
-            response = requests.get(f'{highcharts_map_creator_object.highcharts_server}/{response.text}')
-
-            highcharts_map_creator_object.save_data_as_png(response, path_to_image)
-
-            image: InlineImage = InlineImage(template, image_descriptor=path_to_image, width=Cm(17), height=Cm(9))
-
-            context_items = MetricsGenerator.count_world_map(stat_map, countries_hc)
-
-            context = {
-                'image': image, 'data': itertools.zip_longest(
-                                context_items[:len(context_items) // 2], context_items[len(context_items) // 2 + 1:],
-                                fillvalue=''
-                            )
-                }
-
-            try:
-                template.render(context, autoescape=True)
-            except docx.image.exceptions.UnrecognizedImageError:
-                pass
-
-            template.save(output_path)
-
-
+    @render_map(
+        json_marking_title='kazakhstan_map.JSON',
+        region_key=None,
+        stat_map_key='stat_map2',
+        map_type='kaz_map',
+    )
+    def apply(self) -> tuple | None:
+        pass

@@ -61,7 +61,9 @@
     "most_popular_soc": "The most active sources on the social network",
     "top_negative": "Top negative sources",
     "smi_top_negative": "Top negative media sources",
-    "soc_top_negative": "Top negative sources on social networks"
+    "soc_top_negative": "Top negative sources on social networks",
+    "world_map": "Activity of sources by region",
+    "kaz_map": "Activity of sources over the Kazakhstan"
   },
   "link": "Link",
   "months": {
@@ -118,7 +120,7 @@
     "9": "Telegram",
     "10": "TikTok"
   },
-  "countries": {
+  "countries_or_regions": {
     "не определено": "Undefined",
     "Австралия": "Australia",
     "Австрия": "Austria",

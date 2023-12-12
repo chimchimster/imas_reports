@@ -8,7 +8,8 @@ from ..tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator, Sen
                      TableContentGenerator, TotalMessagesCountDataGenerator, MessagesDynamicsDataGenerator,
                      DistributionDataGenerator, SmiDistributionDataGenerator, SocDistributionDataGenerator,
                      TopMediaDataGenerator, TopSocDataGenerator, MostPopularSocDataGenerator, TopNegativeDataGenerator,
-                     SmiTopNegativeDataGenerator, SocTopNegativeDataGenerator, WorldMapDataGenerator)
+                     SmiTopNegativeDataGenerator, SocTopNegativeDataGenerator, WorldMapDataGenerator,
+                     KazakhstanMapDataGenerator,)
 
 
 class DataManager(FabricMixin, PropertyMethodsMixin):
@@ -31,6 +32,7 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         'smi_top_negative': SmiTopNegativeDataGenerator,
         'soc_top_negative': SocTopNegativeDataGenerator,
         'world_map': WorldMapDataGenerator,
+        'kaz_map': KazakhstanMapDataGenerator,
     }
 
     def __init__(

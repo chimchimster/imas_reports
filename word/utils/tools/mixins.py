@@ -102,7 +102,7 @@ class DiagramPickerInjector:
         self.__available_diagrams__['column'] = self._instance.column
         self.__available_diagrams__['linear'] = self._instance.linear
         self.__available_diagrams__['bar'] = self._instance.bar
-        self.__available_diagrams__['world_map'] = self._instance.world_map
+        self.__available_diagrams__['world_or_kz_map'] = self._instance.world_or_kz_map
 
     def pick_and_execute(self) -> str:
         """ Выбираем нужную диаграмму из доступных и отправляем на отрисовку. """

@@ -347,7 +347,7 @@ class HighchartsCreator:
         return json.dumps(data)
 
     @staticmethod
-    def world_map(payload: str, stat_map: list[dict]) -> str:
+    def world_or_kz_map(payload: str, stat_map: list[dict]) -> str:
 
         map_data = [
             {

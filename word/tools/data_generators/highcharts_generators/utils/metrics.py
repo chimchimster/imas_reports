@@ -1,6 +1,9 @@
+import json
+import os
 from typing import Any
 from collections import Counter
 from datetime import datetime, timedelta
+from word.local import ReportLanguagePicker
 
 
 class MetricsGenerator:
@@ -153,17 +156,66 @@ class MetricsGenerator:
             return negative_smi
 
     @staticmethod
-    def count_world_map(stats_map: list[dict], countries_hc: list[dict]) -> set[tuple]:
+    def count_world_or_kz_map(
+            stats_map: list[dict],
+            countries_or_regions_hc: list[dict] | list[str],
+            language: str
+    ) -> list[tuple]:
 
-        result = set()
+        result = list()
 
         total = sum([int(stat_map.get('sum')) for stat_map in stats_map])
 
+        langs_dict = ReportLanguagePicker(language)()
+
+        countries = langs_dict.get('countries_or_regions')
+
         for stat_map in stats_map:
-            country_short_code = stat_map.get('id')
-            for country_translate in countries_hc:
-                if country_translate.get('hc') == country_short_code:
+            country_or_region_short_code = stat_map.get('id')
+
+            if countries_or_regions_hc is not None:
+                for country_or_region_translate in countries_or_regions_hc:
+                    if country_or_region_translate.get('hc') == country_or_region_short_code:
+
+                        sm = stat_map.get('sum')
+
+                        stats_object = (
+                            countries.get(
+                                    country_or_region_translate.get('country_name'),
+                                    country_or_region_translate.get('country_name'),
+                                ) if countries is not None else country_or_region_translate.get('country_name'),
+                            sm,
+                            round(int(sm) * 100 / total, 2),
+                        )
+
+                        if stats_object not in result:
+                            result.append(stats_object)
+            else:
+                with open(
+                        os.path.join(
+                            os.getcwd(),
+                            'word',
+                            'static',
+                            'geo',
+                            'kazakhstan_regions_ids.JSON'
+                        ),
+                        'r',
+                ) as regions_ids_file:
+
+                    region_ids = json.loads(regions_ids_file.read()).get('regions')
+
                     sm = stat_map.get('sum')
-                    result.add((country_translate.get('country_name'), sm, round(total / int(sm), 2)))
+
+                    stats_object = (
+                        countries.get(
+                            region_ids.get(stat_map.get('id')),
+                            region_ids.get(stat_map.get('id'))
+                        ) if countries is not None else region_ids.get(stat_map.get('id')),
+                        sm,
+                        round(int(sm) * 100 / total, 2),
+                    )
+
+                    if stats_object not in result:
+                        result.append(stats_object)
 
         return result

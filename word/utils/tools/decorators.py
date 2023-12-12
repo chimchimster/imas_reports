@@ -1,3 +1,5 @@
+import functools
+import itertools
 import multiprocessing
 import os
 import re
@@ -5,6 +7,8 @@ from functools import wraps
 from typing import Callable
 
 import docx
+import requests
+from docx.shared import Cm
 
 from word.tools import HighchartsCreator, MetricsGenerator
 from word.local import ReportLanguagePicker
@@ -113,6 +117,13 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
                         width=500,
                         height=500,
                     )
+
+                    new_func_kwargs = {'image': image}
+
+                    template.render({
+                        **new_func_kwargs
+                    }, autoescape=True)
+
             template.save(output_path)
 
         return inner_wrapper
@@ -221,3 +232,112 @@ def throw_params_for_distribution_diagram(
         return inner_wrapper
 
     return outter_wrapper
+
+
+def render_map(
+        json_marking_title: str = None,
+        region_key: str = None,
+        stat_map_key: str = None,
+        map_type: str = None,
+):
+    def outer_wrapper(func: Callable):
+        @functools.wraps(func)
+        def inner_wrapper(self):
+
+            template: DocxTemplate = DocxTemplate(self._template_path)
+
+            countries_or_regions_hc = self.proc_obj.response_part.get(region_key) if region_key is not None else None
+            stat_map = self.proc_obj.response_part.get(stat_map_key)
+
+            path_to_stats_map = os.path.join(
+                os.getcwd(),
+                'word',
+                'static',
+                'geo',
+                json_marking_title,
+            )
+
+            position = self.proc_obj.settings.get('position')
+
+            path_to_image: str = os.path.join(
+                os.getcwd(),
+                'word',
+                'highcharts_temp_images',
+                f'{self.proc_obj.folder.unique_identifier}',
+                self.__class__.__name__ + '.png'
+            )
+
+            output_path: str = os.path.join(
+                os.getcwd(),
+                'word',
+                'temp',
+                f'{self.proc_obj.folder.unique_identifier}',
+                f'output-{position}-messages-{self.__class__.__name__}.docx'
+            )
+
+            length = self.proc_obj.settings.get('length')
+            number = self.proc_obj.settings.get('number')
+            percent = self.proc_obj.settings.get('percent')
+
+            with open(path_to_stats_map, 'r') as stats_map_file:
+
+                highcharts_map_creator_object = HighchartsCreator(self.report_format, self.proc_obj.folder)
+
+                query_string = highcharts_map_creator_object.world_or_kz_map(
+                    stats_map_file.read(),
+                    stat_map,
+                )
+
+                response = highcharts_map_creator_object.do_post_request_to_highcharts_server(query_string)
+
+                response = requests.get(f'{highcharts_map_creator_object.highcharts_server}/{response.text}')
+
+                highcharts_map_creator_object.save_data_as_png(response, path_to_image)
+
+                image: InlineImage = InlineImage(template, image_descriptor=path_to_image, width=Cm(23), height=Cm(15))
+
+                context_items = MetricsGenerator.count_world_or_kz_map(
+                    stat_map,
+                    countries_or_regions_hc,
+                    self.report_format
+                )[:length]
+
+                langs_dict = ReportLanguagePicker(self.report_format)()
+
+                title = langs_dict.get('titles').get(map_type)
+
+                context = {
+                    'title': title,
+                    'image': image,
+                    'data': itertools.zip_longest(
+                        context_items[:len(context_items) // 2], context_items[len(context_items) // 2 + 1:],
+                        fillvalue=''
+                    ),
+                    'number': number,
+                    'percent': percent,
+                }
+
+                try:
+                    template.render(context, autoescape=True)
+                except docx.image.exceptions.UnrecognizedImageError:
+                    context['image'] = InlineImage(
+                        template,
+                        image_descriptor=os.path.join(
+                            os.getcwd(),
+                            'word',
+                            'static',
+                            'data_not_found.png',
+                        ),
+                        width=500,
+                        height=500,
+                       )
+
+                    template.render({
+                        **context
+                    }, autoescape=True)
+
+                template.save(output_path)
+
+        return inner_wrapper
+
+    return outer_wrapper

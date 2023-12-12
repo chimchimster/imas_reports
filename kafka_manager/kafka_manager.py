@@ -48,6 +48,10 @@ class KafkaManager(RemoveDirsMixin):
 
         return self
 
+    def __del__(self):
+        self.queue_thread.join()
+        self.consume_thread.join()
+
     @property
     def bootstrap_server(self):
         return self._bootstrap_server
