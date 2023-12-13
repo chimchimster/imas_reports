@@ -1,14 +1,10 @@
-import functools
-import itertools
-import json
 import os
 import uuid
 import docx
 import shutil
 
-import requests
 from docxtpl import DocxTemplate, InlineImage
-from docx.shared import RGBColor, Pt, Cm
+from docx.shared import RGBColor, Pt
 from docxcompose.composer import Composer
 from .auxiliary_functions import generate_chart_categories
 from .decorators import render_diagram, throw_params_for_distribution_diagram, render_map
@@ -17,9 +13,7 @@ from multiprocessing import Semaphore, Process
 from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
 
 from word.local import ReportLanguagePicker
-from word.tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator,
-                        TableContentGenerator, TableStylesGenerator, SchedulerStylesGenerator,
-                        HighchartsCreator, MetricsGenerator)
+from word.tools import TableStylesGenerator, SchedulerStylesGenerator, HighchartsCreator, MetricsGenerator
 
 
 class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):

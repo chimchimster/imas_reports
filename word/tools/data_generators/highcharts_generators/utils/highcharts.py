@@ -1,5 +1,8 @@
+import multiprocessing
 import os
 import json
+import time
+
 import requests
 
 from functools import wraps
@@ -406,12 +409,14 @@ class HighchartsCreator:
         return json.dumps(payload)
 
     def do_post_request_to_highcharts_server(self, data: str) -> requests.models.Response:
+
         response = requests.post(
             self._highcharts_server,
             data=data.encode(),
             headers=self._headers,
             verify=False,
         )
+
         return response
 
     def save_data_as_png(self, response: requests.models.Response, path_to_image: str) -> None:
