@@ -14,7 +14,7 @@ for api_route, controller in api_routes:
 
 
 if __name__ == '__main__':
-    bootstrap_server, reports_topic, reports_ready_topic = load_kafka_settings()
+    bootstrap_server, reports_topic, reports_ready_topic, sasl_username, sasl_password = load_kafka_settings()
 
     with KafkaManager(
         bootstrap_server=bootstrap_server,
@@ -23,6 +23,8 @@ if __name__ == '__main__':
         producer_timeout=1000,
         consumer_timeout=1.0,
         group_id='none',
+        sasl_username=sasl_username,
+        sasl_password=sasl_password
     ) as manager:
         app.run(host='0.0.0.0', debug=True)
 

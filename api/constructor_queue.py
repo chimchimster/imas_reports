@@ -27,12 +27,14 @@ class DocxReportQueue(Resource):
 
         response_json: json = json.dumps(response_data)
 
-        bs_serv, reports_topic, reports_ready_topic = load_kafka_settings()
+        bs_serv, reports_topic, reports_ready_topic, sasl_username, sasl_password = load_kafka_settings()
 
         producer: KafkaProducer = KafkaProducer(
             bootstrap_server=bs_serv,
             topic=reports_topic,
             timeout=1000,
+            sasl_username=sasl_username,
+            sasl_password=sasl_password
         )
 
         producer.send_message(

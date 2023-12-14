@@ -1,3 +1,4 @@
 word/tests/.pytest_cache
 env/
 .env
+kafka/kafka_server_jaas.conf

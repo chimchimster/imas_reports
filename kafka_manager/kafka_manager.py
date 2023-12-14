@@ -20,6 +20,8 @@ class KafkaManager(RemoveDirsMixin):
             producer_timeout: int,
             consumer_timeout: float,
             group_id: str,
+            sasl_username: str,
+            sasl_password: str,
     ):
         self._bootstrap_server = bootstrap_server
         self._reports_topic = reports_topic
@@ -27,6 +29,8 @@ class KafkaManager(RemoveDirsMixin):
         self._producer_timeout = producer_timeout
         self._consumer_timeout = consumer_timeout
         self._group_id = group_id
+        self._sasl_username = sasl_username
+        self._sasl_password = sasl_password
 
     def __enter__(self) -> ContextManager:
 
@@ -38,6 +42,8 @@ class KafkaManager(RemoveDirsMixin):
             reports_ready_topic=self.reports_ready_topic,
             timeout=self.consumer_timeout,
             group_id=self.group_id,
+            sasl_username=self._sasl_username,
+            sasl_password=self._sasl_password,
         )
 
         self.consume_thread: Thread = Thread(target=self.consume)

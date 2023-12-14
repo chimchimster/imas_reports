@@ -9,16 +9,25 @@ class KafkaProducer:
             bootstrap_server: str,
             topic: str,
             timeout: int,
+            sasl_username: str,
+            sasl_password: str,
     ) -> None:
         self._bootstrap_server = bootstrap_server
         self._topic = topic
         self._timeout = timeout
+        self._sasl_username = sasl_username
+        self._sasl_password = sasl_password
+
         self._producer = self.__configure_producer()
 
     def __configure_producer(self) -> Producer:
 
         conf = {
             'bootstrap.servers': self.bootstrap_server,
+            'security.protocol': 'SASL_PLAINTEXT',
+            'sasl.mechanism': 'PLAIN',
+            'sasl.username': self._sasl_username,
+            'sasl.password': self._sasl_password,
         }
 
         prdcr: Producer = Producer(conf)
@@ -66,13 +75,5 @@ class KafkaProducer:
                 value=message,
                 callback=on_delivery,
             )
-        except KafkaError.FailedPayloads as e:
-            print(e)
-        except KafkaError.KafkaTimeout as e:
-            print(e)
-        except KafkaError.ConnectionError as e:
-            print(e)
-        except KafkaError.SerializationError as e:
-            print(e)
         except KafkaError as e:
-            print(e)
+            sys.stderr.write(str(e))

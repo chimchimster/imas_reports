@@ -12,6 +12,8 @@ class KafkaConsumer:
             timeout: float,
             group_id: str,
             enable_auto_commit: bool = False,
+            sasl_username: str = None,
+            sasl_password: str = None,
     ) -> None:
         self._bootstrap_server = bootstrap_server
         self._reports_topic = reports_topic
@@ -19,6 +21,8 @@ class KafkaConsumer:
         self._timeout = timeout
         self._group_id = group_id
         self._enable_auto_commit = enable_auto_commit
+        self._sasl_username = sasl_username
+        self._sasl_password = sasl_password
 
         self._consumer: Consumer = self.__configure_consumer()
 
@@ -28,6 +32,11 @@ class KafkaConsumer:
             'bootstrap.servers': self.bootstrap_server,
             'group.id': self.group_id,
             'enable.auto.commit': self.enable_auto_commit,
+            'auto.offset.reset': 'latest',
+            'security.protocol': 'SASL_PLAINTEXT',
+            'sasl.mechanism': 'PLAIN',
+            'sasl.username': self._sasl_username,
+            'sasl.password': self._sasl_password,
         }
 
         cnsmr: Consumer = Consumer(conf)
