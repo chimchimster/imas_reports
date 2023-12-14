@@ -144,6 +144,8 @@ class KafkaManager(RemoveDirsMixin):
             bootstrap_server=self.bootstrap_server,
             topic=self.reports_ready_topic,
             timeout=self.producer_timeout,
+            sasl_username=self._sasl_username,
+            sasl_password=self._sasl_password,
         )
 
         producer.send_message(

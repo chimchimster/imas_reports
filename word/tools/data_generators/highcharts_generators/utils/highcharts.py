@@ -361,52 +361,91 @@ class HighchartsCreator:
         ]
 
         data = {
-            'credits': {
-                'enabled': False,
-            },
-            'legend': {
-                'enabled': False,
-            },
-            'mapNavigation': {
-                'enabled': False,
-            },
-            'title': {
-                'text': None,
-                'style': {
-                    'display': None,
+            'infile': {
+                'chart': {
+                    'map': payload
+                },
+                'credits': {
+                    'enabled': False,
+                },
+                'legend': {
+                    'enabled': False,
+                },
+                'mapNavigation': {
+                    'enabled': False,
+                },
+                'title': {
+                    'text': None,
+                    'style': {
+                        'display': None,
+                    },
+                },
+                'colorAxis': {
+                    'min': 0,
+                },
+                'series': [{
+                    'data': map_data,
+                    'joinBy': 'hc-key',
+                    'name': 'Карта',
+                    'states': {
+                        'hover': {
+                            'color': '#a4edba'
+                        }
+                    },
+                }],
+                'dataLabels': {
+                    'enabled': False,
+                    'format': '{point.name}'
                 },
             },
-            'colorAxis': {
-                'min': 0,
-            },
-            'series': [{
-                'data': map_data,
-                'mapData': 'mapdata',
-                'joinBy': 'hc-key',
-                'name': 'Карта',
-                'states': {
-                    'hover': {
-                        'color': '#a4edba'
-                    }
-                },
-            }],
-            'dataLabels': {
-                'enabled': False,
-                'format': '{point.name}'
-            },
+            'constr': 'Map',
+            'type': 'image/png',
+            'scale': False,
+            'width': 1000,
+            'async': True
         }
+        # data = {
+        #             'infile': {
+        #             'chart': {
+        #                 'map': payload
+        #             },
+        #
+        #             'title': {
+        #                 'text': 'Highcharts Maps basic demo'
+        #             },
+        #
+        #             'subtitle': {
+        #                 'text': 'Source map: <a href="http://code.highcharts.com/mapdata/countries/kz/kz-all.topo.json">Kazakhstan</a>'
+        #             },
+        #
+        #             'mapNavigation': {
+        #                 'enabled': 'true',
+        #                 'buttonOptions': {
+        #                     'verticalAlign': 'bottom'
+        #                 }
+        #             },
+        #
+        #             'colorAxis': {
+        #                 'min': 0
+        #             },
+        #
+        #             'series': [{
+        #                 'data': 'data',
+        #                 'name': 'Random data',
+        #                 'states': {
+        #                     'hover': {
+        #                         'color': '#BADA55'
+        #                     }
+        #                 },
+        #                 'dataLabels': {
+        #                     'enabled': 'true',
+        #                     'format': '{point.name}'
+        #                 }
+        #             }]
+        #         }}
+        # LOL
 
-        data = json.dumps(data)
-        data = data.replace('"mapData": "mapdata"', '"mapData":' + payload)
-
-        payload = {'async': True,
-                   'constr': 'Map',
-                   'infile': data,
-                   'scale': False,
-                   'type': 'image/png',
-                   'width': 1000}
-
-        return json.dumps(payload)
+        return json.dumps(data)
 
     def do_post_request_to_highcharts_server(self, data: str) -> requests.models.Response:
 
