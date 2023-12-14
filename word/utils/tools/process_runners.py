@@ -4,7 +4,7 @@ import docx
 import shutil
 
 from docxtpl import DocxTemplate, InlineImage
-from docx.shared import RGBColor, Pt
+from docx.shared import RGBColor, Pt, Cm
 from docxcompose.composer import Composer
 from .auxiliary_functions import generate_chart_categories
 from .decorators import render_diagram, throw_params_for_distribution_diagram, render_map
@@ -503,7 +503,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         messages_dynamic.save_data_as_png(response, path_to_image)
 
-        dynamics_image = InlineImage(template, image_descriptor=path_to_image)
+        dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(7))
 
         title: str = ReportLanguagePicker(self.report_format)().get('titles').get('messages_dynamics')
 
