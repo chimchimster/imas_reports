@@ -1,0 +1,15 @@
+FROM node:latest  
+  
+WORKDIR /app  
+
+ENV ACCEPT_HIGHCHARTS_LICENSE=YES
+ENV HIGHCHARTS_USE_MAPS=true
+
+RUN npm install highcharts-export-server -g  
+  
+RUN apt-get update && \ 
+    apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libx11-xcb1 libxcb-dri3-0 libxcomposite1 libxrandr2 libgbm1 libpango-1.0-0 libpangocairo-1.0-0 libxcursor1 libxdamage1 libxi6 libxtst6 libcups2 libxkbcommon0 libxslt1.1 libgtk-3-0 libasound2 && \ 
+    rm -rf /var/lib/apt/lists/* 
+
+EXPOSE 7801  
+ENTRYPOINT ["highcharts-export-server", "--enableServer", "1"]
