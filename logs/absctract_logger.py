@@ -37,8 +37,8 @@ class LoggerHandler(ABC):
     def __join_thread(self):
         self.thread.join()
 
-    def __send_log(self):
+    def __send_log(self, *ar, **kw):
         try:
-            self.send_log()
+            self.send_log(*ar, **kw)
         except Exception as e:
             sys.stderr.write(str(e))
