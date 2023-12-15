@@ -1,3 +1,4 @@
+import os
 import re
 import requests
 
@@ -7,7 +8,7 @@ from word.utils import DataManager, MergeReport
 
 
 class WordCreator(PropertyMethodsMixin):
-    api_url = 'https://rest34.imas.kz/'
+    api_url = os.environ.get('REST_ENDPOINT')
     relative_api = 'export-apis?'
     relative_api_folders = 'export-api-folders?'
 
@@ -35,7 +36,7 @@ class WordCreator(PropertyMethodsMixin):
 
             for key, val in response_json.items():
                 print(key, val, '\n')
-
+            print(self.api_url)
             self.generate_word_document(response_json)
 
     def generate_word_document(self, response: dict) -> None:

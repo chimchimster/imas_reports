@@ -1,3 +1,4 @@
+import multiprocessing
 from typing import Any
 from multiprocessing import Process
 from .tools import (TableProcess, ContentProcess, TagsProcess, BaseProcess, SentimentsProcess, DistributionProcess,

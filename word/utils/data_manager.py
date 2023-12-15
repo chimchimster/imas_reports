@@ -1,3 +1,4 @@
+import multiprocessing
 import os
 import shutil
 
@@ -34,6 +35,8 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         'world_map': WorldMapDataGenerator,
         'kaz_map': KazakhstanMapDataGenerator,
     }
+
+    sema = multiprocessing.Semaphore(5)
 
     def __init__(
             self,
@@ -79,15 +82,11 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
 
     def apply_processes(self):
 
-        procs = []
-
         for proc_obj in self.procs_objs:
             proc = ProcessDataGenerator(proc_obj)
-            procs.append(proc)
-            proc.start()
-
-        for prc in procs:
-            prc.join()
+            with self.sema:
+                proc.start()
+                proc.join()
 
     def create_temp_folder(self):
         os.chdir(

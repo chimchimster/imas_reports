@@ -3,6 +3,7 @@ import itertools
 import multiprocessing
 import os
 import re
+import time
 from functools import wraps
 from typing import Callable
 
@@ -290,8 +291,7 @@ def render_map(
 
                 response = highcharts_map_creator_object.do_post_request_to_highcharts_server(query_string)
 
-                print(response.status_code, response.text)
-                # response = requests.get(f'{highcharts_map_creator_object.highcharts_server}/{response.text}')
+                response = requests.get(f'{highcharts_map_creator_object.highcharts_server}/{response.text}')
 
                 highcharts_map_creator_object.save_data_as_png(response, path_to_image)
 
