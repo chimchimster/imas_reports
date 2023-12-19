@@ -1,6 +1,6 @@
-import multiprocessing
 import os
 import shutil
+import multiprocessing
 
 from .tools import FabricMixin
 from word.mixins import PropertyMethodsMixin

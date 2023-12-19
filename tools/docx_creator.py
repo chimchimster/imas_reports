@@ -8,6 +8,7 @@ from word.utils import DataManager, MergeReport
 
 
 class WordCreator(PropertyMethodsMixin):
+
     api_url = os.environ.get('REST_ENDPOINT')
     relative_api = 'export-apis?'
     relative_api_folders = 'export-api-folders?'
@@ -64,7 +65,7 @@ class WordCreator(PropertyMethodsMixin):
 
         request_string = ''
 
-        request_data: dict = {k:v for (k,v) in self.static_client_side_settings.items()}
+        request_data: dict = {k: v for (k, v) in self.static_client_side_settings.items()}
 
         request_data['format'] = 'pdf'
         request_data['location'] = 2
@@ -85,7 +86,7 @@ class WordCreator(PropertyMethodsMixin):
             return cls.api_url + cls.relative_api_folders
 
     @staticmethod
-    def parse_string(query_string: str) -> dict:
+    def __parse_string(query_string: str) -> dict:
         """ Формирование словаря из данных пришедших в виде строки с REST. """
 
         return dict(re.findall(r'([^&=]+)=([^&]*)', query_string))

@@ -6,8 +6,9 @@ from queue import Queue
 from threading import Thread
 from tasker import TaskSelector
 from utils import RemoveDirsMixin
-from typing import Any, Callable, ContextManager, Tuple
-from kafka import load_kafka_settings, KafkaConsumer, KafkaProducer
+from typing import Any, Callable, ContextManager
+from kafka import KafkaConsumer, KafkaProducer
+from logs.handlers import LokiLogger
 
 
 class KafkaManager(RemoveDirsMixin):
@@ -120,42 +121,48 @@ class KafkaManager(RemoveDirsMixin):
 
         status_message = 'done'
 
-        query: list = json.loads(value)
+        start_time, end_time = 0, 0
 
-        task_uuid: str = key.decode('utf-8')
-        start_time = 0
-        end_time = 0
-        try:
-            start_time = time.time()
-            task: TaskSelector = TaskSelector(
-                query,
-                task_uuid,
-                'docx',
+        with LokiLogger('Process current task', report_id=key):
+            query: list = json.loads(value)
+            task_uuid: str = key.decode('utf-8')
+
+            try:
+                start_time = time.time()
+                task: TaskSelector = TaskSelector(
+                    query,
+                    task_uuid,
+                    'docx',
+                )
+                task.select_particular_class()
+                end_time = time.time()
+            except Exception:
+                status_message = 'error'
+
+            self.remove_dir(task_uuid)
+
+            producer = KafkaProducer(
+                bootstrap_server=self.bootstrap_server,
+                topic=self.reports_ready_topic,
+                timeout=self.producer_timeout,
+                sasl_username=self._sasl_username,
+                sasl_password=self._sasl_password,
             )
-            task.select_particular_class()
-            end_time = time.time()
-        except Exception:
-            status_message = 'error'
 
-        print(end_time - start_time)
-        self.remove_dir(task_uuid)
+            producer.send_message(
+                key=str(task_uuid),
+                message=str(status_message).encode('utf-8'),
+            )
+            producer.producer_poll()
+            producer.producer_flush()
 
-        producer = KafkaProducer(
-            bootstrap_server=self.bootstrap_server,
-            topic=self.reports_ready_topic,
-            timeout=self.producer_timeout,
-            sasl_username=self._sasl_username,
-            sasl_password=self._sasl_password,
-        )
-
-        producer.send_message(
-            key=str(task_uuid),
-            message=f'{status_message}'
-        )
-        producer.producer_poll()
-        producer.producer_flush()
-
-        print(f'I have done task {task_uuid}')
+        with LokiLogger(
+                'Task processed',
+                status_message,
+                execution_time=round(end_time - start_time, 2),
+                report_id=key,
+        ):
+            pass
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)

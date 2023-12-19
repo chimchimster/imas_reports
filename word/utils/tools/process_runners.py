@@ -14,6 +14,7 @@ from .mixins import PropertyProcessesMixin, AbstractRunnerMixin
 
 from word.local import ReportLanguagePicker
 from word.tools import TableStylesGenerator, SchedulerStylesGenerator, HighchartsCreator, MetricsGenerator
+from logs.decorators import tricky_loggy
 
 
 class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
@@ -29,11 +30,13 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'table.docx',
         )
 
+    @tricky_loggy
     def create_temp_template_folder(self) -> None:
+
         _type_of_table = self.proc_obj.type
 
         _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
-
+        raise ValueError
         path_to_temp_table_folder = os.path.join(
             os.getcwd(),
             'word',

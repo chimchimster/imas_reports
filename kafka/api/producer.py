@@ -1,6 +1,7 @@
 import sys
 
 from confluent_kafka import Producer, KafkaError
+from logs.handlers import LokiLogger
 
 
 class KafkaProducer:
@@ -64,16 +65,28 @@ class KafkaProducer:
             """ Колбэк - доставлено ли сообщение. """
 
             if error is not None:
-                sys.stderr.write(f'Отправка сообщения не удалась.\n Ошибка:\n{error}')
+                with LokiLogger(
+                        'Error while sending message into broker',
+                        report_id=key,
+                        error=error,
+                ):
+                    pass
             else:
-                sys.stdout.write(f'Удачная отправка сообщения в партицию {msg.partition()} топика {msg.topic()}\n\n')
+                with LokiLogger(
+                        'Success on sending message into broker',
+                        report_id=key,
+                        broker_partition=msg.partition(),
+                        broker_topic=msg.topic()
+                ):
+                    pass
 
-        try:
-            self.producer.produce(
-                topic=self.topic,
-                key=key,
-                value=message,
-                callback=on_delivery,
-            )
-        except KafkaError as e:
-            sys.stderr.write(str(e))
+        with LokiLogger('Producing message into broker', report_id=key):
+            try:
+                self.producer.produce(
+                    topic=self.topic,
+                    key=key,
+                    value=message,
+                    callback=on_delivery,
+                )
+            except KafkaError:
+                raise KafkaError

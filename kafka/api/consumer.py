@@ -1,6 +1,5 @@
-import sys
-
-from confluent_kafka import Consumer, TopicPartition, KafkaError
+from confluent_kafka import Consumer, KafkaError
+from logs.handlers import LokiLogger
 
 
 class KafkaConsumer:
@@ -73,7 +72,8 @@ class KafkaConsumer:
 
     @staticmethod
     def __callback_print_assignment(consumer, partitions) -> None:
-        print(f'Assignment consumer {consumer} on partition {partitions}')
+        with LokiLogger('Assignment consumer', str(consumer), *partitions):
+            pass
 
     def __subscribe_consumer(self, topics: list[str]) -> None:
 
@@ -97,34 +97,12 @@ class KafkaConsumer:
                     if msg.error().code() == KafkaError._PARTITION_EOF:
                         continue
                     else:
-                        sys.stdout.write(f"Error: {msg.error().str()}")
+                        with LokiLogger('Broker retrieving message error', msg.error().str()):
+                            pass
 
                 self.consumer.commit(message=msg)
                 yield msg.key(), msg.value().decode('utf-8')
 
         except KeyboardInterrupt:
-            sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
-
-    def wait_until_message_appears_in_reports_ready_topic(self, key: bytes) -> None:
-
-        try:
-            while True:
-                msg = self.consumer.poll(1.0)
-
-                if msg is None:
-                    continue
-                if msg.error():
-                    if msg.error().code() == KafkaError._PARTITION_EOF:
-                        continue
-                    else:
-                        sys.stdout.write(f"Error: {msg.error().str()}")
-
-                print(msg.key())
-
-                if msg.key() == key:
-                    print(msg.key(), msg.value())
-                    print(f'I received message in reports_READY_topic with key: {msg.key()}')
-                    break
-
-        except KeyboardInterrupt:
-            sys.stderr.write('Завершение чтения сообщений из брокера сообщений.')
+            with LokiLogger('Ending consume messages up from broker'):
+                pass

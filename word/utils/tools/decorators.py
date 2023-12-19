@@ -184,7 +184,6 @@ def throw_params_for_distribution_diagram(
                     metrics_soc=metrix_soc,
                     which=['soc']
                 )
-                print(distribution)
                 title = report_language().get('titles').get('soc_top_negative')
 
             distribution: list[dict] = [

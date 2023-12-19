@@ -1,6 +1,9 @@
-from api import DocxReportQueue
+from typing import Final
 
+from api import ReportQueue
+
+API_ROUTE: Final = '/api/v1/'
 
 api_routes = (
-    ('/docx-report-queue', DocxReportQueue),
+    (API_ROUTE + 'get-report/', ReportQueue),
 )

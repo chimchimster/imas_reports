@@ -33,7 +33,7 @@ class LoggerMeta(ABCMeta):
 
         instance._cur_log = None
         instance._has_exc = None
-        instance._logged_at = datetime.now(tz=pytz.timezone('Asia/Almaty')).strftime('%d-%m-%Y %H:%M:%S')
+        instance._logged_at = None
 
         return instance
 
@@ -44,9 +44,9 @@ def cleanup_logger_object(func: Callable) -> Callable:
         func(self)
 
         self._message = ''
-        self._k_params.clear()
+        # self._k_params = {k: v for (k, v) in self._k_params.items() if k == 'report_id'}
         self._level = 'DEBUG'
-        self._params = tuple()
+        # self._params = tuple()
         self._exception = False
 
     return wrapper
@@ -56,7 +56,7 @@ class LoggerHandler(ABC, metaclass=LoggerMeta):
 
     def __init__(
             self,
-            message: str,
+            message: str = None,
             *params,
             level: str = 'DEBUG',
             **k_params,
@@ -77,15 +77,23 @@ class LoggerHandler(ABC, metaclass=LoggerMeta):
         """ Sends log to destination. """
 
     def __enter__(self):
-        self.__fork_thread()
+
+        if self._message is not None:
+            self.__fork_thread()
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.__join_thread()
+
+        if self._message is not None:
+            self.__join_thread()
 
         if exc_type:
             self._exception = True
-            self._message = f'Exception raised on line {exc_tb.tb_lineno} in file {exc_tb.tb_frame.f_code.co_filename}'
+            self._level = 'ERROR'
+            self._message = (f'Exception: row {exc_tb.tb_lineno}, '
+                             f'func {exc_tb.tb_frame.f_code.co_name}, '
+                             f'file {exc_tb.tb_frame.f_code.co_filename}.')
             self._k_params['type'] = str(exc_type)
             self._k_params['exc_val'] = str(exc_val)
             self.__send_log()
@@ -119,13 +127,18 @@ class LoggerHandler(ABC, metaclass=LoggerMeta):
     def __join_thread(self):
         self.thread.join()
 
-    @cleanup_logger_object
+    # @cleanup_logger_object
     def __send_log(self):
 
-        self._cur_log = self.__parse_log_format()
+        if self._message is not None:
 
-        try:
-            self.send_log()
-        except Exception as e:
-            sys.stderr.write(str(e))
+            self._logged_at = datetime.now(tz=pytz.timezone('Asia/Almaty')).strftime('%d-%m-%Y %H:%M:%S')
 
+            self._cur_log = self.__parse_log_format()
+
+            try:
+                self.send_log()
+            except Exception as e:
+                sys.stderr.write(str(e))
+        else:
+            pass

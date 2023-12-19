@@ -7,7 +7,7 @@ from kafka import load_kafka_settings, KafkaProducer
 from logs.handlers import LokiLogger
 
 
-class DocxReportQueue(Resource):
+class ReportQueue(Resource):
 
     @staticmethod
     def post() -> json:
@@ -23,7 +23,11 @@ class DocxReportQueue(Resource):
 
         task_unique_identifier: uuid = uuid.uuid4()
         settings_for_logger = json.loads(json_string)[-1]
-        with LokiLogger('Start handling report', task_unique_identifier, **settings_for_logger):
+        with LokiLogger(
+                'Start handling report',
+                report_id=str(task_unique_identifier),
+                **settings_for_logger
+        ):
 
             response_data: dict = {
                 'user_unique_identifier': str(task_unique_identifier),
@@ -37,7 +41,7 @@ class DocxReportQueue(Resource):
                 topic=reports_topic,
                 timeout=1000,
                 sasl_username=sasl_username,
-                sasl_password=sasl_password
+                sasl_password=sasl_password,
             )
 
             producer.send_message(

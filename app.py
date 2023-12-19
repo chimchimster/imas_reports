@@ -4,6 +4,7 @@ from flask_restful import Api
 from routes import api_routes
 from kafka_manager import KafkaManager
 from kafka import load_kafka_settings
+from logs.handlers import LokiLogger
 
 app = Flask(__name__, static_folder='static')
 api = Api(app)
@@ -26,5 +27,6 @@ if __name__ == '__main__':
         sasl_username=sasl_username,
         sasl_password=sasl_password
     ) as manager:
-        app.run(host='0.0.0.0', debug=True)
+        with LokiLogger('Start app'):
+            app.run(host='0.0.0.0', debug=True)
 

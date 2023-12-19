@@ -1,1 +1,1 @@
-from .constructor_queue import DocxReportQueue
+from .constructor_queue import ReportQueue
