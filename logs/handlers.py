@@ -1,28 +1,30 @@
+import pprint
 import sys
-from datetime import datetime
-from typing import Any
 
-from absctract_logger import LoggerHandler
+from .abc_logger import LoggerHandler
 
 
-class StdOutLogger(LoggerHandler):
+class LokiLogger(LoggerHandler, frmt_type='json'):
+    """ Logger for stack Grafana + Loki. """
+
+    def __init__(self, message, *args, **kwargs):
+        super().__init__(message, *args, level='DEBUG', **kwargs)
 
     @classmethod
     def setup(cls):
         pass
 
-    def parse_log_format(self):
-        pass
+    def send_log(self):
+        """ Sends logs into standard output in parsed format. """
 
-    def send_log(self, message: Any, *params, level='DEBUG', **k_params):
+        match self._level.lower():
+            case 'debug' | 'warning':
+                stream = sys.stdout
+            case 'error' | 'critical':
+                stream = sys.stderr
+            case _:
+                stream = None
 
-        logged_at = datetime.utcnow().strftime('%d-%m-%Y %H:%M:%S.3')
-        std_view = sys.stdout if level == 'DEBUG' else sys.stderr
+        printer = pprint.PrettyPrinter(stream=stream)
 
-        view = self.__class__.__name__ + logged_at + ':' + message
-        if params is not None:
-            view += ";".join(params)
-        if k_params is not None:
-            view += ":".join(tuple(k_params.items()))
-
-        std_view.write(view)
+        printer.pprint(self._cur_log)

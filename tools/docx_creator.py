@@ -34,9 +34,6 @@ class WordCreator(PropertyMethodsMixin):
         if response.status_code == 200:
             response_json: dict = response.json()
 
-            for key, val in response_json.items():
-                print(key, val, '\n')
-            print(self.api_url)
             self.generate_word_document(response_json)
 
     def generate_word_document(self, response: dict) -> None:
