@@ -3,6 +3,7 @@ import re
 
 import docx
 
+from logs.decorators import tricky_loggy
 from utils import FolderUUID
 from docxcompose.composer import Composer
 
@@ -30,15 +31,19 @@ class MergeReport:
         )
         self.folder: FolderUUID = None
 
+    @tricky_loggy
     def set_path_to_folder(self, folder: FolderUUID):
         self.path_to_folder += f'/{folder.unique_identifier}'
 
+    @tricky_loggy
     def set_path_to_result(self, folder: FolderUUID):
         self.path_to_result += f'/{folder.unique_identifier}'
 
+    @tricky_loggy
     def set_path_to_templates(self, folder):
         self.path_to_templates += f'/{folder.unique_identifier}'
 
+    @tricky_loggy
     def create_result_folder(self):
         os.chdir(
             os.path.join(
@@ -60,6 +65,7 @@ class MergeReport:
 
         os.chdir('../..')
 
+    @tricky_loggy
     def merge(self) -> None:
 
         self.set_path_to_folder(self.folder)

@@ -4,6 +4,8 @@ import docx
 from docxtpl import DocxTemplate
 from docx.oxml.ns import nsdecls, qn
 from docx.shared import RGBColor, Pt, Cm
+
+from logs.decorators import tricky_loggy
 from word.local import ReportLanguagePicker
 from docx.oxml import parse_xml, OxmlElement
 from docx.enum.text import WD_PARAGRAPH_ALIGNMENT
@@ -31,6 +33,7 @@ class TableStylesGenerator(TableContentGenerator):
         self._tags_highlight_settings = tags_highlight_settings
         self.pick_language('styles')
 
+    @tricky_loggy
     def apply_table_styles(self):
 
         table = self.template.tables[0]
@@ -46,6 +49,7 @@ class TableStylesGenerator(TableContentGenerator):
 
         self.delete_first_row(table)
 
+    @tricky_loggy
     def choose_particular_table_styles(self, translator_obj, table_obj, _type):
         def set_cell_width():
             match cell.text:
@@ -208,6 +212,7 @@ class TableStylesGenerator(TableContentGenerator):
         run.font.size = Pt(10)
         run.font.name = 'Arial'
 
+    @tricky_loggy
     def delete_first_row(self, table):
         if self.pointer > 0 and len(table.rows) > 1:
             tr = table.rows[0]._tr

@@ -1,11 +1,13 @@
 import sys
+import traceback
+
 import pytz
 import functools
 import threading
 
 from datetime import datetime
 from pydantic import BaseModel
-from typing import Optional, Callable
+from typing import Optional, Callable, Union
 from abc import ABC, ABCMeta, abstractmethod
 
 
@@ -17,7 +19,7 @@ class LoggerMeta(ABCMeta):
         class LogModel(BaseModel):
             logged_at: str
             level: str = 'DEBUG'
-            message: Optional[str]
+            message: Union[list, str]
             params: Optional[tuple]
             k_params: Optional[dict]
 
@@ -36,20 +38,6 @@ class LoggerMeta(ABCMeta):
         instance._logged_at = None
 
         return instance
-
-
-def cleanup_logger_object(func: Callable) -> Callable:
-    @functools.wraps(func)
-    def wrapper(self):
-        func(self)
-
-        self._message = ''
-        # self._k_params = {k: v for (k, v) in self._k_params.items() if k == 'report_id'}
-        self._level = 'DEBUG'
-        # self._params = tuple()
-        self._exception = False
-
-    return wrapper
 
 
 class LoggerHandler(ABC, metaclass=LoggerMeta):
@@ -91,11 +79,7 @@ class LoggerHandler(ABC, metaclass=LoggerMeta):
         if exc_type:
             self._exception = True
             self._level = 'ERROR'
-            self._message = (f'Exception: row {exc_tb.tb_lineno}, '
-                             f'func {exc_tb.tb_frame.f_code.co_name}, '
-                             f'file {exc_tb.tb_frame.f_code.co_filename}.')
-            self._k_params['type'] = str(exc_type)
-            self._k_params['exc_val'] = str(exc_val)
+            self._message = traceback.format_exception(exc_type, exc_val, exc_tb)
             self.__send_log()
 
     def __parse_log_format(self):

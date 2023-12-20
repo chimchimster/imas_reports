@@ -1,3 +1,4 @@
+from logs.decorators import tricky_loggy
 from .mixins import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 
@@ -10,6 +11,7 @@ class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
         super().__init__(response_part, settings, static_settings)
         self._data_collection = {'soc': [], 'smi': []}
 
+    @tricky_loggy
     def generate_data(self) -> None:
 
         cut = 150

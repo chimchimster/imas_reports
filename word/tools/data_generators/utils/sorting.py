@@ -1,5 +1,7 @@
 import pandas as pd
 
+from logs.decorators import tricky_loggy
+
 
 class DataSorter:
 
@@ -15,6 +17,7 @@ class DataSorter:
     def order(self):
         return self._order
 
+    @tricky_loggy
     def sort_data(self) -> list[dict]:
 
         if not self.order:

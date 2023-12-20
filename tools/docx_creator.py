@@ -2,6 +2,7 @@ import os
 import re
 import requests
 
+from logs.decorators import tricky_loggy
 from utils import FolderUUID
 from word.mixins import PropertyMethodsMixin
 from word.utils import DataManager, MergeReport
@@ -21,6 +22,7 @@ class WordCreator(PropertyMethodsMixin):
         self._client_side_settings = client_side_settings
         self._task_uuid = task_uuid
 
+    @tricky_loggy
     def render_report(self) -> None:
         """ Метод-прокладка TODO: как только в компании переработают REST необходимо от него избавиться """
 
@@ -37,6 +39,7 @@ class WordCreator(PropertyMethodsMixin):
 
             self.generate_word_document(response_json)
 
+    @tricky_loggy
     def generate_word_document(self, response: dict) -> None:
         """ Метод контролирующий этапы создания docx документа.
             Начиная с получения данных, распределения процессов,
@@ -60,6 +63,7 @@ class WordCreator(PropertyMethodsMixin):
         setattr(merger, 'folder', folder)
         merger.merge()
 
+    @tricky_loggy
     def generate_string(self) -> str:
         """ Формирование строки из словаря пришедшего в POST-запросе. """
 

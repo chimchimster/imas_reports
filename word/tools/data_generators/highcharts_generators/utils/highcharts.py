@@ -8,6 +8,8 @@ import requests
 from functools import wraps
 from typing import Any, Callable
 from dataclasses import dataclass
+
+from logs.decorators import tricky_loggy
 from word.local import ReportLanguagePicker
 
 
@@ -35,8 +37,9 @@ class HighchartsCreator:
 
         return os.environ.get('HIGHCHARTS_SERVER')
 
-    @staticmethod
+    @tricky_loggy
     def bar(
+            self,
             chart_categories: list[dict] = None,
             chart_series: list[dict] = None,
             chart_color: list[str] = None,
@@ -117,8 +120,9 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
-    @staticmethod
+    @tricky_loggy
     def column(
+            self,
             chart_categories: list[dict] = None,
             chart_series: list[dict] = None,
             chart_color: list[str] = None,
@@ -198,8 +202,9 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
-    @staticmethod
+    @tricky_loggy
     def pie(
+            self,
             chart_categories: list[dict] = None,
             chart_series: list[dict] = None,
             chart_color: list[str] = None,
@@ -262,6 +267,7 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
+    @tricky_loggy
     def linear(
             self,
             chart_categories: list = None,
@@ -349,8 +355,8 @@ class HighchartsCreator:
 
         return json.dumps(data)
 
-    @staticmethod
-    def world_or_kz_map(payload: str, stat_map: list[dict]) -> str:
+    @tricky_loggy
+    def world_or_kz_map(self, payload: str, stat_map: list[dict]) -> str:
 
         map_data = [
             {
@@ -408,6 +414,7 @@ class HighchartsCreator:
 
         return json.dumps(payload)
 
+    @tricky_loggy
     def do_post_request_to_highcharts_server(self, data: str) -> requests.models.Response:
 
         response = requests.post(
@@ -419,6 +426,7 @@ class HighchartsCreator:
 
         return response
 
+    @tricky_loggy
     def save_data_as_png(self, response: requests.models.Response, path_to_image: str) -> None:
 
         path_to_highcharts_temp_images = os.path.join(

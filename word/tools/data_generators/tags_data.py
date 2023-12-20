@@ -1,3 +1,4 @@
+from logs.decorators import tricky_loggy
 from .mixins import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 
@@ -11,6 +12,7 @@ class TagsGenerator(DataGeneratorMixin, PropertyMethodsMixin):
         self._folder = None
         self._data_collection = []
 
+    @tricky_loggy
     def generate_data(self):
 
         self.data_collection.append(self.response_part.get('analyzer_tags_changed'))

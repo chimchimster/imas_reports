@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from logs.decorators import tricky_loggy
 from word.local import ReportLanguagePicker
 from word.mixins import PropertyMethodsMixin
 from .mixins import DataGeneratorMixin
@@ -18,6 +19,7 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
         self._data_collection = []
         self.pick_language('content')
 
+    @tricky_loggy
     def pick_language(self, _type):
 
         obj_format = self.static_settings.get('format')
@@ -33,6 +35,7 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
         self.translator_smi.update(smi)
         self.translator_soc.update(soc)
 
+    @tricky_loggy
     def generate_data(self):
 
         def translate(_key: str, _translator_type):
@@ -51,6 +54,7 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
         else:
             translate('f_news2', self.translator_soc)
 
+    @tricky_loggy
     def __apply_translator(self, translator, news):
 
         translator_for_rest_soc = {

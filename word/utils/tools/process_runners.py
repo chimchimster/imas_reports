@@ -36,7 +36,7 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         _type_of_table = self.proc_obj.type
 
         _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
-        raise ValueError
+
         path_to_temp_table_folder = os.path.join(
             os.getcwd(),
             'word',
@@ -48,6 +48,7 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         if not os.path.exists(path_to_temp_table_folder):
             os.mkdir(path_to_temp_table_folder)
 
+    @tricky_loggy
     def create_temp_result_folder(self) -> None:
 
         _type_of_table = self.proc_obj.type
@@ -65,6 +66,7 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         if not os.path.exists(path_to_temp_results_folder):
             os.mkdir(path_to_temp_results_folder)
 
+    @tricky_loggy
     def chunk_data_process(self, *args) -> None:
 
         def copy_table_template(_uuid: uuid, _path_to_copied_file: str) -> None:
@@ -147,6 +149,7 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
             _template.save(_output_path)
 
+    @tricky_loggy
     def merge_procs_tables(self) -> None:
 
         _is_table: bool = self.proc_obj.settings.get('table')
@@ -246,6 +249,7 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
                 )
             )
 
+    @tricky_loggy
     def apply(self) -> None:
         self.create_temp_template_folder()
         self.create_temp_result_folder()
@@ -280,6 +284,7 @@ class ContentProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'table_of_contents.docx',
         )
 
+    @tricky_loggy
     def apply(self) -> None:
         path_to_obj_table_of_contents = self.template_path
         template = DocxTemplate(path_to_obj_table_of_contents)
@@ -322,6 +327,7 @@ class TagsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'tags.docx',
         )
 
+    @tricky_loggy
     def apply(self) -> None:
         path_to_obj_tags = self.template_path
         template = DocxTemplate(path_to_obj_tags)
@@ -359,6 +365,7 @@ class BaseProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'base.docx',
         )
 
+    @tricky_loggy
     def apply(self) -> None:
         position = 0
         path_to_obj_base = self.template_path
@@ -400,6 +407,7 @@ class TotalMessagesCountProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'total_messages_count.docx',
         )
 
+    @tricky_loggy
     def apply(self) -> None:
         template: DocxTemplate = DocxTemplate(self._template_path)
 
@@ -456,6 +464,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'messages_dynamics.docx',
         )
 
+    @tricky_loggy
     def apply(self) -> None:
         """ Не оборачиваю данную функцию в декоратор render_diagram по причине того, что данный процесс использует
         всего один вид графика - линейный и к тому же в клиентских настройках ничего не приходит. """
@@ -528,6 +537,7 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'sentiments.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='sentiments')
     def apply(self, **kwargs) -> tuple:
         news_count: list = self.proc_obj.response_part.get('news_counts')
@@ -592,6 +602,7 @@ class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'distribution.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='distribution')
     def apply(self, **kwargs) -> tuple:
         soc_count: int = int(self.proc_obj.response_part.get('soc_count'))
@@ -639,6 +650,7 @@ class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'smi_distribution.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='smi_distribution', context_flag=True)
     @throw_params_for_distribution_diagram(
         category_names_key='categoryNames',
@@ -663,6 +675,7 @@ class SocDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'soc_distribution.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='soc_distribution', context_flag=True)
     @throw_params_for_distribution_diagram(
         category_names_key='categoryNames2',
@@ -686,6 +699,7 @@ class TopMediaProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'media_top.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='media_top', context_flag=True)
     @throw_params_for_distribution_diagram(
         category_names_key='itemsCount',
@@ -709,6 +723,7 @@ class TopSocialProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'soc_top.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='soc_top', context_flag=True)
     @throw_params_for_distribution_diagram(
         category_names_key='itemsCount2',
@@ -732,6 +747,7 @@ class MostPopularSocProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'most_popular_soc.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='most_popular_soc', context_flag=True)
     @throw_params_for_distribution_diagram(
         title_key='most_popular_soc',
@@ -755,6 +771,7 @@ class TopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'top_negative.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='top_negative', context_flag=True)
     @throw_params_for_distribution_diagram(
         title_key='top_negative',
@@ -778,6 +795,7 @@ class SmiTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'smi_top_negative.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='smi_top_negative', context_flag=True)
     @throw_params_for_distribution_diagram(
         title_key='smi_top_negative',
@@ -801,6 +819,7 @@ class SocTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'soc_top_negative.docx',
         )
 
+    @tricky_loggy
     @render_diagram(color_flag='soc_top_negative', context_flag=True)
     @throw_params_for_distribution_diagram(
         title_key='soc_top_negative',
@@ -824,6 +843,7 @@ class WorldMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'world_map.docx',
         )
 
+    @tricky_loggy
     @render_map(
         json_marking_title='world_map.JSON',
         region_key='countries_hc',
@@ -835,7 +855,6 @@ class WorldMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
 
 class KazakhstanMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
-
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -848,6 +867,7 @@ class KazakhstanMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             'kaz_map.docx',
         )
 
+    @tricky_loggy
     @render_map(
         json_marking_title='kazakhstan_map.JSON',
         region_key=None,

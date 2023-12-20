@@ -1,8 +1,10 @@
 import re
 
 from word.local import ReportLanguagePicker
-from docxtpl import DocxTemplate, InlineImage
+from docxtpl import DocxTemplate
 from .table_style import TableStylesGenerator
+
+from logs.decorators import tricky_loggy
 
 
 class SchedulerStylesGenerator(TableStylesGenerator):
@@ -23,8 +25,8 @@ class SchedulerStylesGenerator(TableStylesGenerator):
             tags_highlight_settings,
         )
 
+    @tricky_loggy
     def apply_scheduler_styles(self):
-
         def manage_styles(_paragraph, _curr_run, _prev_run, _rows):
 
             prev_run_text = _prev_run.text.rstrip()
@@ -40,26 +42,6 @@ class SchedulerStylesGenerator(TableStylesGenerator):
 
             if _setting:
                 self.apply_run_styles(_curr_run, _setting)
-
-
-            # Скорее всего ненужная функция, пока что непонятно, обсуждает начальство.
-            # Если не решат, то в ближайшие коммиты будет удалено.
-            # if prev_run_text in (
-            #     'Заголовок',
-            #     'Краткое содержание',
-            #     'Пост',
-            #     'Хабарлама тақырыбы',
-            #     'Қысқаша мазмұны',
-            #     'Title',
-            #     'Summary',
-            #     'Post',
-            # ):
-            #     # _curr_run._r.text = _curr_run._r.text.lstrip()
-            #     _paragraph._p.remove(_prev_run._r)
-            #
-            # if prev_run_text == '№':
-            #     _paragraph._p.remove(_curr_run._r)
-            #     _paragraph._p.remove(_prev_run._r)
 
         if not self.settings:
             return

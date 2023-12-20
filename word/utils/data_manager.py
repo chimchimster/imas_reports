@@ -11,6 +11,7 @@ from ..tools import (BasePageDataGenerator, TagsGenerator, ContentGenerator, Sen
                      TopMediaDataGenerator, TopSocDataGenerator, MostPopularSocDataGenerator, TopNegativeDataGenerator,
                      SmiTopNegativeDataGenerator, SocTopNegativeDataGenerator, WorldMapDataGenerator,
                      KazakhstanMapDataGenerator,)
+from logs.decorators import tricky_loggy
 
 
 class DataManager(FabricMixin, PropertyMethodsMixin):
@@ -48,6 +49,7 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         self._procs_objs: list = []
         self._folder = None
 
+    @tricky_loggy
     def distribute_content(self) -> None:
 
         self.create_temp_folder()
@@ -80,6 +82,7 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         base_page_obj.folder = self.folder
         self.procs_objs.append(base_page_obj)
 
+    @tricky_loggy
     def apply_processes(self):
 
         for proc_obj in self.procs_objs:
@@ -88,6 +91,7 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
                 proc.start()
                 proc.join()
 
+    @tricky_loggy
     def create_temp_folder(self):
         os.chdir(
             os.path.join(
@@ -111,6 +115,7 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
 
         os.chdir('../..')
 
+    @tricky_loggy
     def create_temp_templates(self):
         os.chdir(
             os.path.join(

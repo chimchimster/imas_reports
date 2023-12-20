@@ -1,27 +1,25 @@
-import sys
-
 from pprint import pformat
 
 from pygments import highlight
 from pygments.formatters import Terminal256Formatter
-from pygments.lexers import PythonLexer
 from pygments.style import Style
-from pygments.token import Token
+from pygments.token import Generic, Literal
 
 from .abc_logger import LoggerHandler
+from .loki_lexer import LokiLexer
 
 
 class FormatterStyleOnSuccess(Style):
     styles = {
-        Token.String: 'ansiyellow',
-        Token.Number: 'ansibrightblue',
+        Generic.Error: 'ansigreen',
+        Literal.Date: 'ansimagenta',
     }
 
 
 class FormatterStyleOnError(Style):
     styles = {
-        Token.String: 'ansibrightred',
-        Token.Number: 'ansibrightblue',
+        Generic.Error: 'ansired',
+        Literal.Date: 'ansimagenta',
     }
 
 
@@ -52,11 +50,17 @@ class LokiLogger(LoggerHandler, frmt_type='json'):
         else:
             update_style = {'style': self._formatter_style}
 
+        print(self.__get_log_separator(title=self.__class__.__name__))
+
         print(
             highlight(
                 pformat(self._cur_log),
-                PythonLexer(),
+                LokiLexer(),
                 Terminal256Formatter(**update_style)),
             end="",
         )
 
+    @staticmethod
+    def __get_log_separator(title='', length=50, char='*'):
+        separator = char * length
+        return f'{separator}\n{title.center(length)}\n{separator}'

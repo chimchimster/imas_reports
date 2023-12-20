@@ -1,3 +1,4 @@
+from logs.decorators import tricky_loggy
 from .mixins import DataGeneratorMixin
 from word.mixins import PropertyMethodsMixin
 
@@ -10,6 +11,7 @@ class TotalMessagesCountDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
         super().__init__(response_part, settings, static_settings)
         self._data_collection = {}
 
+    @tricky_loggy
     def generate_data(self):
         total_messages_count: int = self.response_part.get('total_count', 0)
         positive_messages_count: int = self.response_part.get('pos_count', 0)

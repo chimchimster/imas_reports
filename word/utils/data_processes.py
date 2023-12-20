@@ -1,5 +1,7 @@
 from typing import Any
 from multiprocessing import Process
+
+from logs.decorators import tricky_loggy
 from .tools import (TableProcess, ContentProcess, TagsProcess, BaseProcess, SentimentsProcess, DistributionProcess,
                     TotalMessagesCountProcess, MessagesDynamicsProcess, FabricMixin, SmiDistributionProcess,
                     SocDistributionProcess, TopMediaProcess, TopSocialProcess, MostPopularSocProcess, TopNegativeProcess,
@@ -33,6 +35,7 @@ class ProcessDataGenerator(FabricMixin, Process):
         super().__init__()
         self.proc_obj = proc_obj
 
+    @tricky_loggy
     def run(self) -> None:
 
         self.proc_obj.generate_data()
