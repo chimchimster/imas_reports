@@ -72,8 +72,9 @@ class KafkaConsumer:
 
     @staticmethod
     def __callback_print_assignment(consumer, partitions) -> None:
-        with LokiLogger('Assignment consumer', str(consumer), *partitions):
-            pass
+        if partitions:
+            with LokiLogger('Assignment consumer', str(consumer), *partitions):
+                pass
 
     def __subscribe_consumer(self, topics: list[str]) -> None:
 

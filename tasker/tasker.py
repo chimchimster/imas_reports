@@ -1,4 +1,6 @@
 from typing import Any
+
+from logs.decorators import tricky_loggy
 from tools import WordCreator, PDFCreator
 
 
@@ -30,6 +32,7 @@ class TaskSelector:
     def report_type(self) -> str:
         return self._report_type
 
+    @tricky_loggy
     def select_particular_class(self) -> None:
         """ Метод инкапсулирующий логику выбора класса-генератора отчета. """
 

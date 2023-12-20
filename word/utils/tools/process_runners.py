@@ -204,11 +204,11 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
             paragraph.alignment = docx.enum.text.WD_PARAGRAPH_ALIGNMENT.CENTER
 
             run = paragraph.add_run(title)
-            run.font.size = Pt(20)
+            run.font.size = Pt(16)
             run.font.name = 'Arial'
-            run.font.bold = False
+            run.font.bold = True
             run.font.italic = False
-            run.font.color.rgb = RGBColor(0, 0, 0)
+            run.font.color.rgb = RGBColor(19, 104, 181)
 
         master: docx.Document = docx.Document(path_to_out_file)
         add_heading_to_table(master)
@@ -515,7 +515,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
 
         messages_dynamic.save_data_as_png(response, path_to_image)
 
-        dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(15), height=Cm(7))
+        dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(23), height=Cm(13))
 
         title: str = ReportLanguagePicker(self.report_format)().get('titles').get('messages_dynamics')
 

@@ -1,14 +1,12 @@
-import functools
-import itertools
-import multiprocessing
 import os
 import re
-import time
-from functools import wraps
-from typing import Callable
-
 import docx
 import requests
+import functools
+import itertools
+
+from functools import wraps
+from typing import Callable
 from docx.shared import Cm
 
 from word.tools import HighchartsCreator, MetricsGenerator
@@ -75,7 +73,10 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
 
             highcharts_obj.save_data_as_png(response, path_to_image)
 
-            image: InlineImage = InlineImage(template, image_descriptor=path_to_image)
+            image: InlineImage = InlineImage(
+                template,
+                image_descriptor=path_to_image,
+            )
 
             if context_flag:
 
@@ -92,8 +93,8 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
                         'static',
                         'data_not_found.png',
                         ),
-                        width=500,
-                        height=500,
+                        width=Cm(15),
+                        height=Cm(15),
                     )
                     new_func_kwargs = {'context': func_kwargs, 'image': image}
 
@@ -115,8 +116,8 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
                         'static',
                         'data_not_found.png',
                         ),
-                        width=500,
-                        height=500,
+                        width=Cm(15),
+                        height=Cm(15),
                     )
 
                     new_func_kwargs = {'image': image}
@@ -217,12 +218,17 @@ def throw_params_for_distribution_diagram(
 
             if len(distribution_union) > 20:
                 distribution_union = dict(
-                    zip(list(distribution_union.keys())[:20], list(distribution_union.values())[:20])
+                    list(distribution_union.items())[:20]
                 )
 
             for key, value in distribution_union.items():
                 context[
-                    re.sub(r'^\s+|\s+$', '', re.sub(r'[\r\n]+', ' ', key))
+                    re.sub(
+                        r'^\s+|\s+$', '', re.sub(
+                            r'[\r\n]+', ' ',
+                            key[:29] + '...' if len(key) >= 29 else key
+                        )
+                    )
                 ] = [int(value), percentages_of_soc_distribution[key]]
 
             context['title'] = title
@@ -294,7 +300,7 @@ def render_map(
 
                 highcharts_map_creator_object.save_data_as_png(response, path_to_image)
 
-                image: InlineImage = InlineImage(template, image_descriptor=path_to_image, width=Cm(23), height=Cm(15))
+                image: InlineImage = InlineImage(template, image_descriptor=path_to_image, width=Cm(23), height=Cm(17))
 
                 context_items = MetricsGenerator.count_world_or_kz_map(
                     stat_map,
@@ -328,8 +334,8 @@ def render_map(
                             'static',
                             'data_not_found.png',
                         ),
-                        width=500,
-                        height=500,
+                        width=Cm(23),
+                        height=Cm(17),
                        )
 
                     template.render({
