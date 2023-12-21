@@ -1,5 +1,5 @@
 from confluent_kafka import Consumer, KafkaError
-from logs.handlers import LokiLogger
+from modules.logs.handlers import LokiLogger
 
 
 class KafkaConsumer:
@@ -7,7 +7,6 @@ class KafkaConsumer:
             self,
             bootstrap_server: str,
             reports_topic: str,
-            reports_ready_topic: str,
             timeout: float,
             group_id: str,
             enable_auto_commit: bool = False,
@@ -16,7 +15,6 @@ class KafkaConsumer:
     ) -> None:
         self._bootstrap_server = bootstrap_server
         self._reports_topic = reports_topic
-        self._reports_ready_topic = reports_ready_topic
         self._timeout = timeout
         self._group_id = group_id
         self._enable_auto_commit = enable_auto_commit

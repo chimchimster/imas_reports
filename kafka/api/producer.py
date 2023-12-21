@@ -1,7 +1,5 @@
-import sys
-
 from confluent_kafka import Producer, KafkaError
-from logs.handlers import LokiLogger
+from reports.modules.logs.handlers import LokiLogger
 
 
 class KafkaProducer:

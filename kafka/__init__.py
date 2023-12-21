@@ -1,5 +1,4 @@
 import os
-from .api import KafkaProducer, KafkaConsumer
 from dotenv import load_dotenv
 
 
