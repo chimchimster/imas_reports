@@ -7,7 +7,8 @@ class ReportLanguagePicker:
 
     langs_dir = os.path.join(
         os.getcwd(),
-        'word',
+        'modules',
+        'apps',
         'localization',
         'langs',
     )

@@ -91,6 +91,8 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         os.chdir(
             os.path.join(
                 os.getcwd(),
+                'modules',
+                'apps',
                 'word',
                 'temp',
             )
@@ -115,6 +117,8 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
         os.chdir(
             os.path.join(
                 os.getcwd(),
+                'modules',
+                'apps',
                 'word',
             )
         )
