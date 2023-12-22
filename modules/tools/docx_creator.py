@@ -94,7 +94,3 @@ class WordCreator(PropertyMethodsMixin):
         """ Формирование словаря из данных пришедших в виде строки с REST. """
 
         return dict(re.findall(r'([^&=]+)=([^&]*)', query_string))
-
-
-
-

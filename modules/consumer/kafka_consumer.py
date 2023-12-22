@@ -7,9 +7,11 @@ from threading import Thread
 from typing import Any, Callable, ContextManager
 
 from kafka.api.consumer import KafkaConsumer
+from modules.logs.decorators import tricky_loggy
 from modules.tasker import TaskSelector
 from modules.utils import RemoveDirsMixin
 from modules.logs.handlers import LokiLogger
+from modules.database.handler import ReportStorageAPI
 
 
 class AppConsumer(RemoveDirsMixin):
@@ -86,14 +88,18 @@ class AppConsumer(RemoveDirsMixin):
 
         return functools.partial(task, *args)
 
+    @tricky_loggy
     def handle_queue(self) -> None:
 
         while True:
-            item = self.queue.get()
-            if item is None:
-                break
-            item.__call__()
-            self.notify_queue()
+            try:
+                item = self.queue.get()
+                if item is None:
+                    break
+                item.__call__()
+                self.notify_queue()
+            except Exception:
+                pass
 
     def add_task(self, task: Callable) -> None:
         self.queue.put(task)
@@ -101,26 +107,33 @@ class AppConsumer(RemoveDirsMixin):
     def notify_queue(self) -> None:
         self.queue.task_done()
 
+    @tricky_loggy
     def consume(self) -> None:
-        for key, value in self.consumer.retrieve_message_from_reports_topic():
-            self.add_task(
-                self.partial_task(
-                    self.process_task,
-                    key,
-                    value,
+        try:
+            for key, value in self.consumer.retrieve_message_from_reports_topic():
+                self.add_task(
+                    self.partial_task(
+                        self.process_task,
+                        key,
+                        value,
+                    )
                 )
-            )
+        except Exception:
+            pass
 
     def process_task(self, key: bytes, value: str) -> Any:
 
-        status_message = 'done'
+        status_message = 'ready'
 
         start_time, end_time = 0, 0
 
-        with LokiLogger('Process current task', report_id=key):
-            query: list = json.loads(value)
-            task_uuid: str = key.decode('utf-8')
+        query: list = json.loads(value)
+        task_uuid: str = key.decode('utf-8')
 
+        storage = ReportStorageAPI(key.decode('utf-8'), query[-1].get('user_id'))
+        storage.on_startup()
+
+        with LokiLogger('Process current task', report_id=key):
             try:
                 start_time = time.time()
                 task: TaskSelector = TaskSelector(
@@ -132,8 +145,8 @@ class AppConsumer(RemoveDirsMixin):
                 end_time = time.time()
             except Exception:
                 status_message = 'error'
-
-            self.remove_dir(task_uuid)
+            finally:
+                self.remove_dir(task_uuid)
 
         with LokiLogger(
                 'Task processed',
@@ -141,7 +154,7 @@ class AppConsumer(RemoveDirsMixin):
                 execution_time=round(end_time - start_time, 2),
                 report_id=key,
         ):
-            pass
+            storage.on_shutdown(status_message)
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)
