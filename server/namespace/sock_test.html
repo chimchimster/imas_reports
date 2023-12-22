@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
+    <script>
+        const socket = io('http://localhost:5000/ws/get-report/');
+        socket.send('12130-dfgdfkjng-4534ngdf-345tnreogvkidfje');
+        socket.on('message', (data) => {
+            console.log('Это эхо:', data);
+            socket.disconnect();
+        });
+    </script>
+</head>
+<body>
+
+
+</body>
+</html>
