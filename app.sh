@@ -42,7 +42,6 @@ done
 
 if [ "$SERVER" = true ] && [ "$APPLICATION" = true ]; then
     echo "Server and application are running now."
-    docker compose -f "$CURRENT_DIR/kafka/docker-compose.yml" up -d
     python3 "$CURRENT_DIR/server/server.py" &
     SERVER_PID=$!
     python3 "$CURRENT_DIR/modules/listener.py" &
