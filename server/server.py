@@ -25,6 +25,6 @@ if __name__ == '__main__':
         # from paste.translogger import TransLogger
         # serve(TransLogger(socket_app, setup_console_handler=True), host='0.0.0.0', port=5010)
 
-        socketio.run(app, debug=True, host='0.0.0.0', port=5000)
+        socketio.run(app, debug=True, host='0.0.0.0', port=5007)
     except KeyboardInterrupt:
         sys.exit(0)

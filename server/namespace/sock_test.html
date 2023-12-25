@@ -5,16 +5,25 @@
     <title>Title</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
     <script>
-        const socket = io('http://localhost:5000/ws/get-report/');
-        socket.send('12130-dfgdfkjng-4534ngdf-345tnreogvkidfje');
+        const socket = io('http://localhost:5007/ws/get-report/');
+        socket.send('af940a27-e314-42c7-873a-b461ba983f0d');
+
         socket.on('message', (data) => {
-            console.log('Это эхо:', data);
-            socket.disconnect();
+            downloadFile(data.file_data, 'downloaded_file.docx');
         });
+
+        function downloadFile(fileData, fileName) {
+            const blob = new Blob([fileData], { type: 'application/octet-stream' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     </script>
 </head>
 <body>
-
 
 </body>
 </html>

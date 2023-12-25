@@ -1,4 +1,6 @@
+
 import sqlalchemy.exc
+
 from sqlalchemy import insert, update
 
 from modules.database.models import Base
@@ -9,7 +11,7 @@ from modules.logs.handlers import LokiLogger
 from modules.database.models.storage import ReportMetaStorage
 
 
-class ReportStorageAPI:
+class ReportStorageMySQLAPI:
 
     _report_id = None
 

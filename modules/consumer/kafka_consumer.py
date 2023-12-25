@@ -11,7 +11,8 @@ from modules.logs.decorators import tricky_loggy
 from modules.tasker import TaskSelector
 from modules.utils import RemoveDirsMixin
 from modules.logs.handlers import LokiLogger
-from modules.database.handler import ReportStorageAPI
+from modules.database.handlers import ReportStorageMySQLAPI
+from redis_api.api import ReportStorageRedisAPI
 
 
 class AppConsumer(RemoveDirsMixin):
@@ -37,6 +38,8 @@ class AppConsumer(RemoveDirsMixin):
     def __enter__(self) -> ContextManager:
 
         self._queue: Queue = Queue()
+
+        self._redis_storage = ReportStorageRedisAPI()
 
         self.consumer: KafkaConsumer = KafkaConsumer(
             bootstrap_server=self.bootstrap_server,
@@ -130,7 +133,7 @@ class AppConsumer(RemoveDirsMixin):
         query: list = json.loads(value)
         task_uuid: str = key.decode('utf-8')
 
-        storage = ReportStorageAPI(key.decode('utf-8'), query[-1].get('user_id'))
+        storage = ReportStorageMySQLAPI(key.decode('utf-8'), query[-1].get('user_id'))
         storage.on_startup()
 
         with LokiLogger('Process current task', report_id=key):
@@ -155,6 +158,7 @@ class AppConsumer(RemoveDirsMixin):
                 report_id=key,
         ):
             storage.on_shutdown(status_message)
+            self._redis_storage.connection.set(key.decode('utf-8'), 0)
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)
