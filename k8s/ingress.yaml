@@ -6,14 +6,15 @@ metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: ingress-nginx
+  ingressClassName: nginx
   rules:
-  - http:
-      paths:
-      - path: /reports
-        pathType: Prefix
-        backend:
-          service:
-            name: reports-service
-            port:
-              number: 5007
+    - host: "reports.imas.kz"
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: reports-service
+              port:
+                number: 5007
