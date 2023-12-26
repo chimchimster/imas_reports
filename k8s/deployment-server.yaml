@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reports-server
+  namespace: production
+spec:
+  selector:
+    matchLabels:
+      app: reports-server
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: reports-server
+    spec:
+      containers:
+        - name: reports-server
+          image: registry-gitlab.imas.kz/imas/reports:latest
+          envFrom:
+            - secretRef:
+                name: reports-server-secret
+          ports:
+            - containerPort: 5007
+          resources:
+            requests:
+              memory: "700Mi"
+              cpu: "2"
+            limits:
+              memory: "700Mi"
+              cpu: "2"
+      imagePullSecrets:
+        - name: regcred

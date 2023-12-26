@@ -6,7 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
     <script>
         const socket = io('http://localhost:5007/ws/get-report/');
-        socket.send('fa3915be-7999-4733-8a7b-849b26170270');
+        socket.send('cefd7371-2404-44e9-ade1-ba24292a9bd5');
 
         socket.on('message', (data) => {
             downloadFile(data.file_data, 'downloaded_file.docx');

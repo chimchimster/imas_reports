@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reports-app
+  namespace: production
+spec:
+  selector:
+    matchLabels:
+      app: reports-app
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: reports-app
+    spec:
+      containers:
+        - name: reports-app
+          image: registry-gitlab.imas.kz/imas/reports:latest
+          envFrom:
+            - secretRef:
+                name: reports-server-secret
+          volumeMounts:
+            - mountPath: "/reports/modules/apps/word/merged"
+              name: reports-storage
+          resources:
+            requests:
+              memory: "2000Mi"
+              cpu: "2"
+            limits:
+              memory: "2000Mi"
+              cpu: "2"
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - name: reports-storage
+          persistentVolumeClaim:
+            claimName: reports-claim

@@ -1,0 +1,19 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: reports-ingress
+  namespace: production
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  ingressClassName: ingress-nginx
+  rules:
+  - http:
+      paths:
+      - path: /reports
+        pathType: Prefix
+        backend:
+          service:
+            name: reports-service
+            port:
+              number: 5007
