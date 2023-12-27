@@ -11,6 +11,7 @@ class ReportStorageRedisAPI:
             port=os.environ.get('REDIS_PORT'),
             db=os.environ.get('REDIS_DB'),
             protocol=3,
+            password=os.environ.get('REDIS_PASSWORD'),
         )
 
         return super().__new__(cls)
