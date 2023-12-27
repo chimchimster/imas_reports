@@ -18,10 +18,12 @@ spec:
       labels:
         app: reports-app
     spec:
+      terminationGracePeriodSeconds: 30
       containers:
         - name: reports-app
           image: registry-gitlab.imas.kz/imas/reports:latest
           args: [ "-a" ]
+          imagePullPolicy: "Always"
           envFrom:
             - secretRef:
                 name: reports-server-secret

@@ -19,10 +19,12 @@ spec:
         app.kubernetes.io/name: reports-server
         app: reports-server
     spec:
+      terminationGracePeriodSeconds: 30
       containers:
         - name: reports-server
           image: registry-gitlab.imas.kz/imas/reports:latest
           args: [ "-s" ]
+          imagePullPolicy: "Always"
           envFrom:
             - secretRef:
                 name: reports-server-secret
