@@ -25,6 +25,6 @@ deploy:
     - kubectl config use-context imas/k8s-agent:k8s-agent
     - kubectl apply -f k8s
     - kubectl get all -n production
-    - kubectl rollout restart deployment reports-app
-    - kubectl rollout restart deployment reports-server
+    - kubectl rollout restart deployment reports-app -n production
+    - kubectl rollout restart deployment reports-server -n production
   when: manual
