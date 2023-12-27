@@ -5,8 +5,8 @@
     <title>Title</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
     <script>
-        const socket = io('http://reports.imas.kz/ws/get-report/');
-        socket.send('1356c3a9-5abe-49a2-9c1c-b6c1b29de8e7');
+        const socket = io('http://localhost:5007/ws/get-report/');
+        socket.send('2248eb86-b451-4ec1-a0a2-105e45f32e38');
 
         socket.on('message', (data) => {
             downloadFile(data.file_data, 'downloaded_file.docx');
