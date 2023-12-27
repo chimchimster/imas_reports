@@ -55,6 +55,10 @@ class SocketWebHookNamespace(Namespace):
                 q.put(False)
                 return False
 
+    def __clean_redis_up(self, key: str):
+
+        self.r_con.connection.delete(key)
+
     def __send_file_to_client(self, filename: str, q: multiprocessing.Queue):
 
         with LokiLogger('Sending file to client', report_id=filename):
@@ -84,16 +88,7 @@ class SocketWebHookNamespace(Namespace):
 
             has_key = mul_queue.get()
             if has_key:
+                prc_cleanup = multiprocessing.Process(target=self.__clean_redis_up(msg))
                 prc_file = multiprocessing.Process(target=self.__send_file_to_client(msg, mul_queue))
+                prc_cleanup.start()
                 prc_file.start()
-
-    def __remove_dir(self, dir_name: str):
-
-        for _dir in os.listdir(self.path_to_file_dir):
-            if _dir == dir_name:
-                shutil.rmtree(
-                    os.path.join(
-                        self.path_to_file_dir,
-                        _dir,
-                    )
-                )
