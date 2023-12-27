@@ -133,9 +133,6 @@ class AppConsumer(RemoveDirsMixin):
         query: list = json.loads(value)
         task_uuid: str = key.decode('utf-8')
 
-        storage = ReportStorageMySQLAPI(key.decode('utf-8'), query[-1].get('user_id'))
-        storage.on_startup()
-
         with LokiLogger('Process current task', report_id=key):
             try:
                 start_time = time.time()
@@ -157,8 +154,7 @@ class AppConsumer(RemoveDirsMixin):
                 execution_time=round(end_time - start_time, 2),
                 report_id=key,
         ):
-            storage.on_shutdown(status_message)
-            self._redis_storage.connection.set(key.decode('utf-8'), 0)
+            self._redis_storage.connection.set(key.decode('utf-8'), status_message)
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)

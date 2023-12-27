@@ -254,10 +254,9 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         self.create_temp_template_folder()
         self.create_temp_result_folder()
 
-        max_processes = 50
         step = 50
 
-        semaphore = Semaphore(max_processes)
+        semaphore = Semaphore(min(32, os.cpu_count()))
 
         processes = []
         for pointer, chunk in enumerate(range(0, len(self.data), step)):

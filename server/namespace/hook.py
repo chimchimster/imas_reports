@@ -1,6 +1,7 @@
 import time
 import os.path
 import multiprocessing
+import multiprocessing.managers
 
 from flask_socketio import Namespace, emit
 
@@ -10,7 +11,6 @@ from reports.modules.logs.handlers import LokiLogger
 
 class SocketWebHookNamespace(Namespace):
 
-    sema = None
     r_con = None
     path_to_file_dir = os.path.join(
         os.getcwd(),
@@ -35,7 +35,11 @@ class SocketWebHookNamespace(Namespace):
 
     def on_message(self, msg: str):
 
-        self.__fork_on_message(msg)
+        prc_count = len(multiprocessing.active_children())
+
+        with LokiLogger('Tracking processes count', prc_count):
+
+            multiprocessing.Process(target=self.__fork_on_message, args=(msg,)).start()
 
     def __check_for_key_in_redis(self, msg: str, q: multiprocessing.Queue, timeout: int = 5000) -> bool:
 
@@ -63,21 +67,34 @@ class SocketWebHookNamespace(Namespace):
                         ), 'rb') as file:
                     file_data = file.read()
                     emit('message', {'file_data': file_data})
-                    q.put(True)
+                    q.put(None)
             except FileNotFoundError:
-                q.put(False)
+                q.put(None)
 
     def __fork_on_message(self, msg: str):
 
-        prc_count = multiprocessing.active_children()
+        redis_queue = multiprocessing.Queue()
+        prc_redis = multiprocessing.Process(target=self.__check_for_key_in_redis, args=(msg, redis_queue))
+        prc_redis.start()
 
-        with LokiLogger('Tracking processes count', prc_count):
+        has_key = None
+        while redis_queue.empty():
+            if not redis_queue.empty():
+                has_key = redis_queue.get()
+                break
 
-            mul_queue = multiprocessing.Queue()
-            prc_redis = multiprocessing.Process(target=self.__check_for_key_in_redis, args=(msg, mul_queue))
-            prc_redis.start()
+        # if prc_redis.is_alive():
+        #     prc_redis.terminate()
 
-            has_key = mul_queue.get()
-            if has_key:
-                prc_file = multiprocessing.Process(target=self.__send_file_to_client(msg, mul_queue))
-                prc_file.start()
+        if has_key:
+
+            file_queue = multiprocessing.Queue()
+            prc_file = multiprocessing.Process(target=self.__send_file_to_client, args=(msg, file_queue))
+            prc_file.start()
+
+            while file_queue.empty():
+                if not file_queue.empty():
+                    # if prc_file.is_alive():
+                    #     prc_file.terminate()
+                    break
+
