@@ -88,7 +88,7 @@ class SocketWebHookNamespace(Namespace):
 
             has_key = mul_queue.get()
             if has_key:
-                prc_cleanup = multiprocessing.Process(target=self.__clean_redis_up(msg))
+                # prc_cleanup = multiprocessing.Process(target=self.__clean_redis_up(msg))
                 prc_file = multiprocessing.Process(target=self.__send_file_to_client(msg, mul_queue))
-                prc_cleanup.start()
+                # prc_cleanup.start()
                 prc_file.start()
