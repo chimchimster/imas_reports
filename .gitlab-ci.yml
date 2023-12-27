@@ -1,13 +1,13 @@
-stages:
-  - build
-  - deploy
-
 include:
   - template: Security/Container-Scanning.gitlab-ci.yml
 
 container_scanning:
   variables:
     CS_IMAGE: $CI_REGISTRY_IMAGE/reports
+
+stages:
+  - build
+  - deploy
 
 build-job:
   stage: build
