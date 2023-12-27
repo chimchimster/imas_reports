@@ -1,11 +1,5 @@
-include:
-  - template: Security/Container-Scanning.gitlab-ci.yml
-
-container_scanning:
-  variables:
-    CS_IMAGE: $CI_REGISTRY_IMAGE/reports
-
 stages:
+
   - build
   - deploy
 
@@ -20,7 +14,6 @@ build-job:
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
   when: manual
-
 
 deploy:
   stage: deploy
