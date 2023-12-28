@@ -3,7 +3,7 @@ import os.path
 import multiprocessing
 import multiprocessing.managers
 
-from flask_socketio import Namespace, emit
+from flask_socketio import Namespace, emit, call
 
 from reports.redis_api.api import ReportStorageRedisAPI
 from reports.modules.logs.handlers import LokiLogger
@@ -35,11 +35,7 @@ class SocketWebHookNamespace(Namespace):
 
     def on_message(self, msg: str):
 
-        prc_count = len(multiprocessing.active_children())
-
-        with LokiLogger('Tracking processes count', prc_count):
-
-            multiprocessing.Process(target=self.__fork_on_message, args=(msg,)).start()
+        multiprocessing.Process(target=self.__fork_on_message(msg,)).start()
 
     def __check_for_key_in_redis(self, msg: str, q: multiprocessing.Queue, timeout: int = 5000) -> bool:
 
@@ -47,15 +43,17 @@ class SocketWebHookNamespace(Namespace):
             if self.r_con is not None:
                 start = end = time.time()
                 while end - start < timeout:
-                    has_key = self.r_con.connection.getdel(msg)
+                    has_key = self.r_con.connection.get(msg)
                     if has_key:
                         q.put(True)
-                        return True
+                        with LokiLogger('Key found in Redis', msg):
+                            return True
                     end = time.time()
             q.put(False)
-            return False
+            with LokiLogger('Key doesnt found in Redis', msg):
+                return False
 
-    def __send_file_to_client(self, filename: str, q: multiprocessing.Queue):
+    def __send_file_to_client(self, filename: str):
 
         with LokiLogger('Sending file to client', report_id=filename):
             try:
@@ -66,10 +64,9 @@ class SocketWebHookNamespace(Namespace):
                             filename + '.docx',
                         ), 'rb') as file:
                     file_data = file.read()
-                    emit('message', {'file_data': file_data})
-                    q.put(None)
+                    emit('message', {'file_data': file_data}, callback=lambda: print('OKЭY'))
             except FileNotFoundError:
-                q.put(None)
+                raise FileNotFoundError
 
     def __fork_on_message(self, msg: str):
 
@@ -83,18 +80,11 @@ class SocketWebHookNamespace(Namespace):
                 has_key = redis_queue.get()
                 break
 
-        # if prc_redis.is_alive():
-        #     prc_redis.terminate()
+        if prc_redis.is_alive():
+            prc_redis.terminate()
 
         if has_key:
-
-            file_queue = multiprocessing.Queue()
-            prc_file = multiprocessing.Process(target=self.__send_file_to_client, args=(msg, file_queue))
+            prc_file = multiprocessing.Process(target=self.__send_file_to_client(msg))
             prc_file.start()
 
-            while file_queue.empty():
-                if not file_queue.empty():
-                    # if prc_file.is_alive():
-                    #     prc_file.terminate()
-                    break
 

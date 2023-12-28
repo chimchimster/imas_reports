@@ -35,6 +35,7 @@ class WordCreator(PropertyMethodsMixin):
         response: requests = requests.get(query_url + response_string)
 
         if response.status_code == 200:
+
             response_json: dict = response.json()
 
             self.generate_word_document(response_json)

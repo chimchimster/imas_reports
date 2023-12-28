@@ -3,9 +3,9 @@ import json
 
 from flask import request
 from flask_restful import Resource
-from reports.kafka import load_kafka_settings
-from reports.kafka.api.producer import KafkaProducer
-from reports.modules.logs.handlers import LokiLogger
+from kafka import load_kafka_settings
+from kafka.api.producer import KafkaProducer
+from modules.logs.handlers import LokiLogger
 
 
 class ReportQueue(Resource):

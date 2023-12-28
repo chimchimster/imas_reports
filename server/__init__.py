@@ -1,2 +1,2 @@
-from api import ReportQueue
-from reports.server.routes import api_routes
+from .api import ReportQueue
+from .routes import api_routes
