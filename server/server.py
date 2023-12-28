@@ -1,5 +1,5 @@
-from .setup import api, app
-from .routes import api_routes, socket_routes
+from server.setup import api, app
+from server.routes import api_routes, socket_routes
 from flask_socketio import SocketIO
 
 socketio = SocketIO(

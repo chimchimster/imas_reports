@@ -28,7 +28,6 @@ class SocketWebHookNamespace(Namespace):
         return super().__new__(cls)
 
     def on_connect(self):
-        print(self.__dict__)
         print(f"Присоеденился клиент")
 
     def on_disconnect(self):
