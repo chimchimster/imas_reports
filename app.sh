@@ -48,7 +48,7 @@ if [ "$SERVER" = true ] && [ "$APPLICATION" = true ]; then
     APPLICATION_PID=$!
 elif [ "$SERVER" = true ]; then
     echo "Only server is running now."
-    python3 "$CURRENT_DIR/server/server.py" &
+    gunicorn -w 1 -k gevent -b 0.0.0.0:5007 "server.server:app" &
     SERVER_PID=$!
 else
     echo "Only application is running now."
