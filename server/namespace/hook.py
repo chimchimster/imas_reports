@@ -12,18 +12,20 @@ from reports.modules.logs.handlers import LokiLogger
 class SocketWebHookNamespace(Namespace):
 
     r_con = None
-    path_to_file_dir = os.path.join(
-        os.getcwd(),
-        'modules',
-        'apps',
-        'word',
-        'merged',
-    )
+    path_to_file_dir = None
 
     def __new__(cls, *args, **kwargs):
 
         if cls.r_con is None:
             cls.r_con = ReportStorageRedisAPI()
+        if cls.path_to_file_dir is None:
+            cls.path_to_file_dir = os.path.join(
+                os.getcwd(),
+                'modules',
+                'apps',
+                'word',
+                'merged',
+            )
 
         return super().__new__(cls)
 
@@ -57,17 +59,14 @@ class SocketWebHookNamespace(Namespace):
     def __send_file_to_client(self, filename: str):
 
         with LokiLogger('Sending file to client', report_id=filename):
-            try:
-                with open(
-                        os.path.join(
-                            self.path_to_file_dir,
-                            filename,
-                            filename + '.docx',
-                        ), 'rb') as file:
-                    file_data = file.read()
-                    emit('message', {'file_data': file_data}, callback=lambda: print('OKЭY'))
-            except FileNotFoundError:
-                raise FileNotFoundError
+
+            with open(os.path.join(
+                        self.path_to_file_dir,
+                        filename,
+                        filename + '.docx',
+                    ), 'rb') as file:
+                file_data = file.read()
+                emit('message', {'file_data': file_data}, callback=lambda: print('OKЭY'))
 
     def __fork_on_message(self, msg: str):
 
