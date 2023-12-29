@@ -6,7 +6,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.1.2/socket.io.js"></script>
     <script>
         const socket = io('http://reports.imas.kz/ws/get-report/');
-        socket.send('513b9781-b004-41e5-b0c3-caa6d4271b4c');
+        socket.send('53dd6d2b-4373-4387-858e-455408e6da48');
 
         socket.on('message', (data) => {
             downloadFile(data.file_data, 'downloaded_file.docx');
