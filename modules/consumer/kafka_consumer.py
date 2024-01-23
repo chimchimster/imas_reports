@@ -1,10 +1,13 @@
 import json
+import os.path
 import time
 import functools
 
 from queue import Queue
 from threading import Thread
 from typing import Any, Callable, ContextManager
+
+import requests
 
 from kafka.api.consumer import KafkaConsumer
 from modules.logs.decorators import tricky_loggy
@@ -16,6 +19,8 @@ from redis_api.api import ReportStorageRedisAPI
 
 
 class AppConsumer(RemoveDirsMixin):
+
+    STORAGE_API_ENDPOINT = os.getenv('STORAGE_API_ENDPOINT')
 
     def __init__(
             self,
@@ -132,6 +137,9 @@ class AppConsumer(RemoveDirsMixin):
 
         query: list = json.loads(value)
         task_uuid: str = key.decode('utf-8')
+        user_id: int = query[-1].get('user_id')
+        report_format = query[-1].get('format').split('_')[0]
+        file_extension = self.__define_file_extension(report_format)
 
         with LokiLogger('Process current task', report_id=key):
             try:
@@ -154,7 +162,53 @@ class AppConsumer(RemoveDirsMixin):
                 execution_time=round(end_time - start_time, 2),
                 report_id=key,
         ):
+            self.__send_file_to_storage(user_id, task_uuid, file_extension)
             self._redis_storage.connection.set(key.decode('utf-8'), status_message)
+
+    def __send_file_to_storage(
+            self,
+            user_id: int,
+            task_uuid: str,
+            file_extension: str,
+            service_name: str = 'export',
+            retry: int = 0,
+    ):
+
+        if retry > 2:
+            raise TimeoutError('Возникла ошибка при отправке файла в хранилище. Количество попыток %s' % retry)
+
+        path_to_file = os.path.join(
+            os.getcwd(),
+            'modules',
+            'apps',
+            'word',
+            'merged',
+            task_uuid,
+            task_uuid + file_extension,
+        )
+        print(path_to_file)
+        try:
+            with open(path_to_file, 'rb') as file:
+                file_data = file.read()
+                print(file_data)
+                try:
+                    url = self.__form_api_link(user_id, task_uuid, file_extension, service_name)
+                    requests.put(url, data=file_data, headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+                except requests.exceptions.RequestException:
+                    time.sleep(5)
+                    self.__send_file_to_storage(user_id, task_uuid, file_extension, service_name, retry + 1)
+        except FileNotFoundError:
+            raise FileNotFoundError(f'Файл с uuid {task_uuid} не был найден.')
+
+    def __form_api_link(self, user_id: int, task_uuid: str, report_format: str, service_name: str = 'export'):
+
+        return self.STORAGE_API_ENDPOINT + '/'.join((user_id, service_name, task_uuid, report_format))
+
+    @staticmethod
+    def __define_file_extension(report_format: str) -> str:
+
+        if report_format == 'word':
+            return '.docx'
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)

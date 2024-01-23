@@ -1,6 +1,7 @@
 import os
 import re
 import docx
+import requests
 
 from docxcompose.composer import Composer
 
@@ -12,6 +13,8 @@ class MergeReport:
     """ Класс обращается к заданным директориям
         основываясь на уникальных идекнтификаторах клиента uuid
         и собирает воедино сгенерированные части шаблонов. """
+
+    storage_api = os.getenv('storage_api')
 
     def __init__(self):
         self.path_to_folder: str = os.path.join(
@@ -117,4 +120,3 @@ class MergeReport:
         )
 
         composer.save(output_file)
-

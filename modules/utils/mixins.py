@@ -7,6 +7,13 @@ class RemoveDirsMixin:
         названия которых хранят уникальный идентификатор uuid. """
 
     dirs_to_delete = [
+        # os.path.join(
+        #     os.getcwd(),
+        #     'modules',
+        #     'apps',
+        #     'word',
+        #     'merged',
+        # ),
         os.path.join(
             os.getcwd(),
             'modules',
@@ -58,4 +65,3 @@ class RemoveDirsMixin:
                             dir_name,
                         )
                     )
-
