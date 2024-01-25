@@ -49,10 +49,6 @@ class KafkaConsumer:
         return self._reports_topic
 
     @property
-    def reports_ready_topic(self) -> str:
-        return self._reports_ready_topic
-
-    @property
     def timeout(self) -> float:
         return self._timeout
 

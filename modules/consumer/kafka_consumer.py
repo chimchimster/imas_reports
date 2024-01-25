@@ -162,8 +162,9 @@ class AppConsumer(RemoveDirsMixin):
                 execution_time=round(end_time - start_time, 2),
                 report_id=key,
         ):
-            self.__send_file_to_storage(user_id, task_uuid, file_extension)
             self._redis_storage.connection.set(key.decode('utf-8'), status_message)
+
+        self.__send_file_to_storage(user_id, task_uuid, file_extension)
 
     def __send_file_to_storage(
             self,
@@ -186,14 +187,16 @@ class AppConsumer(RemoveDirsMixin):
             task_uuid,
             task_uuid + file_extension,
         )
-        print(path_to_file)
         try:
             with open(path_to_file, 'rb') as file:
                 file_data = file.read()
-                print(file_data)
                 try:
                     url = self.__form_api_link(user_id, task_uuid, file_extension, service_name)
-                    requests.put(url, data=file_data, headers={'Content-Type': 'application/json', 'Accept': 'application/json'})
+                    requests.put(
+                        url,
+                        data=file_data,
+                        headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
+                    )
                 except requests.exceptions.RequestException:
                     time.sleep(5)
                     self.__send_file_to_storage(user_id, task_uuid, file_extension, service_name, retry + 1)
@@ -202,7 +205,7 @@ class AppConsumer(RemoveDirsMixin):
 
     def __form_api_link(self, user_id: int, task_uuid: str, report_format: str, service_name: str = 'export'):
 
-        return self.STORAGE_API_ENDPOINT + '/'.join((user_id, service_name, task_uuid, report_format))
+        return self.STORAGE_API_ENDPOINT + '/'.join((user_id, service_name, task_uuid, report_format)) + '/'
 
     @staticmethod
     def __define_file_extension(report_format: str) -> str:
