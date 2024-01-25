@@ -164,8 +164,13 @@ class AppConsumer(RemoveDirsMixin):
         ):
             self._redis_storage.connection.set(key.decode('utf-8'), status_message)
 
-        self.__send_file_to_storage(user_id, task_uuid, file_extension)
+        with LokiLogger(
+            'Sending to storage',
+            report_id=key,
+        ):
+            self.__send_file_to_storage(user_id, task_uuid, file_extension)
 
+    @tricky_loggy
     def __send_file_to_storage(
             self,
             user_id: int,
