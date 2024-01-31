@@ -6,10 +6,11 @@ from modules.apps.word.tools import *
 from modules.apps.word.utils.tools import FabricMixin
 from modules.apps.word.mixins import PropertyMethodsMixin
 from modules.apps.word.utils.data_processes import ProcessDataGenerator
+from modules.data_manager import DataManager
 from modules.logs.decorators import tricky_loggy
 
 
-class DataManager(FabricMixin, PropertyMethodsMixin):
+class WordDataManager(DataManager, FabricMixin, PropertyMethodsMixin):
 
     __available_classes__ = {
         'smi': TableContentGenerator,
@@ -34,13 +35,8 @@ class DataManager(FabricMixin, PropertyMethodsMixin):
 
     sema = multiprocessing.Semaphore(5)
 
-    def __init__(
-            self,
-            client_side_settings: list,
-            response: dict,
-    ):
-        self._client_side_settings = client_side_settings
-        self._response = response
+    def __init__(self, *args):
+        super().__init__(*args)
         self._procs_objs: list = []
         self._folder = None
 

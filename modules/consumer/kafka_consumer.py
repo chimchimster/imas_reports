@@ -147,7 +147,7 @@ class AppConsumer(RemoveDirsMixin):
                 task: TaskSelector = TaskSelector(
                     query,
                     task_uuid,
-                    'docx',
+                    report_format,
                 )
                 task.select_particular_class()
                 end_time = time.time()
@@ -217,6 +217,8 @@ class AppConsumer(RemoveDirsMixin):
 
         if report_format == 'word':
             return '.docx'
+        elif report_format == 'excel':
+            return '.xlsx'
 
     def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         self.queue.put(None)

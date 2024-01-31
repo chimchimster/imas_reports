@@ -1,7 +1,7 @@
 from typing import Any
 
 from modules.logs.decorators import tricky_loggy
-from modules.tools import WordCreator, PDFCreator
+from modules.tools import WordCreator, PDFCreator, ExcelCreator
 
 
 class TaskSelector:
@@ -10,12 +10,15 @@ class TaskSelector:
     __accessible_classes__ = {
         'docx': WordCreator,
         'pdf': PDFCreator,
+        'excel': ExcelCreator,
     }
 
-    def __init__(self,
-                 query: list,
-                 task_uuid: str,
-                 report_type: str) -> None:
+    def __init__(
+            self,
+            query: list,
+            task_uuid: str,
+            report_type: str,
+        ) -> None:
         self._query = query
         self._task_uuid = task_uuid
         self._report_type = report_type
