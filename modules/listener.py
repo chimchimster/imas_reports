@@ -1,6 +1,7 @@
 """ Entry point for Kafka consumer. """
 import os
 import sys
+import signal
 
 sys.path.append(
     os.path.join(
@@ -13,9 +14,20 @@ from consumer import AppConsumer
 from modules.logs.handlers import LokiLogger
 
 
+class GracefulKiller:
+    kill_now = False
+
+    def __init__(self):
+        signal.signal(signal.SIGINT, self.exit_gracefully)
+        signal.signal(signal.SIGTERM, self.exit_gracefully)
+
+    def exit_gracefully(self, signum, frame):
+        self.kill_now = True
+
+
 if __name__ == '__main__':
 
-    bootstrap_server, reports_topic, reports_ready_topic, sasl_username, sasl_password = load_kafka_settings()
+    bootstrap_server, reports_topic, sasl_username, sasl_password = load_kafka_settings()
 
     try:
         with LokiLogger('Start consumer'):
@@ -31,4 +43,5 @@ if __name__ == '__main__':
                 while True:
                     pass
     except KeyboardInterrupt:
+        killer = GracefulKiller()
         sys.exit(0)

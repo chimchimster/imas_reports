@@ -153,8 +153,9 @@ class AppConsumer(RemoveDirsMixin):
                 end_time = time.time()
             except Exception:
                 status_message = 'error'
-            finally:
-                self.remove_dir(task_uuid)
+            else:
+                if report_format == 'word':
+                    self.remove_dir(task_uuid)
 
         with LokiLogger(
                 'Task processed',

@@ -17,9 +17,9 @@ class KafkaProducer:
         self._sasl_username = sasl_username
         self._sasl_password = sasl_password
 
-        self._producer = self.__configure_producer()
+        self._producer = self.__configurate_producer()
 
-    def __configure_producer(self) -> Producer:
+    def __configurate_producer(self) -> Producer:
 
         conf = {
             'bootstrap.servers': self.bootstrap_server,

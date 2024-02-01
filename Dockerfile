@@ -2,7 +2,7 @@ FROM python:3.10-slim
 WORKDIR /reports/
 COPY requirements.txt .
 RUN pip install -r requirements.txt --no-cache-dir
-RUN apt-get update && apt-get install -y cron && apt-get install -y gunicorn
+RUN apt-get update && apt-get install -y cron && apt-get install -y gunicorn && apt-get install -y kafkacat
 COPY . .
 ENV PYTHONUNBUFFERED=1
 #RUN mkdir /reports/modules/apps/word/temp \

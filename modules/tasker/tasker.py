@@ -8,7 +8,7 @@ class TaskSelector:
     """ Класс-менеджер определяющий выбор класса генерации отчетов. """
 
     __accessible_classes__ = {
-        'docx': WordCreator,
+        'word': WordCreator,
         'pdf': PDFCreator,
         'excel': ExcelCreator,
     }

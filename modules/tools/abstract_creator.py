@@ -36,11 +36,11 @@ class Creator(abc.ABC, PropertyMethodsMixin):
         if response.status_code == 200:
             response_json: dict = response.json()
 
-            self.__generate_document(response_json)
+            self.generate_document(response_json)
 
     @abc.abstractmethod
-    def __generate_document(self, response: dict) -> None:
-        """ Private method which helps to generate document. """
+    def generate_document(self, response: dict) -> None:
+        """ Method which helps to generate document. """
 
     @tricky_loggy
     def __generate_string(self) -> str:

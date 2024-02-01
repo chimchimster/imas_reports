@@ -11,8 +11,7 @@ class WordCreator(Creator):
         super().__init__(*args)
         self.folder = FolderUUID(unique_identifier=self._task_uuid)
 
-    @tricky_loggy
-    def __generate_document(self, response: dict) -> None:
+    def generate_document(self, response: dict) -> None:
 
         manager = WordDataManager(
             self.client_side_settings,

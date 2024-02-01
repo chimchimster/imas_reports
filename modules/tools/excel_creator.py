@@ -6,6 +6,6 @@ class ExcelCreator(Creator):
     def __init__(self, *args):
         super().__init__(*args)
 
-    def __generate_document(self, response: dict) -> None:
+    def generate_document(self, response: dict) -> None:
 
         print(response)
