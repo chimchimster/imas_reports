@@ -1,10 +1,9 @@
 from modules.logs.decorators import tricky_loggy
 
-from modules.apps.word.mixins import PropertyMethodsMixin
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
+from modules.mixins import DataGeneratorMixin
 
 
-class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class ContentGenerator(DataGeneratorMixin):
 
     flag: str = 'content'
 
@@ -26,7 +25,7 @@ class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
                 try:
                     text_obj = news[idx][key][:cut].strip()
 
-                    self.data_collection[media_type].append(text_obj + ' ...' if len(text_obj) == cut else text_obj)
+                    self._data_collection[media_type].append(text_obj + ' ...' if len(text_obj) == cut else text_obj)
                 except IndexError:
                     pass
 
@@ -39,24 +38,24 @@ class ContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
             return _post
 
-        if self.settings.get('id') == 'contents':
-            count_soc = self.settings.get('soc')
-            count_smi = self.settings.get('smi')
+        if self._settings.get('id') == 'contents':
+            count_soc = self._settings.get('soc')
+            count_smi = self._settings.get('smi')
 
-            soc_posts = self.response_part.get('f_news2')
-            smi_posts = self.response_part.get('f_news')
+            soc_posts = self._response_part.get('f_news2')
+            smi_posts = self._response_part.get('f_news')
 
             if count_smi > 0:
                 collect_titles_or_texts(smi_posts, count_smi, 'title', media_type='smi')
             else:
                 for post in smi_posts:
-                    self.data_collection['smi'].append(check_length_of_title_or_text(post.get('title')))
+                    self._data_collection['smi'].append(check_length_of_title_or_text(post.get('title')))
 
             if count_soc > 0:
                 collect_titles_or_texts(soc_posts, count_soc, 'full_text', media_type='soc')
             else:
                 for post in soc_posts:
-                    self.data_collection['soc'].append(check_length_of_title_or_text(post.get('full_text')))
+                    self._data_collection['soc'].append(check_length_of_title_or_text(post.get('full_text')))
 
-        for key, value in self.data_collection.items():
-            self.data_collection[key] = {k: v for (k, v) in enumerate(value, start=1)}
+        for key, value in self._data_collection.items():
+            self._data_collection[key] = {k: v for (k, v) in enumerate(value, start=1)}

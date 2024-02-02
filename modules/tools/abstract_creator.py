@@ -3,11 +3,10 @@ import abc
 
 import requests
 
-from modules.apps.word.mixins import PropertyMethodsMixin
 from modules.logs.decorators import tricky_loggy
 
 
-class Creator(abc.ABC, PropertyMethodsMixin):
+class Creator(abc.ABC):
 
     api_url = os.environ.get('REST_ENDPOINT')
     relative_api = 'export-apis?'
@@ -20,6 +19,7 @@ class Creator(abc.ABC, PropertyMethodsMixin):
     ) -> None:
         self._client_side_settings = client_side_settings
         self._task_uuid = task_uuid
+        self._static_client_side_settings = self._client_side_settings[-1]
 
     @tricky_loggy
     def render_report(self) -> None:
@@ -27,7 +27,7 @@ class Creator(abc.ABC, PropertyMethodsMixin):
 
         response_string: str = self.__generate_string()
 
-        an_id: str = self.static_client_side_settings.get('an_id')
+        an_id: str = self._static_client_side_settings.get('an_id')
 
         query_url: str = self.__define_query_url(an_id)
 
@@ -48,7 +48,7 @@ class Creator(abc.ABC, PropertyMethodsMixin):
 
         request_string = ''
 
-        request_data: dict = {k: v for (k, v) in self.static_client_side_settings.items()}
+        request_data: dict = {k: v for (k, v) in self._static_client_side_settings.items()}
 
         request_data['format'] = 'pdf'
         request_data['location'] = 2

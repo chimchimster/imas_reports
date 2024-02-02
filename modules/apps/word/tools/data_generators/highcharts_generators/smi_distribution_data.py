@@ -1,8 +1,7 @@
-from modules.apps.word.mixins import PropertyMethodsMixin
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
+from modules.mixins.mixins import DataGeneratorMixin
 
 
-class SmiDistributionDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class SmiDistributionDataGenerator(DataGeneratorMixin):
 
     flag: str = 'smi_distribution'
 

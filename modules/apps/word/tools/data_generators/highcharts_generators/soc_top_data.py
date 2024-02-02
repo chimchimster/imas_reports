@@ -1,8 +1,8 @@
-from modules.apps.word.mixins import PropertyMethodsMixin
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
+
+from modules.mixins import DataGeneratorMixin
 
 
-class TopSocDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class TopSocDataGenerator(DataGeneratorMixin):
 
     flag: str = 'soc_top'
 

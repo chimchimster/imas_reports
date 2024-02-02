@@ -14,8 +14,9 @@ class WordCreator(Creator):
     def generate_document(self, response: dict) -> None:
 
         manager = WordDataManager(
-            self.client_side_settings,
+            self._client_side_settings,
             response,
+            self.folder,
         )
         manager.folder = self.folder
         manager.distribute_content()

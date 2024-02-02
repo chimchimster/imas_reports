@@ -1,7 +1,6 @@
 import os
 import re
 import docx
-import requests
 
 from docxcompose.composer import Composer
 

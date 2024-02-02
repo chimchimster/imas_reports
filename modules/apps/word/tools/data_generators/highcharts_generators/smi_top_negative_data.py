@@ -1,8 +1,7 @@
-from modules.apps.word.mixins import PropertyMethodsMixin
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
+from modules.mixins import DataGeneratorMixin
 
 
-class SmiTopNegativeDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class SmiTopNegativeDataGenerator(DataGeneratorMixin):
 
     flag: str = 'smi_top_negative'
 

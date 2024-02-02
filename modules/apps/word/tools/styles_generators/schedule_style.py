@@ -43,19 +43,19 @@ class SchedulerStylesGenerator(TableStylesGenerator):
             if _setting:
                 self.apply_run_styles(_curr_run, _setting)
 
-        if not self.settings:
+        if not self._settings:
             return
 
-        scheduler = self.template.paragraphs
+        scheduler = self._template.paragraphs
 
-        _format = self.static_settings.get('format', 'word_rus')
+        _format = self._static_settings.get('format', 'word_rus')
 
         dict_languages = ReportLanguagePicker(_format)()
 
         link_name = dict_languages.get('link', 'Ссылка')
 
         prev_run = None
-        rows = self.settings['list_rows']
+        rows = self._settings['list_rows']
         for paragraph in scheduler:
             for idx, run in enumerate(paragraph.runs, start=1):
                 curr_run = run

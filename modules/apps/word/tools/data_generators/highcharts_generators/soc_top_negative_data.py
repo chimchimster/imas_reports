@@ -1,8 +1,7 @@
-from modules.apps.word.mixins import PropertyMethodsMixin
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
+from modules.mixins import DataGeneratorMixin
 
 
-class SocTopNegativeDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class SocTopNegativeDataGenerator(DataGeneratorMixin):
 
     flag: str = 'soc_top_negative'
 

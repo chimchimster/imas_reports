@@ -10,6 +10,7 @@ class DataManager(abc.ABC):
     ):
         self._client_side_settings = client_side_settings
         self._response = response
+        self._static_client_side_settings = self._client_side_settings[-1]
 
     @abc.abstractmethod
     def distribute_content(self):

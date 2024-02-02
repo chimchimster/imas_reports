@@ -1,9 +1,8 @@
 from modules.logs.decorators import tricky_loggy
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
-from modules.apps.word.mixins import PropertyMethodsMixin
+from modules.mixins import DataGeneratorMixin
 
 
-class TotalMessagesCountDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class TotalMessagesCountDataGenerator(DataGeneratorMixin):
 
     flag: str = 'count'
 
@@ -13,12 +12,12 @@ class TotalMessagesCountDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
     @tricky_loggy
     def generate_data(self):
-        total_messages_count: int = self.response_part.get('total_count', 0)
-        positive_messages_count: int = self.response_part.get('pos_count', 0)
-        neutral_messages_count: int = self.response_part.get('neu_count', 0)
-        negative_messages_count: int = self.response_part.get('neg_count', 0)
+        total_messages_count: int = self._response_part.get('total_count', 0)
+        positive_messages_count: int = self._response_part.get('pos_count', 0)
+        neutral_messages_count: int = self._response_part.get('neu_count', 0)
+        negative_messages_count: int = self._response_part.get('neg_count', 0)
 
-        self.data_collection['total_count'] = total_messages_count
-        self.data_collection['pos_count'] = positive_messages_count
-        self.data_collection['neu_count'] = neutral_messages_count
-        self.data_collection['neg_count'] = negative_messages_count
+        self._data_collection['total_count'] = total_messages_count
+        self._data_collection['pos_count'] = positive_messages_count
+        self._data_collection['neu_count'] = neutral_messages_count
+        self._data_collection['neg_count'] = negative_messages_count

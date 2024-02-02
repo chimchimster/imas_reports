@@ -1,8 +1,7 @@
-from modules.apps.word.mixins import PropertyMethodsMixin
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
+from modules.mixins import DataGeneratorMixin
 
 
-class MostPopularSocDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class MostPopularSocDataGenerator(DataGeneratorMixin):
 
     flag: str = 'most_popular_soc'
 

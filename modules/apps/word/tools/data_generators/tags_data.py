@@ -1,9 +1,8 @@
 from modules.logs.decorators import tricky_loggy
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
-from modules.apps.word.mixins import PropertyMethodsMixin
+from modules.mixins import DataGeneratorMixin
 
 
-class TagsGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class TagsGenerator(DataGeneratorMixin):
 
     flag: str = 'tags'
 
@@ -15,4 +14,4 @@ class TagsGenerator(DataGeneratorMixin, PropertyMethodsMixin):
     @tricky_loggy
     def generate_data(self):
 
-        self.data_collection.append(self.response_part.get('analyzer_tags_changed'))
+        self._data_collection.append(self._response_part.get('analyzer_tags_changed'))

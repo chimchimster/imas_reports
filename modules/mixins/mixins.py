@@ -40,33 +40,11 @@ class AbstractRunnerMixin(ABC):
         self._proc_obj = proc_object
         self._data = data
         self._report_format = report_format
-        self._report_lang = report_format.split('_')[1]  # TODO: от этого "ужаса" нужно избавиться на уровне клиентской части
+        self._report_lang = report_format.split('_')[1]
 
     @abstractmethod
     def apply(self) -> tuple | None:
         """ Метод ответственный за логику каждого из runner's. """
-
-
-class PropertyProcessesMixin:
-    @property
-    def data(self) -> list[dict] | dict:
-        return self._data
-
-    @property
-    def report_format(self) -> str:
-        return self._report_format
-
-    @property
-    def proc_obj(self) -> Any:
-        return self._proc_obj
-
-    @property
-    def template_path(self) -> str:
-        return self._template_path
-
-    @property
-    def report_lang(self) -> str:
-        return self._report_lang
 
 
 class DiagramPickerInjector:
@@ -108,3 +86,29 @@ class DiagramPickerInjector:
         """ Выбираем нужную диаграмму из доступных и отправляем на отрисовку. """
 
         return self.__available_diagrams__.get(self.type_of_diagram)(*self.func_args, **self.func_kwargs)
+
+
+class DataGeneratorMixin(ABC):
+    """ Класс задающий основные параметры для всех классов генераторов данных. """
+
+    def __init__(
+            self,
+            response_part: dict,
+            settings: dict | None,
+            static_settings: dict,
+    ):
+        self._response_part = response_part
+        self._settings = settings
+        self._static_settings = static_settings
+
+    @abstractmethod
+    def generate_data(self) -> None:
+        """ Метод генерирующий данные исходя из полученных настроек. """
+
+
+__all__ = [
+    'FabricMixin',
+    'AbstractRunnerMixin',
+    'DiagramPickerInjector',
+    'DataGeneratorMixin',
+]

@@ -3,6 +3,7 @@ from multiprocessing import Process
 
 from modules.logs.decorators import tricky_loggy
 from modules.apps.word.utils.tools import *
+from modules.mixins import FabricMixin
 
 
 class ProcessDataGenerator(FabricMixin, Process):

@@ -3,14 +3,13 @@ import shutil
 import multiprocessing
 
 from modules.apps.word.tools import *
-from modules.apps.word.utils.tools import FabricMixin
-from modules.apps.word.mixins import PropertyMethodsMixin
 from modules.apps.word.utils.data_processes import ProcessDataGenerator
 from modules.data_manager import DataManager
+from modules.mixins import FabricMixin
 from modules.logs.decorators import tricky_loggy
 
 
-class WordDataManager(DataManager, FabricMixin, PropertyMethodsMixin):
+class WordDataManager(DataManager, FabricMixin):
 
     __available_classes__ = {
         'smi': TableContentGenerator,
@@ -38,7 +37,6 @@ class WordDataManager(DataManager, FabricMixin, PropertyMethodsMixin):
     def __init__(self, *args):
         super().__init__(*args)
         self._procs_objs: list = []
-        self._folder = None
 
     @tricky_loggy
     def distribute_content(self) -> None:
@@ -46,7 +44,7 @@ class WordDataManager(DataManager, FabricMixin, PropertyMethodsMixin):
         self.create_temp_folder()
         self.create_temp_templates()
 
-        for client_side_setting in self.client_side_settings[:-1]:
+        for client_side_setting in self._client_side_settings[:-1]:
 
             obj_type = client_side_setting.get('id')
 
@@ -54,29 +52,29 @@ class WordDataManager(DataManager, FabricMixin, PropertyMethodsMixin):
             if obj_type:
                 gen_obj = self.select_particular_class(
                     obj_type,
-                    self.response,
+                    self._response,
                     client_side_setting,
-                    self.static_client_side_settings,
+                    self._static_client_side_settings,
                     apply=False,
                 )
                 setattr(gen_obj, 'folder', self.folder)
-                self.procs_objs.append(gen_obj)
+                self._procs_objs.append(gen_obj)
 
         # Главную страницу мы обрабатываем в любом случае.
         # Наличие клиентских настроек не играет никакой роли.
         # Нужны только вшитые (статические) клиентские настройки.
         base_page_obj = BasePageDataGenerator(
-            self.response,
+            self._response,
             None,
-            self.static_client_side_settings,
+            self._static_client_side_settings,
         )
         base_page_obj.folder = self.folder
-        self.procs_objs.append(base_page_obj)
+        self._procs_objs.append(base_page_obj)
 
     @tricky_loggy
     def apply_processes(self):
 
-        for proc_obj in self.procs_objs:
+        for proc_obj in self._procs_objs:
             proc = ProcessDataGenerator(proc_obj)
             with self.sema:
                 proc.start()

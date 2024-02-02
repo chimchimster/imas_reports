@@ -3,11 +3,10 @@ import time
 from datetime import datetime
 
 from modules.logs.decorators import tricky_loggy
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
-from modules.apps.word.mixins import PropertyMethodsMixin
+from modules.mixins import DataGeneratorMixin
 
 
-class BasePageDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class BasePageDataGenerator(DataGeneratorMixin):
     """ Генерирует заглавную страницу docx документа.
         Флаг 'base' исплользуется в word/utils/data_threads
         в переопределенном методе run объекта ThreadDataGenerator. """
@@ -20,12 +19,12 @@ class BasePageDataGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
     @tricky_loggy
     def generate_data(self) -> None:
-        project_name: str = self.response_part.get('analyzer_name', 'Undefined')
-        start_time: str = self.response_part.get('s_date', 'undefined') + ' ' + self.response_part.get('s_time', 'undefined')
-        end_time: str = self.response_part.get('f_date', 'undefined') + ' ' + self.response_part.get('f_time', 'undefined')
+        project_name: str = self._response_part.get('analyzer_name', 'Undefined')
+        start_time: str = self._response_part.get('s_date', 'undefined') + ' ' + self._response_part.get('s_time', 'undefined')
+        end_time: str = self._response_part.get('f_date', 'undefined') + ' ' + self._response_part.get('f_time', 'undefined')
         date_of_export: str = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')
 
-        self.data_collection['project_name'] = project_name
-        self.data_collection['start_time'] = start_time
-        self.data_collection['end_time'] = end_time
-        self.data_collection['date_of_export'] = date_of_export
+        self._data_collection['project_name'] = project_name
+        self._data_collection['start_time'] = start_time
+        self._data_collection['end_time'] = end_time
+        self._data_collection['date_of_export'] = date_of_export

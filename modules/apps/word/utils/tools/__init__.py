@@ -1,4 +1,3 @@
-from .mixins import FabricMixin
 from .process_runners import (TableProcess, ContentProcess, TagsProcess, SentimentsProcess, DistributionProcess,
                               BaseProcess, TotalMessagesCountProcess, MessagesDynamicsProcess, SmiDistributionProcess,
                               SocDistributionProcess, TopMediaProcess, TopSocialProcess,MostPopularSocProcess,
@@ -15,7 +14,6 @@ __all__ = [
     'DistributionProcess',
     'TotalMessagesCountProcess',
     'MessagesDynamicsProcess',
-    'FabricMixin',
     'SmiDistributionProcess',
     'SocDistributionProcess',
     'TopMediaProcess',

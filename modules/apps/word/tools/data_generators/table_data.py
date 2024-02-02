@@ -2,12 +2,11 @@ from datetime import datetime
 
 from modules.logs.decorators import tricky_loggy
 from modules.apps.localization import ReportLanguagePicker
-from modules.apps.word.mixins import PropertyMethodsMixin
-from modules.apps.word.tools.data_generators.mixins import DataGeneratorMixin
-from modules.apps.word.tools.data_generators.utils import DataSorter
+from modules.mixins import DataGeneratorMixin
+from modules.sorting import DataSorter
 
 
-class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
+class TableContentGenerator(DataGeneratorMixin):
     flag: str = 'table'
 
     translator_smi: dict = {}
@@ -22,7 +21,7 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
     @tricky_loggy
     def pick_language(self, _type):
 
-        obj_format = self.static_settings.get('format')
+        obj_format = self._static_settings.get('format')
 
         if not obj_format:
             obj_format = 'word_rus'
@@ -40,9 +39,9 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
 
         def translate(_key: str, _translator_type):
 
-            order = self.settings.get('order')
+            order = self._settings.get('order')
 
-            table_data = self.response_part.get(_key, [{}])
+            table_data = self._response_part.get(_key, [{}])
 
             news = DataSorter(table_data, order).sort_data()
 
@@ -101,8 +100,8 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
                         return _tag.lower()
                 return ''
 
-            text_length = self.settings.get('text_length')
-            tags = self.response_part.get('query_ar')
+            text_length = self._settings.get('text_length')
+            tags = self._response_part.get('query_ar')
 
             for i in range(len(news)):
                 news[i] = {**{'number': i + 1}, **news[i]}
@@ -151,19 +150,19 @@ class TableContentGenerator(DataGeneratorMixin, PropertyMethodsMixin):
                             result[translator[key]] = value
 
                 sorted_result = {k: v for (k, v) in sorted(result.items(), key=lambda x: to_sort[x[0]])}
-                self.data_collection.append(sorted_result)
+                self._data_collection.append(sorted_result)
 
-        if self.settings.get('id') == 'soc':
-            delete_unused_columns(self.settings, translator_for_rest_soc)
-        elif self.settings.get('id') == 'smi':
-            delete_unused_columns(self.settings, translator_for_rest_smi)
+        if self._settings.get('id') == 'soc':
+            delete_unused_columns(self._settings, translator_for_rest_soc)
+        elif self._settings.get('id') == 'smi':
+            delete_unused_columns(self._settings, translator_for_rest_smi)
 
         news = [{k: v for (k, v) in n.items() if k not in to_delete} for n in news]
 
-        if self.settings.get('id') == 'soc':
-            to_sort = sort_columns(self.settings, translator_for_rest_soc)
-        elif self.settings.get('id') == 'smi':
-            to_sort = sort_columns(self.settings, translator_for_rest_smi)
+        if self._settings.get('id') == 'soc':
+            to_sort = sort_columns(self._settings, translator_for_rest_soc)
+        elif self._settings.get('id') == 'smi':
+            to_sort = sort_columns(self._settings, translator_for_rest_smi)
 
         update_collection()
 

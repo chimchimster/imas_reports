@@ -14,7 +14,6 @@ from modules.logs.decorators import tricky_loggy
 from modules.tasker import TaskSelector
 from modules.utils import RemoveDirsMixin
 from modules.logs.handlers import LokiLogger
-from modules.database.handlers import ReportStorageMySQLAPI
 from redis_api.api import ReportStorageRedisAPI
 
 

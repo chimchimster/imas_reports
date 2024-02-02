@@ -12,12 +12,12 @@ from multiprocessing import Semaphore, Process
 from modules.logs.decorators import tricky_loggy
 from modules.apps.localization import ReportLanguagePicker
 from modules.apps.word.utils.tools.auxiliary_functions import generate_chart_categories
-from modules.apps.word.utils.tools.mixins import PropertyProcessesMixin, AbstractRunnerMixin
+from modules.mixins import AbstractRunnerMixin
 from modules.apps.word.tools import TableStylesGenerator, SchedulerStylesGenerator, HighchartsCreator, MetricsGenerator
 from modules.apps.word.utils.tools.decorators import render_diagram, throw_params_for_distribution_diagram, render_map
 
 
-class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class TableProcess(AbstractRunnerMixin):
 
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
@@ -271,7 +271,7 @@ class TableProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         self.merge_procs_tables()
 
 
-class ContentProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class ContentProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path: str = os.path.join(
@@ -314,7 +314,7 @@ class ContentProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class TagsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class TagsProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -352,7 +352,7 @@ class TagsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class BaseProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class BaseProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -394,7 +394,7 @@ class BaseProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class TotalMessagesCountProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class TotalMessagesCountProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -450,7 +450,7 @@ class TotalMessagesCountProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class MessagesDynamicsProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -523,7 +523,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         template.save(output_path)
 
 
-class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class SentimentsProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -588,7 +588,7 @@ class SentimentsProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         }
 
 
-class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class DistributionProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -636,7 +636,7 @@ class DistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         }
 
 
-class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class SmiDistributionProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -661,7 +661,7 @@ class SmiDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class SocDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class SocDistributionProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -685,7 +685,7 @@ class SocDistributionProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class TopMediaProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class TopMediaProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -709,7 +709,7 @@ class TopMediaProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class TopSocialProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class TopSocialProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -733,7 +733,7 @@ class TopSocialProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class MostPopularSocProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class MostPopularSocProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -757,7 +757,7 @@ class MostPopularSocProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class TopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class TopNegativeProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -781,7 +781,7 @@ class TopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class SmiTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class SmiTopNegativeProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -805,7 +805,7 @@ class SmiTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class SocTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class SocTopNegativeProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -829,7 +829,7 @@ class SocTopNegativeProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class WorldMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class WorldMapProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(
@@ -853,7 +853,7 @@ class WorldMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
         pass
 
 
-class KazakhstanMapProcess(AbstractRunnerMixin, PropertyProcessesMixin):
+class KazakhstanMapProcess(AbstractRunnerMixin):
     def __init__(self, proc_object, data, report_format):
         super().__init__(proc_object, data, report_format)
         self._template_path = os.path.join(

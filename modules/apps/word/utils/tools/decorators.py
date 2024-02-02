@@ -11,10 +11,10 @@ from typing import Callable
 from docxtpl import DocxTemplate, InlineImage
 
 from modules.apps.localization import ReportLanguagePicker
-from modules.apps.word.utils.tools.mixins import DiagramPickerInjector
 from modules.apps.word.tools import HighchartsCreator, MetricsGenerator
 from modules.apps.word.utils.tools.auxiliary_classes import ChartColorDistribution
 from modules.apps.word.utils.tools.auxiliary_functions import generate_chart_categories
+from modules.mixins import DiagramPickerInjector
 
 
 def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callable:
