@@ -35,13 +35,13 @@ class TableStylesGenerator(TableContentGenerator):
     @tricky_loggy
     def apply_table_styles(self):
 
-        table = self.template.tables[0]
+        table = self._template.tables[0]
         table.style = 'Table Grid'
 
-        if not self.settings:
+        if not self._settings:
             return
 
-        if self.settings.get('id') == 'soc':
+        if self._settings.get('id') == 'soc':
             self.choose_particular_table_styles(self.translator_soc, table, 'soc')
         else:
             self.choose_particular_table_styles(self.translator_smi, table, 'smi')
@@ -69,13 +69,13 @@ class TableStylesGenerator(TableContentGenerator):
                 case 'Тональность' | 'Реңкілік' | 'Sentiment':
                     table_obj.columns[idx].width = Cm(6)
 
-        _format = self.static_settings.get('format', 'word_rus')
+        _format = self._static_settings.get('format', 'word_rus')
 
         dict_languages = ReportLanguagePicker(_format)()
 
         link_name = dict_languages.get('link', 'Ссылка')
 
-        for column in self.settings['columns']:
+        for column in self._settings['columns']:
             if column.get('id') in translator_obj:
                 column_name_en = column.get('id')
                 column_name = translator_obj[column_name_en]
@@ -93,7 +93,7 @@ class TableStylesGenerator(TableContentGenerator):
                                 paragraph.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER
                                 for run in paragraph.runs:
 
-                                    self.highlight_tag(run, paragraph, self.tags, column_name, self.tags_highlight_settings)
+                                    self.highlight_tag(run, paragraph, self._tags, column_name, self._tags_highlight_settings)
 
                                     if re.match(r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+[/\w .?=-]*', cell.text) and column_name == 'URL':
                                         hyperlink = self.add_hyperlink(paragraph, cell.text.strip(), link_name, '#0000FF', '#000080')

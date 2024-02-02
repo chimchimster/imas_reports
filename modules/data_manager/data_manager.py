@@ -7,10 +7,12 @@ class DataManager(abc.ABC):
             self,
             client_side_settings: list,
             response: dict,
+            task_uuid: str,
     ):
         self._client_side_settings = client_side_settings
         self._response = response
         self._static_client_side_settings = self._client_side_settings[-1]
+        self._task_uuid = task_uuid
 
     @abc.abstractmethod
     def distribute_content(self):

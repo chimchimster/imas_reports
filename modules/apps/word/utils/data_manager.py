@@ -57,7 +57,7 @@ class WordDataManager(DataManager, FabricMixin):
                     self._static_client_side_settings,
                     apply=False,
                 )
-                setattr(gen_obj, 'folder', self.folder)
+                setattr(gen_obj, 'folder', self._task_uuid)
                 self._procs_objs.append(gen_obj)
 
         # Главную страницу мы обрабатываем в любом случае.
@@ -68,7 +68,7 @@ class WordDataManager(DataManager, FabricMixin):
             None,
             self._static_client_side_settings,
         )
-        base_page_obj.folder = self.folder
+        base_page_obj.folder = self._task_uuid
         self._procs_objs.append(base_page_obj)
 
     @tricky_loggy

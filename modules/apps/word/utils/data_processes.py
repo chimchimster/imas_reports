@@ -38,9 +38,9 @@ class ProcessDataGenerator(FabricMixin, Process):
 
         self.proc_obj.generate_data()
 
-        data: Any = self.proc_obj.data_collection
+        data: Any = self.proc_obj._data_collection
 
-        report_format: str = self.proc_obj.static_settings.get('format', 'word_rus')
+        report_format: str = self.proc_obj._static_settings.get('format', 'word_rus')
 
         process_type: str = self.proc_obj.flag
 

@@ -25,7 +25,7 @@ class TableProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'table.docx',
         )
@@ -33,9 +33,9 @@ class TableProcess(AbstractRunnerMixin):
     @tricky_loggy
     def create_temp_template_folder(self) -> None:
 
-        _type_of_table = self.proc_obj.type
+        _type_of_table = self._proc_obj._type
 
-        _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+        _uuid: str = '_'.join((_type_of_table, str(self._proc_obj.folder.unique_identifier)))
 
         path_to_temp_table_folder = os.path.join(
             os.getcwd(),
@@ -51,9 +51,9 @@ class TableProcess(AbstractRunnerMixin):
     @tricky_loggy
     def create_temp_result_folder(self) -> None:
 
-        _type_of_table = self.proc_obj.type
+        _type_of_table = self._proc_obj._type
 
-        _uuid: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+        _uuid: str = '_'.join((_type_of_table, str(self._proc_obj.folder.unique_identifier)))
 
         path_to_temp_results_folder = os.path.join(
             os.getcwd(),
@@ -70,7 +70,7 @@ class TableProcess(AbstractRunnerMixin):
     def chunk_data_process(self, *args) -> None:
 
         def copy_table_template(_uuid: uuid, _path_to_copied_file: str) -> None:
-            path_to_obj_table = self.template_path
+            path_to_obj_table = self._template_path
 
             shutil.copy(path_to_obj_table, _path_to_copied_file)
 
@@ -80,12 +80,12 @@ class TableProcess(AbstractRunnerMixin):
 
             _uuid: uuid = uuid.uuid4()
 
-            _type_of_table: str = self.proc_obj.type
-            _is_table: bool = self.proc_obj.settings.get('table')
+            _type_of_table: str = self._proc_obj._type
+            _is_table: bool = self._proc_obj._settings.get('table')
 
             temp_table_template_folder_name: str = '_'.join(
-                (_type_of_table, str(self.proc_obj.folder.unique_identifier)))
-            temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self.proc_obj.folder.unique_identifier)))
+                (_type_of_table, str(self._proc_obj.folder.unique_identifier)))
+            temp_table_result_folder_name: str = '_'.join((_type_of_table, str(self._proc_obj.folder.unique_identifier)))
 
             path_to_copied_file: str = os.path.join(
                 os.getcwd(),
@@ -120,13 +120,13 @@ class TableProcess(AbstractRunnerMixin):
             except IndexError:
                 raise IndexError('Невозможно сформировавть таблицу по причине нехватки данных!')
 
-            settings: dict = {k: v for (k, v) in self.proc_obj.settings.items()}
-            static_settings: dict = self.proc_obj.static_settings
+            settings: dict = {k: v for (k, v) in self._proc_obj._settings.items()}
+            static_settings: dict = self._proc_obj._static_settings
 
-            tags: list = self.proc_obj.response_part.get('query_ar')
-            tags_highlight_settings: dict = self.proc_obj.settings.get('tag_highlight')
+            tags: list = self._proc_obj._response_part.get('query_ar')
+            tags_highlight_settings: dict = self._proc_obj._settings.get('tag_highlight')
 
-            if self.proc_obj.settings.get('table'):
+            if self._proc_obj._settings.get('table'):
                 styles = TableStylesGenerator(
                     _template,
                     settings,
@@ -152,9 +152,9 @@ class TableProcess(AbstractRunnerMixin):
     @tricky_loggy
     def merge_procs_tables(self) -> None:
 
-        _is_table: bool = self.proc_obj.settings.get('table')
-        _uuid: str = str(self.proc_obj.folder.unique_identifier)
-        _type_of_table: str = self.proc_obj.type
+        _is_table: bool = self._proc_obj._settings.get('table')
+        _uuid: str = str(self._proc_obj.folder.unique_identifier)
+        _type_of_table: str = self._proc_obj._type
 
         results_folder_name: str = '_'.join((_type_of_table, _uuid))
 
@@ -176,7 +176,7 @@ class TableProcess(AbstractRunnerMixin):
         def add_heading_to_table(_master: docx.Document) -> None:
             def choose_title(_is_table_: bool, _type_: str) -> str:
 
-                lang_dicts: dict = ReportLanguagePicker(self.report_format)()
+                lang_dicts: dict = ReportLanguagePicker(self._report_format)()
 
                 dict_obj = lang_dicts.get('titles')
 
@@ -219,7 +219,7 @@ class TableProcess(AbstractRunnerMixin):
         def delete_paragraph(_paragraph) -> None:
             """ Метод позволяет убрать пустое пространство между таблицами. """
 
-            if self.proc_obj.settings.get('table'):
+            if self._proc_obj._settings.get('table'):
                 p = _paragraph._element
                 p.getparent().remove(p)
                 p._p = p._element = None
@@ -237,7 +237,7 @@ class TableProcess(AbstractRunnerMixin):
 
             composer.append(doc)
 
-            _position = self.proc_obj.settings.get('position')
+            _position = self._proc_obj._settings.get('position')
 
             composer.save(
                 os.path.join(
@@ -259,9 +259,9 @@ class TableProcess(AbstractRunnerMixin):
         semaphore = Semaphore(min(32, os.cpu_count()))
 
         processes = []
-        for pointer, chunk in enumerate(range(0, len(self.data), step)):
+        for pointer, chunk in enumerate(range(0, len(self._data), step)):
             process = Process(target=self.chunk_data_process,
-                              args=(pointer, self.data[chunk:chunk + step], semaphore))
+                              args=(pointer, self._data[chunk:chunk + step], semaphore))
             processes.append(process)
             process.start()
 
@@ -278,35 +278,35 @@ class ContentProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'table_of_contents.docx',
         )
 
     @tricky_loggy
     def apply(self) -> None:
-        path_to_obj_table_of_contents = self.template_path
+        path_to_obj_table_of_contents = self._template_path
         template = DocxTemplate(path_to_obj_table_of_contents)
 
-        position = self.proc_obj.settings.get('position')
+        position = self._proc_obj._settings.get('position')
 
         output_path = os.path.join(
             os.getcwd(),
             'word',
             'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             f'output-{position}-content.docx',
         )
 
-        has_soc = self.data.get('soc', {})
-        has_smi = self.data.get('smi', {})
+        has_soc = self._data.get('soc', {})
+        has_smi = self._data.get('smi', {})
 
         try:
             template.render(
                 {
                     'table_of_contents_soc': has_soc,
                     'table_of_contents_smi': has_smi,
-                    'lang': self.report_lang,
+                    'lang': self._report_lang,
                 }, autoescape=True)
         except IndexError:
             raise IndexError('Невозможно сформировать оглавление по причине нехватки данных!')
@@ -321,30 +321,30 @@ class TagsProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'tags.docx',
         )
 
     @tricky_loggy
     def apply(self) -> None:
-        path_to_obj_tags = self.template_path
+        path_to_obj_tags = self._template_path
         template = DocxTemplate(path_to_obj_tags)
 
-        _position = self.proc_obj.settings.get('position')
+        _position = self._proc_obj._settings.get('position')
 
         output_path = os.path.join(
             os.getcwd(),
             'word',
             'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             f'output-{_position}-atags.docx',
         )
 
         try:
             template.render({
-                'tags': self.data,
-                'lang': self.report_lang,
+                'tags': self._data,
+                'lang': self._report_lang,
             }, autoescape=True)
         except IndexError:
             raise IndexError('Невозможно сформировать теги по причине нехватки данных!')
@@ -359,7 +359,7 @@ class BaseProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'base.docx',
         )
@@ -367,28 +367,28 @@ class BaseProcess(AbstractRunnerMixin):
     @tricky_loggy
     def apply(self) -> None:
         position = 0
-        path_to_obj_base = self.template_path
+        path_to_obj_base = self._template_path
         template = DocxTemplate(path_to_obj_base)
 
         output_path = os.path.join(
             os.getcwd(),
             'word',
             'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             f'output-{position}-base.docx',
         )
 
-        project_name = self.data.get('project_name')
-        start_time = self.data.get('start_time')
-        end_time = self.data.get('end_time')
-        date_of_export = self.data.get('date_of_export')
+        project_name = self._data.get('project_name')
+        start_time = self._data.get('start_time')
+        end_time = self._data.get('end_time')
+        date_of_export = self._data.get('date_of_export')
 
         template.render({
             'project_name': project_name,
             'date_start': start_time,
             'date_end': end_time,
             'date_of_export': date_of_export,
-            'lang': self.report_lang,
+            'lang': self._report_lang,
         }, autoescape=True)
 
         template.save(output_path)
@@ -401,7 +401,7 @@ class TotalMessagesCountProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'total_messages_count.docx',
         )
@@ -410,22 +410,22 @@ class TotalMessagesCountProcess(AbstractRunnerMixin):
     def apply(self) -> None:
         template: DocxTemplate = DocxTemplate(self._template_path)
 
-        _position = self.proc_obj.settings.get('position')
+        _position = self._proc_obj._settings.get('position')
 
         output_path = os.path.join(
             os.getcwd(),
             'word',
             'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             f'output-{_position}-total-messages-count.docx'
         )
 
-        total_messages_count: int = self.data.get('total_count', 0)
-        positive_messages_count: int = self.data.get('pos_count', 0)
-        neutral_messages_count: int = self.data.get('neu_count', 0)
-        negative_messages_count: int = self.data.get('neg_count', 0)
+        total_messages_count: int = self._data.get('total_count', 0)
+        positive_messages_count: int = self._data.get('pos_count', 0)
+        neutral_messages_count: int = self._data.get('neu_count', 0)
+        negative_messages_count: int = self._data.get('neg_count', 0)
 
-        messages_count_dict: dict = ReportLanguagePicker(self.report_format)().get('messages_count')
+        messages_count_dict: dict = ReportLanguagePicker(self._report_format)().get('messages_count')
 
         title = messages_count_dict.get('title')
         total_title = messages_count_dict.get('messages')
@@ -457,7 +457,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'messages_dynamics.docx',
@@ -470,20 +470,20 @@ class MessagesDynamicsProcess(AbstractRunnerMixin):
 
         template: DocxTemplate = DocxTemplate(self._template_path)
 
-        _position: str = self.proc_obj.settings.get('position')
+        _position: str = self._proc_obj._settings.get('position')
 
         messages_dynamic = HighchartsCreator(
-            self.report_format,
-            self.proc_obj.folder,
+            self._report_format,
+            self._proc_obj.folder,
         )
 
         chart = MetricsGenerator()
 
-        start_date = self.proc_obj.response_part.get('s_date')
-        end_date = self.proc_obj.response_part.get('f_date')
+        start_date = self._proc_obj._response_part.get('s_date')
+        end_date = self._proc_obj._response_part.get('f_date')
 
-        soc_news = self.proc_obj.response_part.get('f_news2')
-        smi_news = self.proc_obj.response_part.get('f_news')
+        soc_news = self._proc_obj._response_part.get('f_news2')
+        smi_news = self._proc_obj._response_part.get('f_news')
 
         categories = chart.define_timedelta(start_date, end_date)
         chart_series = chart.count_messages(soc_news, smi_news)
@@ -498,7 +498,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'highcharts_temp_images',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             class_name + '.png'
         )
 
@@ -506,7 +506,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             f'output-{_position}-messages-{class_name}.docx'
         )
 
@@ -516,7 +516,7 @@ class MessagesDynamicsProcess(AbstractRunnerMixin):
 
         dynamics_image = InlineImage(template, image_descriptor=path_to_image, width=Cm(23), height=Cm(13))
 
-        title: str = ReportLanguagePicker(self.report_format)().get('titles').get('messages_dynamics')
+        title: str = ReportLanguagePicker(self._report_format)().get('titles').get('messages_dynamics')
 
         template.render({'title': title, 'image': dynamics_image}, autoescape=True)
 
@@ -530,7 +530,7 @@ class SentimentsProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'sentiments.docx',
@@ -539,15 +539,15 @@ class SentimentsProcess(AbstractRunnerMixin):
     @tricky_loggy
     @render_diagram(color_flag='sentiments')
     def apply(self, **kwargs) -> tuple:
-        news_count: list = self.proc_obj.response_part.get('news_counts')
+        news_count: list = self._proc_obj._response_part.get('news_counts')
         diagram_type: str = kwargs.pop('diagram_type')
         news_count_union: dict = {}
 
         for n_c in news_count:
             news_count_union.update(n_c)
 
-        title = ReportLanguagePicker(self.report_format)().get('titles').get('sentiments')
-        sentiments_translate = ReportLanguagePicker(self.report_format)().get('sentiments_translate')
+        title = ReportLanguagePicker(self._report_format)().get('titles').get('sentiments')
+        sentiments_translate = ReportLanguagePicker(self._report_format)().get('sentiments_translate')
         positive_title = sentiments_translate.get('positive')
         negative_title = sentiments_translate.get('negative')
         neutral_title = sentiments_translate.get('neutral')
@@ -595,7 +595,7 @@ class DistributionProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'distribution.docx',
@@ -604,9 +604,9 @@ class DistributionProcess(AbstractRunnerMixin):
     @tricky_loggy
     @render_diagram(color_flag='distribution')
     def apply(self, **kwargs) -> tuple:
-        soc_count: int = int(self.proc_obj.response_part.get('soc_count'))
-        smi_count: int = int(self.proc_obj.response_part.get('smi_count'))
-        langs_dict: dict = ReportLanguagePicker(self.report_format)().get('titles')
+        soc_count: int = int(self._proc_obj._response_part.get('soc_count'))
+        smi_count: int = int(self._proc_obj._response_part.get('smi_count'))
+        langs_dict: dict = ReportLanguagePicker(self._report_format)().get('titles')
         title: str = langs_dict.get('distribution')
         soc_title: str = langs_dict.get('soc')
         smi_title: str = langs_dict.get('smi')
@@ -643,7 +643,7 @@ class SmiDistributionProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'smi_distribution.docx',
@@ -668,7 +668,7 @@ class SocDistributionProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'soc_distribution.docx',
@@ -692,7 +692,7 @@ class TopMediaProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'media_top.docx',
@@ -716,7 +716,7 @@ class TopSocialProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'soc_top.docx',
@@ -740,7 +740,7 @@ class MostPopularSocProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'most_popular_soc.docx',
@@ -764,7 +764,7 @@ class TopNegativeProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'top_negative.docx',
@@ -788,7 +788,7 @@ class SmiTopNegativeProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'smi_top_negative.docx',
@@ -812,7 +812,7 @@ class SocTopNegativeProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'soc_top_negative.docx',
@@ -836,7 +836,7 @@ class WorldMapProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'world_map.docx',
@@ -860,7 +860,7 @@ class KazakhstanMapProcess(AbstractRunnerMixin):
             os.getcwd(),
             'word',
             'temp_templates',
-            f'{self.proc_obj.folder.unique_identifier}',
+            f'{self._proc_obj.folder.unique_identifier}',
             'template_parts',
             'highcharts',
             'kaz_map.docx',

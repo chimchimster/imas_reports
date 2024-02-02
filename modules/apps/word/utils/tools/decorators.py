@@ -24,13 +24,13 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
 
             template: DocxTemplate = DocxTemplate(self._template_path)
 
-            _position: str = self.proc_obj.settings.get('position')
-            diagram_type: str = self.proc_obj.settings.get('type')
-            data_labels: bool = self.proc_obj.settings.get('data_labels')
+            _position: str = self._proc_obj._settings.get('position')
+            diagram_type: str = self._proc_obj._settings.get('type')
+            data_labels: bool = self._proc_obj._settings.get('data_labels')
 
             highcharts_obj = HighchartsCreator(
-                self.report_format,
-                self.proc_obj.folder,
+                self._report_format,
+                self._proc_obj.folder,
             )
 
             class_name = self.__class__.__name__
@@ -39,7 +39,7 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
                 os.getcwd(),
                 'word',
                 'highcharts_temp_images',
-                f'{self.proc_obj.folder.unique_identifier}',
+                f'{self._proc_obj.folder.unique_identifier}',
                 class_name + '.png'
             )
 
@@ -47,7 +47,7 @@ def render_diagram(color_flag: str = None, context_flag: bool = False) -> Callab
                 os.getcwd(),
                 'word',
                 'temp',
-                f'{self.proc_obj.folder.unique_identifier}',
+                f'{self._proc_obj.folder.unique_identifier}',
                 f'output-{_position}-messages-{class_name}.docx'
             )
 
@@ -143,23 +143,23 @@ def throw_params_for_distribution_diagram(
         @wraps(func)
         def inner_wrapper(self, **kwargs) -> tuple:
 
-            report_language = ReportLanguagePicker(self.report_format)
+            report_language = ReportLanguagePicker(self._report_format)
 
             diagram_type: str = kwargs.pop('diagram_type')
 
             title: str = report_language().get('titles').get(title_key)
 
             if not has_distribution:
-                distribution: list[dict, ...] = self.proc_obj.response_part.get(category_names_key)
+                distribution: list[dict, ...] = self._proc_obj._response_part.get(category_names_key)
             elif has_distribution == 'count_most_popular_metrix':
-                metrics_soc = self.proc_obj.response_part.get('f_news2')
+                metrics_soc = self._proc_obj._response_part.get('f_news2')
                 distribution: list[dict, ...] = MetricsGenerator.count_most_popular_metrics(metrics_soc)
                 title += ' ' + report_language().get('categories_soc').get(
                     str(MetricsGenerator.define_most_popular_resources(metrics_soc))
                 )
             elif has_distribution == 'count_top_negative':
-                metrix_soc = self.proc_obj.response_part.get('f_news2')
-                metrix_smi = self.proc_obj.response_part.get('f_news')
+                metrix_soc = self._proc_obj._response_part.get('f_news2')
+                metrix_smi = self._proc_obj._response_part.get('f_news')
                 distribution: list[dict, ...] = MetricsGenerator.count_top_negative(
                     metrics_smi=metrix_smi,
                     metrics_soc=metrix_soc,
@@ -168,8 +168,8 @@ def throw_params_for_distribution_diagram(
 
                 title = report_language().get('titles').get('top_negative')
             elif has_distribution == 'count_top_negative_smi':
-                metrix_soc = self.proc_obj.response_part.get('f_news2')
-                metrix_smi = self.proc_obj.response_part.get('f_news')
+                metrix_soc = self._proc_obj._response_part.get('f_news2')
+                metrix_smi = self._proc_obj._response_part.get('f_news')
                 distribution: list[dict, ...] = MetricsGenerator.count_top_negative(
                     metrics_smi=metrix_smi,
                     metrics_soc=metrix_soc,
@@ -177,8 +177,8 @@ def throw_params_for_distribution_diagram(
                 )
                 title = report_language().get('titles').get('smi_top_negative')
             elif has_distribution == 'count_top_negative_soc':
-                metrix_soc = self.proc_obj.response_part.get('f_news2')
-                metrix_smi = self.proc_obj.response_part.get('f_news')
+                metrix_soc = self._proc_obj._response_part.get('f_news2')
+                metrix_smi = self._proc_obj._response_part.get('f_news')
                 distribution: list[dict, ...] = MetricsGenerator.count_top_negative(
                     metrics_smi=metrix_smi,
                     metrics_soc=metrix_soc,
@@ -251,8 +251,8 @@ def render_map(
 
             template: DocxTemplate = DocxTemplate(self._template_path)
 
-            countries_or_regions_hc = self.proc_obj.response_part.get(region_key) if region_key is not None else None
-            stat_map = self.proc_obj.response_part.get(stat_map_key)
+            countries_or_regions_hc = self._proc_obj._response_part.get(region_key) if region_key is not None else None
+            stat_map = self._proc_obj._response_part.get(stat_map_key)
 
             path_to_stats_map = os.path.join(
                 os.getcwd(),
@@ -262,13 +262,13 @@ def render_map(
                 json_marking_title,
             )
 
-            position = self.proc_obj.settings.get('position')
+            position = self._proc_obj._settings.get('position')
 
             path_to_image: str = os.path.join(
                 os.getcwd(),
                 'word',
                 'highcharts_temp_images',
-                f'{self.proc_obj.folder.unique_identifier}',
+                f'{self._proc_obj.folder.unique_identifier}',
                 self.__class__.__name__ + '.png'
             )
 
@@ -276,17 +276,17 @@ def render_map(
                 os.getcwd(),
                 'word',
                 'temp',
-                f'{self.proc_obj.folder.unique_identifier}',
+                f'{self._proc_obj.folder.unique_identifier}',
                 f'output-{position}-messages-{self.__class__.__name__}.docx'
             )
 
-            length = self.proc_obj.settings.get('length')
-            number = self.proc_obj.settings.get('number')
-            percent = self.proc_obj.settings.get('percent')
+            length = self._proc_obj._settings.get('length')
+            number = self._proc_obj._settings.get('number')
+            percent = self._proc_obj._settings.get('percent')
 
             with open(path_to_stats_map, 'r') as stats_map_file:
 
-                highcharts_map_creator_object = HighchartsCreator(self.report_format, self.proc_obj.folder)
+                highcharts_map_creator_object = HighchartsCreator(self._report_format, self._proc_obj.folder)
 
                 query_string = highcharts_map_creator_object.world_or_kz_map(
                     stats_map_file.read(),
@@ -304,10 +304,10 @@ def render_map(
                 context_items = MetricsGenerator.count_world_or_kz_map(
                     stat_map,
                     countries_or_regions_hc,
-                    self.report_format
+                    self._report_format
                 )[:length]
 
-                langs_dict = ReportLanguagePicker(self.report_format)()
+                langs_dict = ReportLanguagePicker(self._report_format)()
 
                 title = langs_dict.get('titles').get(map_type)
 
