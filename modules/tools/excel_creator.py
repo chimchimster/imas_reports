@@ -10,7 +10,8 @@ class ExcelCreator(Creator):
     def generate_document(self, response: dict) -> None:
 
         manager = ExcelDataManager(
-            self.client_side_settings,
-            response
+            self._client_side_settings,
+            response,
+            self._task_uuid,
         )
         manager.distribute_content()
