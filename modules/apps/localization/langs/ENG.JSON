@@ -672,5 +672,8 @@
     "Телевидение": "TV",
     "Радио": "Radio",
 	"Агрегаторы СМИ": "Mass-media aggregators"
-  } 
+  },
+  "sheet_name": {
+    "common": "General information"
+  }
 }

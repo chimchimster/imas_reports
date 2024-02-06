@@ -1,1 +1,1 @@
-from .base import IMASResponseAPIModel
+from .secondary import IMASResponseAPIModel
