@@ -1,4 +1,4 @@
-import pandas as pd
+import xlsxwriter
 from modules.sorting import DataSorter
 
 from modules.apps.localization import ReportLanguagePicker
@@ -6,10 +6,12 @@ from modules.apps.localization import ReportLanguagePicker
 
 class ExcelReportGenerator:
 
-    def __init__(self, data, settings):
+    def __init__(self, data, settings, task_uuid):
         self._data = data
         self._settings = settings
-        self._lang = ReportLanguagePicker(settings[-1].get('format').split('_')[-1])()
+        report_format = settings[-1].get('format')
+        self._lang = ReportLanguagePicker(report_format)()
+        self._task_uuid = task_uuid
 
     def __sort_data(self):
 
@@ -20,7 +22,28 @@ class ExcelReportGenerator:
     def generate_excel_document(self):
 
         sheets_data = self.__prepare_sheets()
-        [print((x.lang, x.name_cat)) for x in self._data.category_mass_media]
+
+        workbook = xlsxwriter.Workbook(self._task_uuid + '.xlsx')
+
+        sheets = {}
+        for key, value in sheets_data.items():
+            sheet_name = value.get('sheet_name')
+            if sheet_name not in workbook.sheetnames:
+                worksheet = workbook.add_worksheet(sheet_name)
+                row_cnt = 0
+                sheets[sheet_name] = [worksheet, row_cnt]
+            data = value.get('data')
+            if isinstance(data, (list, tuple)):
+                for d in data:
+                    col = 0
+                    for attr_value in vars(d).values():
+                        sheets[sheet_name][0].write(sheets[sheet_name][1], col + 1, str(attr_value))
+                        col += 1
+                        sheets[sheet_name][1] += 1
+            else:
+                sheets[sheet_name][0].write(0, 0, str(data))
+
+        workbook.close()
 
     def __prepare_sheets(self):
 
@@ -39,10 +62,7 @@ class ExcelReportGenerator:
                     social_media_data = getattr(self._data, 'category_social_media')
                     meta_mapping[setting_name] = {
                         'sheet_name': self._lang.get('sheet_name').get('common'),
-                        'data': [
-                            [data for data in mass_media_data],
-                            []
-                        ]
+                        'data': mass_media_data + social_media_data
                     }
 
         return meta_mapping

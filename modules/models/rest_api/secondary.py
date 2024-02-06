@@ -1,16 +1,11 @@
-import pydantic
-from pydantic import Field, ConfigDict
-
-from typing_extensions import Annotated
+from typing import Any
 
 from .base import BaseMetaModel
 from modules.apps.localization import ReportLanguagePicker
 
 
-class CategorySocialMediaModel(pydantic.BaseModel):
+class CategorySocialMediaModel(BaseMetaModel):
     # CategoryName
-
-    model_config = ConfigDict(extra='allow')
 
     COUNTER: str
     name: str
@@ -20,30 +15,28 @@ class CategorySocialMediaModel(pydantic.BaseModel):
     def counter(self):
         return self.COUNTER
 
+    def translate_model_fields(self, lang: str) -> None:
+        if translation := ReportLanguagePicker(lang)().get('categories_soc'):
+            self.name = translation.get(self.name, '')
+
 
 class CategoryMassMediaModel(BaseMetaModel):
     # CategoryName2
 
-    model_config = ConfigDict(extra='allow')
-
     COUNTER: str
-    name_cat: Annotated[str, Field(validate_default=True)]
+    name_cat: str
 
     @property
     def counter(self):
         return self.COUNTER
 
-    # @classmethod
-    # @pydantic.field_validator('name_cat', mode='before')
-    # def translate_category(cls):
-    #
-    #     return ReportLanguagePicker(cls.language)().get('titles').get('smi')
+    def translate_model_fields(self, lang: str) -> None:
+        if translation := ReportLanguagePicker(lang)().get('categories_smi'):
+            self.name_cat = translation.get(self.name_cat, '')
 
 
-class ItemsCountMassMediaModel(pydantic.BaseModel):
+class ItemsCountMassMediaModel(BaseMetaModel):
     # ItemsCount
-
-    model_config = ConfigDict(extra='allow')
 
     COUNTER: str
     res_id: int
@@ -54,11 +47,8 @@ class ItemsCountMassMediaModel(pydantic.BaseModel):
         return self.COUNTER
 
 
-class ItemsCountSocialMediaModel(pydantic.BaseModel):
+class ItemsCountSocialMediaModel(BaseMetaModel):
     # ItemsCount2
-
-    model_config = ConfigDict(extra='allow')
-
     COUNTER: str
     res_id: int
     resource_name: str
@@ -68,10 +58,8 @@ class ItemsCountSocialMediaModel(pydantic.BaseModel):
         return self.COUNTER
 
 
-class ItemsMassMediaModel(pydantic.BaseModel):
+class ItemsMassMediaModel(BaseMetaModel):
     # f_news
-
-    model_config = ConfigDict(extra='allow')
 
     id: str
     title: str
@@ -95,10 +83,8 @@ class ItemsMassMediaModel(pydantic.BaseModel):
         return self.RESOURCE_PAGE_URL
 
 
-class ItemsSocialMediaModel(pydantic.BaseModel):
+class ItemsSocialMediaModel(BaseMetaModel):
     # f_news2
-
-    model_config = ConfigDict(extra='allow')
 
     id: str
     title: str

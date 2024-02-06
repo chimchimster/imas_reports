@@ -10,7 +10,11 @@ class ExcelDataManager(DataManager):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._lang = self._static_client_side_settings.get('format').split('_')[-1]
+        self._document_format = self._static_client_side_settings.get('format')
+        try:
+            self._lang = self._document_format.split('_')[-1]
+        except IndexError:
+            raise IndexError('Wrong document format.')
 
     @tricky_loggy
     def distribute_content(self):
@@ -19,9 +23,17 @@ class ExcelDataManager(DataManager):
             lang=self._lang,
             **self._response
         )
-        print(self._lang)
-        for model in response_model.items_mass_media:
-            model.__setattr__('lang', self._lang)
 
-        excel_gen = ExcelReportGenerator(response_model, self._client_side_settings)
+        self.__set_language_to_models(response_model)
+        excel_gen = ExcelReportGenerator(response_model, self._client_side_settings, self._task_uuid)
         excel_gen.generate_excel_document()
+
+    def __set_language_to_models(self, response_model):
+
+        for key in vars(response_model):
+            collection_of_models = getattr(response_model, key)
+            if isinstance(collection_of_models, (list, tuple)):
+                for model in collection_of_models:
+                    setattr(model, 'lang', self._lang)
+                    if hasattr(model, 'translate_model_fields'):
+                        model.translate_model_fields(self._document_format)
