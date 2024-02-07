@@ -5,15 +5,20 @@ from modules.apps.localization import ReportLanguagePicker
 
 
 class CategorySocialMediaModel(BaseMetaModel):
-    # CategoryName
+    # CategoryNames2
 
-    COUNTER: str
     name: str
+    COUNTER: str
     type: int
 
     @property
     def counter(self):
         return self.COUNTER
+
+
+    @property
+    def category(self):
+        return self.name
 
     def translate_model_fields(self, lang: str) -> None:
         if translation := ReportLanguagePicker(lang)().get('categories_soc'):
@@ -21,14 +26,18 @@ class CategorySocialMediaModel(BaseMetaModel):
 
 
 class CategoryMassMediaModel(BaseMetaModel):
-    # CategoryName2
+    # CategoryNames
 
-    COUNTER: str
     name_cat: str
+    COUNTER: str
 
     @property
     def counter(self):
         return self.COUNTER
+
+    @property
+    def category(self):
+        return self.name_cat
 
     def translate_model_fields(self, lang: str) -> None:
         if translation := ReportLanguagePicker(lang)().get('categories_smi'):
@@ -38,9 +47,9 @@ class CategoryMassMediaModel(BaseMetaModel):
 class ItemsCountMassMediaModel(BaseMetaModel):
     # ItemsCount
 
-    COUNTER: str
     res_id: int
     RESOURCE_NAME: str
+    COUNTER: str
 
     @property
     def counter(self):
@@ -49,10 +58,11 @@ class ItemsCountMassMediaModel(BaseMetaModel):
 
 class ItemsCountSocialMediaModel(BaseMetaModel):
     # ItemsCount2
-    COUNTER: str
+
     res_id: int
     resource_name: str
-
+    COUNTER: str
+    
     @property
     def counter(self):
         return self.COUNTER
@@ -73,14 +83,23 @@ class ItemsMassMediaModel(BaseMetaModel):
     RESOURCE_PAGE_URL: str
     sentiment: int
     full_text: str
+    name_cat: str
 
     @property
-    def resource_name(self):
+    def resource(self):
         return self.RESOURCE_NAME
 
     @property
-    def resource_page_url(self):
+    def resource_link(self):
         return self.RESOURCE_PAGE_URL
+
+    @property
+    def date(self):
+        return self.not_date
+
+    @property
+    def category(self):
+        return self.name_cat
 
 
 class ItemsSocialMediaModel(BaseMetaModel):
@@ -100,8 +119,21 @@ class ItemsSocialMediaModel(BaseMetaModel):
     sentiment: int
     full_text: str
 
+    @property
+    def category(self):
+        return self.type
+
+    @property
+    def resource(self):
+        return self.resource_name
+
+    @property
+    def resource_link(self):
+        return self.res_link
+
 
 class IMASResponseAPIModel(BaseMetaModel):
+
     analyzer_tags_changed: str
     categoryNames: list[CategoryMassMediaModel]
     categoryNames2: list[CategorySocialMediaModel]
@@ -141,4 +173,6 @@ class IMASResponseAPIModel(BaseMetaModel):
 
 __all__ = [
     'IMASResponseAPIModel',
+    'ItemsSocialMediaModel',
+    'ItemsMassMediaModel',
 ]

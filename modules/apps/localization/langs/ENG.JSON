@@ -675,5 +675,13 @@
   },
   "sheet_name": {
     "common": "General information"
-  }
+  },
+  "tags": "Tags",
+  "category": "Category",
+  "sentiments": "Sentiment",
+  "resources": "Resources",
+  "dates": "Dates",
+  "smi_table": "Mass media table",
+  "soc_table": "Social networks table",
+  "quantity": "Quantity"
 }
