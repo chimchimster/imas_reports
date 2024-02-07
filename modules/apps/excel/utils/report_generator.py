@@ -41,26 +41,30 @@ class ExcelReportGenerator:
             sheet_name = value.get('sheet_name')
             if sheet_name not in workbook.sheetnames:
                 worksheet = workbook.add_worksheet(sheet_name)
-                row_bouncer = Bouncer()
+                row_bouncer = Bouncer(0)
                 sheets[sheet_name] = worksheet_cursor(worksheet, row_bouncer)
+
             data = value.get('data')
-            title = self._lang_dict.get(key)
-
-            bouncer = sheets[sheet_name].bouncer
-            title_position = bouncer.position
-            sheets[sheet_name].worksheet.write(title_position, title_position, title)
-            bouncer.jump(1)
-
-            if isinstance(data, (list, tuple)):
-                for model in data:
-                    col = -1
-                    for attr_value in {k: v for k, v in vars(model).items() if k != 'lang'}.values():
-                        sheets[sheet_name].worksheet.write(sheets[sheet_name].bouncer.position, col + 1, str(attr_value))
-                        col += 1
-                    sheets[sheet_name][1] += 1
-            else:
-                sheets[sheet_name][0].write(sheets[sheet_name][1], 0, str(data))
-                sheets[sheet_name][1] += 1
+            if isinstance(data, dict):
+                for title_key, models_list in data.items():
+                    title = self._lang_dict.get(title_key)
+                    col_bouncer = Bouncer(-1)
+                    for model in models_list:
+                        for attr in model:
+                            sheets[sheet_name].worksheet.write(
+                                sheets[sheet_name].bouncer.position,
+                                col_bouncer.position,
+                                str(attr)
+                            )
+                            col_bouncer.jump(1)
+                    sheets[sheet_name].bouncer.jump(1)
+            # else:
+            #     sheets[sheet_name].worksheet.write(
+            #         sheets[sheet_name].bouncer.position,
+            #         col_bouncer.position,
+            #         str(data)
+            #     )
+            #     sheets[sheet_name].bouncer.jump(1)
 
         workbook.close()
 

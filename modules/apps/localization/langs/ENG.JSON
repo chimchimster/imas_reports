@@ -683,5 +683,7 @@
   "dates": "Dates",
   "smi_table": "Mass media table",
   "soc_table": "Social networks table",
-  "quantity": "Quantity"
+  "quantity": "Quantity",
+  "soc": "Social media",
+  "smi": "Mass media"
 }
