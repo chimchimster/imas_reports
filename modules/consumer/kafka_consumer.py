@@ -162,13 +162,14 @@ class AppConsumer(RemoveDirsMixin):
                 execution_time=round(end_time - start_time, 2),
                 report_id=key,
         ):
-            self._redis_storage.connection.set(key.decode('utf-8'), status_message)
+            pass
 
         with LokiLogger(
             'Sending to storage',
             report_id=key,
         ):
             self.__send_file_to_storage(user_id, task_uuid, file_extension)
+            self._redis_storage.connection.set(key.decode('utf-8'), status_message)
 
     @tricky_loggy
     def __send_file_to_storage(
@@ -210,7 +211,7 @@ class AppConsumer(RemoveDirsMixin):
 
     def __form_api_link(self, user_id: int, task_uuid: str, report_format: str, service_name: str = 'export'):
 
-        return self.STORAGE_API_ENDPOINT + '/'.join((user_id, service_name, task_uuid, report_format)) + '/'
+        return self.STORAGE_API_ENDPOINT + '/api/v1/files/file/upload/' + '/'.join((user_id, service_name, task_uuid, report_format)) + '/'
 
     @staticmethod
     def __define_file_extension(report_format: str) -> str:
