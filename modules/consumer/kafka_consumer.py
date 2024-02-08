@@ -224,3 +224,4 @@ class AppConsumer(RemoveDirsMixin):
         self.queue.put(None)
         self.consume_thread.join()
         self.queue_thread.join()
+
