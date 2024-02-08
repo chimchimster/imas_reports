@@ -51,7 +51,6 @@ class ExcelReportGenerator:
                     col_bouncer = Bouncer(-1)
                     for model in models_list:
                         for attr in model:
-                            print(attr, end='\n')
                             sheets[sheet_name].worksheet.write(
                                 sheets[sheet_name].bouncer.position,
                                 col_bouncer.position,

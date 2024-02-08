@@ -4,7 +4,21 @@ from .base import BaseMetaModel
 from modules.apps.localization import ReportLanguagePicker
 
 
-class CategorySocialMediaModel(BaseMetaModel):
+class AttrMorph:
+
+    _hidden_attrs = set()
+
+    @classmethod
+    def hide_attr(cls, attr_name: str):
+        cls._hidden_attrs.add(attr_name)
+
+    def get_values_set(self, *attrs):
+
+        # {attr_name for attr_name in attrs}
+        return [getattr(self, attr, '') for attr in attrs]
+
+
+class CategorySocialMediaModel(BaseMetaModel, AttrMorph):
     # CategoryNames2
 
     name: str
@@ -15,7 +29,6 @@ class CategorySocialMediaModel(BaseMetaModel):
     def counter(self):
         return self.COUNTER
 
-
     @property
     def category(self):
         return self.name
@@ -25,7 +38,7 @@ class CategorySocialMediaModel(BaseMetaModel):
             self.name = translation.get(self.name, '')
 
 
-class CategoryMassMediaModel(BaseMetaModel):
+class CategoryMassMediaModel(BaseMetaModel, AttrMorph):
     # CategoryNames
 
     name_cat: str
@@ -44,7 +57,7 @@ class CategoryMassMediaModel(BaseMetaModel):
             self.name_cat = translation.get(self.name_cat, '')
 
 
-class ItemsCountMassMediaModel(BaseMetaModel):
+class ItemsCountMassMediaModel(BaseMetaModel, AttrMorph):
     # ItemsCount
 
     res_id: int
@@ -56,7 +69,7 @@ class ItemsCountMassMediaModel(BaseMetaModel):
         return self.COUNTER
 
 
-class ItemsCountSocialMediaModel(BaseMetaModel):
+class ItemsCountSocialMediaModel(BaseMetaModel, AttrMorph):
     # ItemsCount2
 
     res_id: int
