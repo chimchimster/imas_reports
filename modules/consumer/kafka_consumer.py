@@ -185,6 +185,8 @@ class AppConsumer(RemoveDirsMixin):
 
         path_to_file = os.path.join(
             os.getcwd(),
+            'modules',
+            'apps',
             'word',
             'merged',
             task_uuid,
