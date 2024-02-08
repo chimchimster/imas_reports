@@ -12,7 +12,7 @@ build-job:
       --context "${CI_PROJECT_DIR}"
       --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
       --destination "${CI_REGISTRY_IMAGE}:${CI_COMMIT_TAG}"
-  when: manual
+#  when: manual
 
 deploy:
   stage: deploy
@@ -26,4 +26,4 @@ deploy:
     - kubectl get all -n production
     - kubectl rollout restart deployment reports-app -n production
     - kubectl rollout restart deployment reports-server -n production
-  when: manual
+#  when: manual

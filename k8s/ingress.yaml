@@ -7,6 +7,10 @@ metadata:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - reports.imas.kz
+      secretName: imas-tls
   rules:
     - host: "reports.imas.kz"
       http:
