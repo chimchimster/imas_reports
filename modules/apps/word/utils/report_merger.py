@@ -5,7 +5,7 @@ import docx
 from docxcompose.composer import Composer
 
 from modules.logs.decorators import tricky_loggy
-from modules.utils import FolderUUID
+from modules.folder import FolderUUID
 
 
 class MergeReport:

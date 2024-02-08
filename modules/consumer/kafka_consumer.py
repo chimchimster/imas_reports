@@ -12,7 +12,7 @@ import requests
 from kafka.api.consumer import KafkaConsumer
 from modules.logs.decorators import tricky_loggy
 from modules.tasker import TaskSelector
-from modules.utils import RemoveDirsMixin
+from modules.mixins import RemoveDirsMixin
 from modules.logs.handlers import LokiLogger
 from redis_api.api import ReportStorageRedisAPI
 
@@ -185,8 +185,6 @@ class AppConsumer(RemoveDirsMixin):
 
         path_to_file = os.path.join(
             os.getcwd(),
-            'modules',
-            'apps',
             'word',
             'merged',
             task_uuid,

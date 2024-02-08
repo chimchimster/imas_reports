@@ -1,7 +1,7 @@
 import functools
 from typing import Callable, Any
 
-from modules.utils import FolderUUID
+from modules.folder import FolderUUID
 from modules.logs.handlers import LokiLogger
 
 

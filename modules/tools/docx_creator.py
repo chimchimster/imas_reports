@@ -1,8 +1,6 @@
-from modules.apps.word.utils import WordDataManager, MergeReport
-from modules.logs.decorators import tricky_loggy
-from modules.utils import FolderUUID
-
 from .abstract_creator import Creator
+from modules.apps.word.utils import WordDataManager, MergeReport
+from modules.folder import FolderUUID
 
 
 class WordCreator(Creator):
