@@ -1,4 +1,3 @@
-import queue
 import time
 import os.path
 import threading
@@ -41,9 +40,15 @@ class SocketWebHookNamespace(Namespace):
 
         threading.Thread(target=self.__fork_on_message(msg,)).start()
 
-    def __check_for_key_in_redis(self, msg: str, event: threading.Event, timeout: int = 5000) -> bool:
+    def __check_for_key_in_redis(
+            self,
+            msg: str,
+            event: threading.Event,
+            timeout: int = 5000,
+            receive_type: str = ''
+    ) -> bool:
 
-        with LokiLogger('Trying to find key in Redis', report_id=msg):
+        with LokiLogger('Trying to find key in Redis' + ' ' + receive_type, report_id=msg):
             if self.r_con is not None:
                 start = end = time.time()
                 while end - start < timeout:
@@ -58,29 +63,35 @@ class SocketWebHookNamespace(Namespace):
             with LokiLogger('Key doesnt found in Redis', msg):
                 return False
 
-    def __send_file_to_client(self, file_uuid: str):
+    def __send_file_to_client(self, file_uuid: str, file_ready_event: threading.Event):
 
         with LokiLogger('Sending file to client', report_id=file_uuid):
 
-            try:
-                response = requests.get(self.STORAGE_API_ENDPOINT + '/api/v1/files/file/download/', params={
-                    'file_uuid': file_uuid
-                })
-            except requests.exceptions.RequestException:
-                raise requests.exceptions.RequestException
+            if self.__check_for_key_in_redis(file_uuid, file_ready_event, receive_type='second time'):
+                try:
+                    response = requests.get(self.STORAGE_API_ENDPOINT + '/api/v1/files/file/download/', params={
+                        'file_uuid': file_uuid
+                    })
+                except requests.exceptions.RequestException:
+                    raise requests.exceptions.RequestException
 
-            emit('message', {'file_data': response.content}, callback=lambda: print('OKЭY'))
+                emit('message', {'file_data': response.content}, callback=lambda: print('OKЭY'))
 
     def __fork_on_message(self, msg: str):
 
         redis_event = threading.Event()
+        file_ready_event = threading.Event()
 
-        thr_redis = threading.Thread(target=self.__check_for_key_in_redis, args=(msg, redis_event))
+        thr_redis = threading.Thread(
+            target=self.__check_for_key_in_redis,
+            args=(msg, redis_event),
+            kwargs={'receive_type': 'first time'}
+        )
         thr_redis.run()
 
         while True:
             if redis_event.is_set():
-                thr_send_file = threading.Thread(target=self.__send_file_to_client, args=(msg,))
+                thr_send_file = threading.Thread(target=self.__send_file_to_client, args=(msg, file_ready_event))
                 thr_send_file.run()
                 break
 

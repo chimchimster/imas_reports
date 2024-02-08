@@ -47,14 +47,24 @@ class ExcelReportGenerator:
             data = value.get('data')
             if isinstance(data, dict):
                 for title_key, models_list in data.items():
-                    title = self._lang_dict.get(title_key)
                     col_bouncer = Bouncer(-1)
+                    title, quantity = self._lang_dict.get(title_key), self._lang_dict.get('quantity')
+
+                    for title, quantity in zip(self._lang_dict.get('title_key'), self._lang_dict.get('quantity')):
+                        pass
+                    sheets[sheet_name].worksheet.write(
+                        sheets[sheet_name].bouncer.position,
+                        1, 1
+                    )
+                    col_bouncer.set_to(-1)
                     for model in models_list:
-                        for attr in model:
+                        model.hidde_attr('lang')
+                        values_list = model.get_values_list()
+                        for val in values_list:
                             sheets[sheet_name].worksheet.write(
                                 sheets[sheet_name].bouncer.position,
                                 col_bouncer.position,
-                                str(attr)
+                                str(val)
                             )
                             col_bouncer.jump(1)
                     sheets[sheet_name].bouncer.jump(1)

@@ -6,16 +6,15 @@ from modules.apps.localization import ReportLanguagePicker
 
 class AttrMorph:
 
-    _hidden_attrs = set()
+    hidden_attrs = set()
 
     @classmethod
     def hide_attr(cls, attr_name: str):
-        cls._hidden_attrs.add(attr_name)
+        cls.hidden_attrs.add(attr_name)
 
-    def get_values_set(self, *attrs):
+    def get_values_list(self, *attrs):
 
-        # {attr_name for attr_name in attrs}
-        return [getattr(self, attr, '') for attr in attrs]
+        return [getattr(self, attr_name, '') for attr_name in attrs if attr_name not in self.hidden_attrs]
 
 
 class CategorySocialMediaModel(BaseMetaModel, AttrMorph):
