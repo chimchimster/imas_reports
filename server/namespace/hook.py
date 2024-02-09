@@ -13,21 +13,20 @@ from reports.modules.logs.handlers import LokiLogger
 class SocketWebHookNamespace(Namespace):
 
     r_con = None
-    path_to_file_dir = None
-    STORAGE_API_ENDPOINT = os.getenv('STORAGE_API_ENDPOINT')
+    queues = None
+    storage_endpoint = None
 
     def __new__(cls, *args, **kwargs):
 
         if cls.r_con is None:
-            cls.r_con = ReportStorageRedisAPI()
-        if cls.path_to_file_dir is None:
-            cls.path_to_file_dir = os.path.join(
-                os.getcwd(),
-                'modules',
-                'apps',
-                'word',
-                'merged',
+            cls.r_con = ReportStorageRedisAPI(
+                host=os.getenv('REDIS_HOST'),
+                port=os.getenv('REDIS_PORT'),
+                db=os.getenv('REDIS_DB'),
+                password=os.getenv('REDIS_PASSWORD')
             )
+        if cls.storage_endpoint is None:
+            cls.storage_endpoint = os.getenv('STORAGE_API_ENDPOINT')
 
         return super().__new__(cls)
 
@@ -37,9 +36,21 @@ class SocketWebHookNamespace(Namespace):
     def on_disconnect(self):
         print(f"Клиент отключился")
 
-    def on_message(self, msg: str):
+    def on_message(self, msg: str, timeout: int = 5000):
 
-        threading.Thread(target=self.__fork_on_message(msg,)).start()
+        response_q = queue.Queue()
+        thr_retrieve_message = threading.Thread(target=self.__fork_on_message(msg, response_q))
+        thr_retrieve_message.start()
+        print('BIG COCK')
+        start = end = time.time()
+        while end - start < timeout:
+            print(response_q)
+            if not response_q.empty():
+                response = response_q.get(block=False)
+                if response is not None:
+                    with LokiLogger('Sending data via websocket', report_id=msg):
+                        emit('message', {'file_data': response.content}, callback=lambda: print('OKЭY'))
+            end = time.time()
 
     def __check_for_key_in_redis(
             self,
@@ -47,77 +58,72 @@ class SocketWebHookNamespace(Namespace):
             redis_event: threading.Event,
             redis_q: queue.Queue,
             timeout: int = 5000,
-            receive_type: str = ''
     ) -> None:
 
-        with LokiLogger('Trying to find key in Redis' + ' ' + receive_type, report_id=msg):
+        with LokiLogger('Trying to find key in Redis', report_id=msg):
             if self.r_con is not None:
                 start = end = time.time()
                 while end - start < timeout:
                     has_key = self.r_con.connection.getdel(msg)
                     if has_key is not None:
-                        print(has_key)
                         has_key = has_key.decode('utf-8')
                         with LokiLogger('Key found in Redis', has_key, report_id=msg):
-                            if receive_type == 'second time':
-                                redis_q.put(has_key)
+                            redis_q.put(has_key)
                             redis_event.set()
                             return
                     end = time.time()
 
             with LokiLogger('Key doesnt found in Redis', msg):
                 redis_q.put('error')
+                return
 
-    def __send_file_to_client(
+    def __retrieve_response(
             self,
             file_uuid: str,
-            status: str
+            status: str,
+            response_q: queue.Queue,
     ) -> None:
 
-        with LokiLogger('Sending file to client', report_id=file_uuid):
+        with LokiLogger('Retrieving data from storage', status, report_id=file_uuid):
 
             if status is None or status == 'error':
-                emit('message', {'file_data': b'Error during constructing report'})
+                response_q.put(None)
             else:
                 try:
-                    response = requests.get(self.STORAGE_API_ENDPOINT + '/api/v1/files/file/download/', params={
+                    response = requests.get(self.storage_endpoint + '/api/v1/files/file/download/', params={
                         'file_uuid': file_uuid
                     })
+                    if response.status_code == 200:
+                        response_q.put(response.content, block=False)
+                    else:
+                        response_q.put(None)
                 except requests.exceptions.RequestException as e:
                     raise e
-
-                emit('message', {'file_data': response.content}, callback=lambda: print('OKЭY'))
 
     def __start_redis_thr(
             self,
             msg: str,
             redis_event: threading.Event,
             redis_q: queue.Queue,
-            receive_type: str
     ) -> threading.Thread:
         thr_redis = threading.Thread(
             target=self.__check_for_key_in_redis,
             args=(msg, redis_event, redis_q),
-            kwargs={'receive_type': receive_type}
         )
         thr_redis.start()
         return thr_redis
 
-    def __fork_on_message(self, msg: str, timeout: int = 5000):
+    def __fork_on_message(self, msg: str, response_q: queue.Queue, timeout: int = 5000):
 
         redis_event, redis_q = threading.Event(), queue.Queue()
 
-        thr_r1 = self.__start_redis_thr(msg, redis_event, redis_q, receive_type='first time')
-        thr_r1.join()
+        thr_redis = self.__start_redis_thr(msg, redis_event, redis_q)
+        thr_redis.join()
 
-        start, end = time.time(), time.time()
+        start = end = time.time()
         while end - start < timeout:
 
             if redis_event.is_set():
-
-                redis_event.clear()
-
-                self.__start_redis_thr(msg, redis_event, redis_q, receive_type='second time')
 
                 while end - start < timeout:
 
@@ -125,8 +131,8 @@ class SocketWebHookNamespace(Namespace):
 
                     if status is not None or status != 'error':
                         thr_send_file = threading.Thread(
-                            target=self.__send_file_to_client,
-                            args=(msg, status)
+                            target=self.__retrieve_response,
+                            args=(msg, status, response_q)
                         )
                         thr_send_file.start()
                         break

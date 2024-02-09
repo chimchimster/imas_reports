@@ -43,8 +43,6 @@ class AppConsumer(RemoveDirsMixin):
 
         self._queue: Queue = Queue()
 
-        self._redis_storage = ReportStorageRedisAPI()
-
         self.consumer: KafkaConsumer = KafkaConsumer(
             bootstrap_server=self.bootstrap_server,
             reports_topic=self.reports_topic,
@@ -169,7 +167,6 @@ class AppConsumer(RemoveDirsMixin):
             report_id=key,
         ):
             self.__send_file_to_storage(user_id, task_uuid, file_extension)
-            self._redis_storage.connection.set(key.decode('utf-8'), status_message)
 
     @tricky_loggy
     def __send_file_to_storage(

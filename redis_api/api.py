@@ -7,11 +7,11 @@ class ReportStorageRedisAPI:
     def __new__(cls, *args, **kwargs):
 
         cls._connection = redis.Redis(
-            host=os.environ.get('REDIS_HOST'),
-            port=os.environ.get('REDIS_PORT'),
-            db=os.environ.get('REDIS_DB'),
+            host=kwargs.get('host'),
+            port=kwargs.get('port'),
+            db=kwargs.get('db'),
+            password=kwargs.get('password'),
             protocol=3,
-            password=os.environ.get('REDIS_PASSWORD'),
         )
 
         return super().__new__(cls)
