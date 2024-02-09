@@ -94,4 +94,3 @@ class SocketWebHookNamespace(Namespace):
                 thr_send_file = threading.Thread(target=self.__send_file_to_client, args=(msg, file_ready_event))
                 thr_send_file.run()
                 break
-
